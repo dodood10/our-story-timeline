@@ -20,11 +20,14 @@ export interface NavItem {
   emoji: string;
 }
 
+import { Map as MapIcon } from "lucide-react";
+
 export const NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Início", icon: Home, emoji: "🏠" },
   { to: "/timeline", label: "Linha do Tempo", icon: Clock, emoji: "⏱️" },
   { to: "/bucket-list", label: "Bucket List", icon: Target, emoji: "🎯" },
   { to: "/gallery", label: "Galeria", icon: ImageIcon, emoji: "📸" },
+  { to: "/map", label: "Mapa", icon: MapIcon, emoji: "🗺️" },
   { to: "/letters", label: "Cartas", icon: Mail, emoji: "💌" },
   { to: "/stats", label: "Estatísticas", icon: BarChart3, emoji: "📊" },
   { to: "/milestones", label: "Conquistas", icon: Trophy, emoji: "🏆" },

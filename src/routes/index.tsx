@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useApp } from "@/hooks/useApp";
-import { daysTogether, upcomingMilestones, formatDatePT } from "@/lib/dates";
-import { Heart, Calendar, Sparkles } from "lucide-react";
+import { upcomingMilestones, formatDatePT } from "@/lib/dates";
+import { Heart, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { Hero } from "@/components/home/Hero";
+import { OnThisDay } from "@/components/home/OnThisDay";
+import { Photo } from "@/components/common/Photo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -13,8 +16,6 @@ export const Route = createFileRoute("/")({
   }),
   component: HomePage,
 });
-
-const STATUS_LABEL: Record<string, string> = { dating: "Namorando", engaged: "Noivos", married: "Casados" };
 
 function HomePage() {
   const { couple, hydrated, memories } = useApp();
@@ -31,49 +32,14 @@ function HomePage() {
     );
   }
 
-  const days = daysTogether(couple.startDate);
   const milestones = upcomingMilestones(couple.startDate);
   const recent = memories.slice(0, 3);
 
   return (
     <div className="px-4 sm:px-8 py-8 sm:py-12 max-w-5xl mx-auto space-y-10">
-      <motion.section
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="rounded-3xl bg-gradient-romantic p-6 sm:p-10 shadow-soft"
-      >
-        <div className="flex flex-col sm:flex-row items-center gap-6">
-          <div className="relative shrink-0">
-            <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-card overflow-hidden border-4 border-card shadow-card">
-              {couple.photo ? (
-                <img src={couple.photo} alt="Casal" className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center text-5xl">💕</div>
-              )}
-            </div>
-            <Heart className="absolute -bottom-1 -right-1 h-7 w-7 text-primary fill-primary bg-card rounded-full p-1" />
-          </div>
-          <div className="text-center sm:text-left">
-            <p className="text-xs uppercase tracking-widest text-foreground/60 mb-1">{STATUS_LABEL[couple.status]}</p>
-            <h1 className="font-display text-3xl sm:text-4xl mb-1">{couple.name1} <span className="text-primary">&</span> {couple.name2}</h1>
-            <p className="text-foreground/70 inline-flex items-center gap-1.5 text-sm">
-              <Calendar className="h-3.5 w-3.5" /> Desde {formatDatePT(couple.startDate)}
-            </p>
-          </div>
-        </div>
-      </motion.section>
+      <Hero couple={couple} />
 
-      <motion.section
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-        className="text-center py-6"
-      >
-        <p className="text-sm text-muted-foreground uppercase tracking-widest mb-2">Estamos juntos há</p>
-        <p className="font-display text-7xl sm:text-8xl text-gradient-romantic leading-none">{days.toLocaleString("pt-BR")}</p>
-        <p className="font-display text-2xl mt-2">dias</p>
-      </motion.section>
+      <OnThisDay />
 
       {milestones.length > 0 && (
         <section>
@@ -82,8 +48,15 @@ function HomePage() {
             <h2 className="font-display text-xl">Próximas datas</h2>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
-            {milestones.map((m) => (
-              <div key={m.label + m.daysLeft} className="rounded-2xl bg-card p-4 border border-border shadow-card flex items-center justify-between">
+            {milestones.map((m, i) => (
+              <motion.div
+                key={m.label + m.daysLeft}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 * i }}
+                whileHover={{ y: -2 }}
+                className="rounded-2xl bg-card p-4 border border-border shadow-card flex items-center justify-between"
+              >
                 <div>
                   <p className="font-medium">{m.label}</p>
                   <p className="text-xs text-muted-foreground">{formatDatePT(m.date)}</p>
@@ -92,7 +65,7 @@ function HomePage() {
                   <p className="font-display text-2xl text-primary">{m.daysLeft}</p>
                   <p className="text-[10px] uppercase text-muted-foreground tracking-wider">dias</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </section>
@@ -103,9 +76,13 @@ function HomePage() {
           <h2 className="font-display text-xl mb-3">Memórias recentes</h2>
           <div className="space-y-2">
             {recent.map((m) => (
-              <div key={m.id} className="rounded-xl bg-card p-3 border border-border flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-xl">
-                  {m.photos[0] ? <img src={m.photos[0]} alt="" className="h-full w-full object-cover rounded-full" /> : "💞"}
+              <div key={m.id} className="rounded-xl bg-card p-3 border border-border flex items-center gap-3 transition hover:shadow-card">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-xl overflow-hidden">
+                  {m.photos[0] ? (
+                    <Photo src={m.photos[0]} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    "💞"
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{m.title}</p>
