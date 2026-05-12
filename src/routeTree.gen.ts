@@ -9,8 +9,56 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TimelineRouteImport } from './routes/timeline'
+import { Route as StatsRouteImport } from './routes/stats'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as MilestonesRouteImport } from './routes/milestones'
+import { Route as LettersRouteImport } from './routes/letters'
+import { Route as GiftIdeasRouteImport } from './routes/gift-ideas'
+import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as BucketListRouteImport } from './routes/bucket-list'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TimelineRoute = TimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatsRoute = StatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MilestonesRoute = MilestonesRouteImport.update({
+  id: '/milestones',
+  path: '/milestones',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LettersRoute = LettersRouteImport.update({
+  id: '/letters',
+  path: '/letters',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GiftIdeasRoute = GiftIdeasRouteImport.update({
+  id: '/gift-ideas',
+  path: '/gift-ideas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BucketListRoute = BucketListRouteImport.update({
+  id: '/bucket-list',
+  path: '/bucket-list',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +67,144 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/bucket-list': typeof BucketListRoute
+  '/gallery': typeof GalleryRoute
+  '/gift-ideas': typeof GiftIdeasRoute
+  '/letters': typeof LettersRoute
+  '/milestones': typeof MilestonesRoute
+  '/settings': typeof SettingsRoute
+  '/stats': typeof StatsRoute
+  '/timeline': typeof TimelineRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/bucket-list': typeof BucketListRoute
+  '/gallery': typeof GalleryRoute
+  '/gift-ideas': typeof GiftIdeasRoute
+  '/letters': typeof LettersRoute
+  '/milestones': typeof MilestonesRoute
+  '/settings': typeof SettingsRoute
+  '/stats': typeof StatsRoute
+  '/timeline': typeof TimelineRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/bucket-list': typeof BucketListRoute
+  '/gallery': typeof GalleryRoute
+  '/gift-ideas': typeof GiftIdeasRoute
+  '/letters': typeof LettersRoute
+  '/milestones': typeof MilestonesRoute
+  '/settings': typeof SettingsRoute
+  '/stats': typeof StatsRoute
+  '/timeline': typeof TimelineRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/bucket-list'
+    | '/gallery'
+    | '/gift-ideas'
+    | '/letters'
+    | '/milestones'
+    | '/settings'
+    | '/stats'
+    | '/timeline'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/bucket-list'
+    | '/gallery'
+    | '/gift-ideas'
+    | '/letters'
+    | '/milestones'
+    | '/settings'
+    | '/stats'
+    | '/timeline'
+  id:
+    | '__root__'
+    | '/'
+    | '/bucket-list'
+    | '/gallery'
+    | '/gift-ideas'
+    | '/letters'
+    | '/milestones'
+    | '/settings'
+    | '/stats'
+    | '/timeline'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BucketListRoute: typeof BucketListRoute
+  GalleryRoute: typeof GalleryRoute
+  GiftIdeasRoute: typeof GiftIdeasRoute
+  LettersRoute: typeof LettersRoute
+  MilestonesRoute: typeof MilestonesRoute
+  SettingsRoute: typeof SettingsRoute
+  StatsRoute: typeof StatsRoute
+  TimelineRoute: typeof TimelineRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/timeline': {
+      id: '/timeline'
+      path: '/timeline'
+      fullPath: '/timeline'
+      preLoaderRoute: typeof TimelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stats': {
+      id: '/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/milestones': {
+      id: '/milestones'
+      path: '/milestones'
+      fullPath: '/milestones'
+      preLoaderRoute: typeof MilestonesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/letters': {
+      id: '/letters'
+      path: '/letters'
+      fullPath: '/letters'
+      preLoaderRoute: typeof LettersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gift-ideas': {
+      id: '/gift-ideas'
+      path: '/gift-ideas'
+      fullPath: '/gift-ideas'
+      preLoaderRoute: typeof GiftIdeasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bucket-list': {
+      id: '/bucket-list'
+      path: '/bucket-list'
+      fullPath: '/bucket-list'
+      preLoaderRoute: typeof BucketListRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,17 +217,15 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BucketListRoute: BucketListRoute,
+  GalleryRoute: GalleryRoute,
+  GiftIdeasRoute: GiftIdeasRoute,
+  LettersRoute: LettersRoute,
+  MilestonesRoute: MilestonesRoute,
+  SettingsRoute: SettingsRoute,
+  StatsRoute: StatsRoute,
+  TimelineRoute: TimelineRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
