@@ -78,6 +78,9 @@ function MapPage() {
   const { memories, updateMemory } = useApp();
   const [pins, setPins] = useState<Pin[]>([]);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const withLocation = useMemo(
     () => memories.filter((m) => m.location?.trim() || m.coords),
@@ -159,6 +162,7 @@ function MapPage() {
         />
       ) : (
         <div className="rounded-2xl overflow-hidden border border-border shadow-card h-[70vh]">
+          {mounted && (
           <MapContainer center={[-15.78, -47.92]} zoom={3} style={{ height: "100%", width: "100%" }} scrollWheelZoom>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -177,6 +181,7 @@ function MapPage() {
             ))}
             <FitBounds pins={pins} />
           </MapContainer>
+          )}
         </div>
       )}
     </div>
