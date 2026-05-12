@@ -7,12 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Heart, Camera, Calendar } from "lucide-react";
 import { useApp } from "@/hooks/useApp";
 import { compressImage } from "@/lib/storage";
-import { seedBucket, seedLetters, seedMemories } from "@/lib/seed";
 import type { RelationshipStatus } from "@/lib/types";
 import { toast } from "sonner";
 
 export function OnboardingDialog({ open }: { open: boolean }) {
-  const { setCouple, setOnboarded, setMemories, setBucket, setLetters } = useAppHelpers();
+  const { setCouple, setOnboarded, resetSeed } = useApp();
   const [step, setStep] = useState(0);
   const [name1, setName1] = useState("");
   const [name2, setName2] = useState("");
@@ -23,8 +22,12 @@ export function OnboardingDialog({ open }: { open: boolean }) {
   async function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
-    const compressed = await compressImage(f, 800, 0.85);
-    setPhoto(compressed);
+    try {
+      const compressed = await compressImage(f, 800, 0.85);
+      setPhoto(compressed);
+    } catch {
+      toast.error("Não consegui processar a foto");
+    }
   }
 
   function finish() {
@@ -40,9 +43,7 @@ export function OnboardingDialog({ open }: { open: boolean }) {
       status,
       createdAt: new Date().toISOString(),
     });
-    setMemories(seedMemories());
-    setBucket(seedBucket());
-    setLetters(seedLetters());
+    resetSeed();
     setOnboarded(true);
     toast.success("Bem-vindos ao Memory Lane 💕");
   }
@@ -86,7 +87,7 @@ export function OnboardingDialog({ open }: { open: boolean }) {
                 <img src={photo} alt="Casal" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                  <Camera className="h-8 w-8" strokeWidth={1.5} />
+                  <Camera className="h-8 w-8" />
                   <span className="text-sm">Clique para enviar uma foto</span>
                 </div>
               )}
@@ -137,25 +138,4 @@ export function OnboardingDialog({ open }: { open: boolean }) {
       </DialogContent>
     </Dialog>
   );
-}
-
-// Need access to setMemories/setBucket/setLetters too — extend helper
-function useAppHelpers() {
-  const ctx = useApp();
-  return {
-    ...ctx,
-    setMemories: (m: import("@/lib/types").Memory[]) => {
-      window.localStorage.setItem("ml.memories", JSON.stringify(m));
-      // trigger reload via storage event or full refresh:
-      window.dispatchEvent(new StorageEvent("storage", { key: "ml.memories", newValue: JSON.stringify(m) }));
-    },
-    setBucket: (m: import("@/lib/types").BucketItem[]) => {
-      window.localStorage.setItem("ml.bucket", JSON.stringify(m));
-      window.dispatchEvent(new StorageEvent("storage", { key: "ml.bucket", newValue: JSON.stringify(m) }));
-    },
-    setLetters: (m: import("@/lib/types").Letter[]) => {
-      window.localStorage.setItem("ml.letters", JSON.stringify(m));
-      window.dispatchEvent(new StorageEvent("storage", { key: "ml.letters", newValue: JSON.stringify(m) }));
-    },
-  };
 }
