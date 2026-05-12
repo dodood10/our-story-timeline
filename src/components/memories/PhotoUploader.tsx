@@ -1,8 +1,8 @@
 import { useRef } from "react";
 import { Camera, X } from "lucide-react";
-import { compressImage } from "@/lib/storage";
+import { savePhotoFile } from "@/lib/photos";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Photo } from "@/components/common/Photo";
 
 export function PhotoUploader({
   photos,
@@ -23,15 +23,15 @@ export function PhotoUploader({
       return;
     }
     const list = Array.from(files).slice(0, remaining);
-    const compressed: string[] = [];
+    const refs: string[] = [];
     for (const f of list) {
       try {
-        compressed.push(await compressImage(f));
+        refs.push(await savePhotoFile(f));
       } catch {
-        /* skip */
+        toast.error("Não consegui salvar uma foto");
       }
     }
-    onChange([...photos, ...compressed]);
+    onChange([...photos, ...refs]);
   }
 
   function remove(i: number) {
@@ -43,7 +43,7 @@ export function PhotoUploader({
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
         {photos.map((p, i) => (
           <div key={i} className="relative aspect-square rounded-lg overflow-hidden group">
-            <img src={p} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
+            <Photo src={p} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
             <button
               type="button"
               onClick={() => remove(i)}

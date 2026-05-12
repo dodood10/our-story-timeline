@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -13,6 +14,8 @@ import { AppProvider, useApp } from "@/hooks/useApp";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BottomBar } from "@/components/layout/BottomBar";
 import { OnboardingDialog } from "@/components/layout/OnboardingDialog";
+import { CommandPalette, useCmdK } from "@/components/common/CommandPalette";
+import { MemoryFormDialog } from "@/components/memories/MemoryFormDialog";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -70,6 +73,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", href: "/icon-192.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/icon-192.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -91,7 +97,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem('ml.settings');if(s){var t=JSON.parse(s).theme||'romantic';document.documentElement.classList.remove('theme-romantic','theme-minimal','theme-modern');document.documentElement.classList.add('theme-'+t);}}catch(e){}})();`,
+            __html: `(function(){try{var s=localStorage.getItem('ml.settings');if(s){var t=JSON.parse(s).theme||'romantic';document.documentElement.classList.remove('theme-romantic','theme-minimal','theme-modern');document.documentElement.classList.add('theme-'+t);}}catch(e){}if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}})();`,
           }}
         />
       </head>
@@ -117,6 +123,9 @@ function RootComponent() {
 
 function AppShell() {
   const { hydrated, onboarded } = useApp();
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [newMemoryOpen, setNewMemoryOpen] = useState(false);
+  useCmdK(setPaletteOpen);
   return (
     <div className="min-h-screen flex bg-background">
       <AppSidebar />
@@ -125,6 +134,12 @@ function AppShell() {
       </main>
       <BottomBar />
       {hydrated && !onboarded && <OnboardingDialog open />}
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        onNewMemory={() => setNewMemoryOpen(true)}
+      />
+      <MemoryFormDialog open={newMemoryOpen} onOpenChange={setNewMemoryOpen} />
     </div>
   );
 }

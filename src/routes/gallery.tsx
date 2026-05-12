@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Image as ImageIcon, Play } from "lucide-react";
 import { formatDatePT } from "@/lib/dates";
 import { parseISO } from "date-fns";
+import { Photo } from "@/components/common/Photo";
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
@@ -60,7 +61,7 @@ function GalleryPage() {
               onClick={() => setLightbox({ index: i })}
               className="relative aspect-square overflow-hidden rounded-xl bg-muted group"
             >
-              <img src={p.src} alt={p.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+              <Photo src={p.src} alt={p.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-3">
                 <p className="text-white text-xs font-medium truncate">{p.title}</p>
               </div>

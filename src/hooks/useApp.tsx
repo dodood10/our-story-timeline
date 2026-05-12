@@ -17,6 +17,7 @@ interface AppState {
   addMemory: (m: Omit<Memory, "id" | "createdAt">) => Memory;
   updateMemory: (id: string, patch: Partial<Memory>) => void;
   deleteMemory: (id: string) => void;
+  toggleFavoriteMemory: (id: string) => void;
   // bucket
   bucket: BucketItem[];
   addBucket: (b: Omit<BucketItem, "id" | "createdAt" | "done">) => BucketItem;
@@ -75,6 +76,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const deleteMemory = useCallback((id: string) => {
     setMemories((prev) => prev.filter((m) => m.id !== id));
+  }, [setMemories]);
+
+  const toggleFavoriteMemory = useCallback((id: string) => {
+    setMemories((prev) => prev.map((m) => (m.id === id ? { ...m, favorite: !m.favorite } : m)));
   }, [setMemories]);
 
   const addBucket = useCallback<AppState["addBucket"]>((b) => {
@@ -141,6 +146,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addMemory,
       updateMemory,
       deleteMemory,
+      toggleFavoriteMemory,
       bucket,
       addBucket,
       toggleBucket,
@@ -157,7 +163,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setNotifications,
       resetSeed,
     }),
-    [hydrated, couple, setCouple, onboarded, setOnboarded, memories, addMemory, updateMemory, deleteMemory, bucket, addBucket, toggleBucket, deleteBucket, letters, addLetter, sealLetter, openLetter, deleteLetter, giftFavorites, toggleGiftFavorite, settings, setTheme, setNotifications, resetSeed],
+    [hydrated, couple, setCouple, onboarded, setOnboarded, memories, addMemory, updateMemory, deleteMemory, toggleFavoriteMemory, bucket, addBucket, toggleBucket, deleteBucket, letters, addLetter, sealLetter, openLetter, deleteLetter, giftFavorites, toggleGiftFavorite, settings, setTheme, setNotifications, resetSeed],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { EmotionPicker } from "./EmotionPicker";
 import { PhotoUploader } from "./PhotoUploader";
+import { TagInput } from "@/components/common/TagInput";
 import { Heart, MapPin } from "lucide-react";
 import type { Memory, Emotion } from "@/lib/types";
 import { useApp } from "@/hooks/useApp";
@@ -21,13 +22,20 @@ export function MemoryFormDialog({
   onOpenChange: (v: boolean) => void;
   editing?: Memory | null;
 }) {
-  const { addMemory, updateMemory } = useApp();
+  const { addMemory, updateMemory, memories } = useApp();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [description, setDescription] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [emotion, setEmotion] = useState<Emotion | undefined>("love");
   const [location, setLocation] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+
+  const tagSuggestions = useMemo(() => {
+    const all = new Set<string>();
+    memories.forEach((m) => m.tags?.forEach((t) => all.add(t)));
+    return Array.from(all);
+  }, [memories]);
 
   useEffect(() => {
     if (open) {
@@ -38,6 +46,7 @@ export function MemoryFormDialog({
         setPhotos(editing.photos);
         setEmotion(editing.emotion);
         setLocation(editing.location ?? "");
+        setTags(editing.tags ?? []);
       } else {
         setTitle("");
         setDate(new Date().toISOString().slice(0, 10));
@@ -45,6 +54,7 @@ export function MemoryFormDialog({
         setPhotos([]);
         setEmotion("love");
         setLocation("");
+        setTags([]);
       }
     }
   }, [open, editing]);
@@ -59,6 +69,7 @@ export function MemoryFormDialog({
       photos,
       emotion,
       location: location.trim() || undefined,
+      tags: tags.length ? tags : undefined,
     };
     if (editing) {
       updateMemory(editing.id, payload);
@@ -105,6 +116,10 @@ export function MemoryFormDialog({
           <div className="space-y-2">
             <Label>Conte essa história</Label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="Descreva esse momento..." />
+          </div>
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <TagInput value={tags} onChange={setTags} suggestions={tagSuggestions} />
           </div>
           <div className="space-y-2">
             <Label>Fotos</Label>

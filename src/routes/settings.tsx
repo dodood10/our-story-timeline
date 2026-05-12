@@ -7,13 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings as SettingsIcon, Camera, Download, RotateCcw } from "lucide-react";
-import { compressImage, estimateStorageBytes } from "@/lib/storage";
+import { Settings as SettingsIcon, Camera, Download, RotateCcw, Upload, Cloud, RefreshCw, Copy, Loader2 } from "lucide-react";
+import { compressImage } from "@/lib/storage";
 import { toast } from "sonner";
 import type { Couple, RelationshipStatus, Theme } from "@/lib/types";
 import jsPDF from "jspdf";
 import { formatDatePT, daysTogether } from "@/lib/dates";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { QuotaMeter } from "@/components/common/QuotaMeter";
+import { downloadBackup, importBackup, type BackupBundle } from "@/lib/backup";
+import { generateSyncCode, pushSync, pullSync } from "@/lib/sync";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -42,6 +46,11 @@ function SettingsForm({ couple }: { couple: Couple }) {
   const [status, setStatus] = useState<RelationshipStatus>(couple.status);
   const [saving, setSaving] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [syncCode, setSyncCode] = useState(settings.syncCode ?? "");
+  const [syncBusy, setSyncBusy] = useState(false);
+  const [pullCode, setPullCode] = useState("");
+  const [confirmPull, setConfirmPull] = useState(false);
 
   async function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -99,7 +108,61 @@ function SettingsForm({ couple }: { couple: Couple }) {
     toast.success("PDF gerado 💕");
   }
 
-  const storageMb = (estimateStorageBytes() / 1024 / 1024).toFixed(2);
+  async function onImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    try {
+      const text = await f.text();
+      const bundle = JSON.parse(text) as BackupBundle;
+      await importBackup(bundle);
+      toast.success("Backup restaurado. Recarregando...");
+      setTimeout(() => location.reload(), 800);
+    } catch (err) {
+      console.error(err);
+      toast.error("Arquivo inválido");
+    }
+  }
+
+  async function doPush() {
+    if (!syncCode.trim()) {
+      const code = generateSyncCode();
+      setSyncCode(code);
+      try {
+        setSyncBusy(true);
+        await pushSync(code);
+        toast.success("Sincronizado! Guarde seu código.");
+      } catch (e) {
+        toast.error((e as Error).message);
+      } finally {
+        setSyncBusy(false);
+      }
+      return;
+    }
+    try {
+      setSyncBusy(true);
+      await pushSync(syncCode.trim().toUpperCase());
+      toast.success("Enviado para a nuvem 💕");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSyncBusy(false);
+    }
+  }
+
+  async function doPull() {
+    setConfirmPull(false);
+    try {
+      setSyncBusy(true);
+      await pullSync(pullCode.trim().toUpperCase());
+      toast.success("Dados restaurados. Recarregando...");
+      setTimeout(() => location.reload(), 800);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSyncBusy(false);
+    }
+  }
 
   return (
     <div className="px-4 sm:px-8 py-8 max-w-2xl mx-auto space-y-8">
@@ -180,18 +243,71 @@ function SettingsForm({ couple }: { couple: Couple }) {
         </div>
       </section>
 
-      <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-3">
-        <h2 className="font-display text-xl">Exportar</h2>
-        <p className="text-sm text-muted-foreground">Baixe um PDF com todas as memórias.</p>
-        <Button variant="outline" onClick={exportPdf}>
-          <Download className="h-4 w-4 mr-1.5" /> Exportar PDF
-        </Button>
+      <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-4">
+        <h2 className="font-display text-xl">Backup &amp; restauração</h2>
+        <p className="text-sm text-muted-foreground">
+          Baixe um arquivo com todas as memórias, fotos, bucket list e cartas — para guardar em segurança ou levar para outro navegador.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => downloadBackup().then(() => toast.success("Backup baixado"))}>
+            <Download className="h-4 w-4 mr-1.5" /> Baixar backup (JSON)
+          </Button>
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="h-4 w-4 mr-1.5" /> Restaurar de arquivo
+          </Button>
+          <Button variant="outline" onClick={exportPdf}>
+            <Download className="h-4 w-4 mr-1.5" /> Exportar PDF
+          </Button>
+          <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={onImportFile} />
+        </div>
+      </section>
+
+      <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-4">
+        <h2 className="font-display text-xl flex items-center gap-2"><Cloud className="h-5 w-5 text-primary" /> Sincronizar entre dispositivos</h2>
+        <p className="text-sm text-muted-foreground">
+          Opcional. Gere um código secreto e use-o no celular do(a) parceiro(a) para sincronizar tudo. Sem cadastro — quem tem o código tem acesso.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Input
+            value={syncCode}
+            onChange={(e) => setSyncCode(e.target.value.toUpperCase())}
+            placeholder="Seu código (gerado automaticamente)"
+            className="font-mono max-w-xs"
+          />
+          {syncCode && (
+            <Button
+              variant="outline"
+              onClick={() => { navigator.clipboard.writeText(syncCode); toast.success("Código copiado"); }}
+            >
+              <Copy className="h-4 w-4 mr-1.5" /> Copiar
+            </Button>
+          )}
+          <Button onClick={doPush} disabled={syncBusy}>
+            {syncBusy ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Cloud className="h-4 w-4 mr-1.5" />}
+            {syncCode ? "Enviar para nuvem" : "Gerar código e enviar"}
+          </Button>
+        </div>
+        <div className="border-t border-border pt-4 space-y-2">
+          <p className="text-sm font-medium">Receber dados de outro dispositivo</p>
+          <div className="flex flex-wrap gap-2">
+            <Input
+              value={pullCode}
+              onChange={(e) => setPullCode(e.target.value.toUpperCase())}
+              placeholder="Cole o código aqui"
+              className="font-mono max-w-xs"
+            />
+            <Button variant="outline" onClick={() => setConfirmPull(true)} disabled={!pullCode.trim() || syncBusy}>
+              <RefreshCw className="h-4 w-4 mr-1.5" /> Baixar dados
+            </Button>
+          </div>
+        </div>
       </section>
 
       <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-3">
-        <h2 className="font-display text-xl">Dados</h2>
-        <p className="text-sm text-muted-foreground">
-          Armazenamento usado: ~{storageMb} MB · {memories.length} memórias
+        <h2 className="font-display text-xl">Armazenamento</h2>
+        <QuotaMeter />
+        <p className="text-xs text-muted-foreground">
+          {memories.length} memórias guardadas neste dispositivo.
         </p>
         <Button variant="outline" onClick={() => setConfirmReset(true)}>
           <RotateCcw className="h-4 w-4 mr-1.5" /> Restaurar memórias de exemplo
@@ -206,6 +322,15 @@ function SettingsForm({ couple }: { couple: Couple }) {
         confirmLabel="Restaurar"
         destructive
         onConfirm={() => { resetSeed(); setConfirmReset(false); toast.success("Restaurado"); }}
+      />
+      <ConfirmDialog
+        open={confirmPull}
+        onOpenChange={setConfirmPull}
+        title="Substituir dados locais?"
+        description="Os dados deste dispositivo serão substituídos pelos da nuvem. Faça um backup antes se quiser garantir."
+        confirmLabel="Substituir"
+        destructive
+        onConfirm={doPull}
       />
     </div>
   );

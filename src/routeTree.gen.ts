@@ -13,6 +13,7 @@ import { Route as TimelineRouteImport } from './routes/timeline'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MilestonesRouteImport } from './routes/milestones'
+import { Route as MapRouteImport } from './routes/map'
 import { Route as LettersRouteImport } from './routes/letters'
 import { Route as GiftIdeasRouteImport } from './routes/gift-ideas'
 import { Route as GalleryRouteImport } from './routes/gallery'
@@ -37,6 +38,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const MilestonesRoute = MilestonesRouteImport.update({
   id: '/milestones',
   path: '/milestones',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapRoute = MapRouteImport.update({
+  id: '/map',
+  path: '/map',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LettersRoute = LettersRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/gallery': typeof GalleryRoute
   '/gift-ideas': typeof GiftIdeasRoute
   '/letters': typeof LettersRoute
+  '/map': typeof MapRoute
   '/milestones': typeof MilestonesRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/gallery': typeof GalleryRoute
   '/gift-ideas': typeof GiftIdeasRoute
   '/letters': typeof LettersRoute
+  '/map': typeof MapRoute
   '/milestones': typeof MilestonesRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/gallery': typeof GalleryRoute
   '/gift-ideas': typeof GiftIdeasRoute
   '/letters': typeof LettersRoute
+  '/map': typeof MapRoute
   '/milestones': typeof MilestonesRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/gift-ideas'
     | '/letters'
+    | '/map'
     | '/milestones'
     | '/settings'
     | '/stats'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/gift-ideas'
     | '/letters'
+    | '/map'
     | '/milestones'
     | '/settings'
     | '/stats'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/gift-ideas'
     | '/letters'
+    | '/map'
     | '/milestones'
     | '/settings'
     | '/stats'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   GalleryRoute: typeof GalleryRoute
   GiftIdeasRoute: typeof GiftIdeasRoute
   LettersRoute: typeof LettersRoute
+  MapRoute: typeof MapRoute
   MilestonesRoute: typeof MilestonesRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
@@ -175,6 +188,13 @@ declare module '@tanstack/react-router' {
       path: '/milestones'
       fullPath: '/milestones'
       preLoaderRoute: typeof MilestonesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/map': {
+      id: '/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof MapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/letters': {
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   GalleryRoute: GalleryRoute,
   GiftIdeasRoute: GiftIdeasRoute,
   LettersRoute: LettersRoute,
+  MapRoute: MapRoute,
   MilestonesRoute: MilestonesRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
@@ -229,13 +250,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
