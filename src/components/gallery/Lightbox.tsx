@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { X, ChevronLeft, ChevronRight, Download, Play, Pause } from "lucide-react";
 import { downloadDataUrl } from "@/lib/storage";
+import { resolvePhoto, isPhotoRef } from "@/lib/photos";
+import { Photo } from "@/components/common/Photo";
 
 export interface LightboxPhoto {
   src: string;
@@ -47,8 +49,13 @@ export function Lightbox({
   const photo = photos[index];
   if (!photo) return null;
 
+  async function download() {
+    const url = isPhotoRef(photo.src) ? await resolvePhoto(photo.src) : photo.src;
+    if (url) downloadDataUrl(url, `memoria-${index + 1}.jpg`);
+  }
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center animate-in fade-in" onClick={onClose}>
       <button onClick={onClose} className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white" aria-label="Fechar">
         <X className="h-5 w-5" />
       </button>
@@ -57,7 +64,7 @@ export function Lightbox({
           {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           {playing ? "Pausar" : "Slideshow"}
         </button>
-        <button onClick={(e) => { e.stopPropagation(); downloadDataUrl(photo.src, `memoria-${index + 1}.jpg`); }} className="h-10 px-3 rounded-full bg-white/10 hover:bg-white/20 flex items-center gap-1.5 text-white text-sm">
+        <button onClick={(e) => { e.stopPropagation(); download(); }} className="h-10 px-3 rounded-full bg-white/10 hover:bg-white/20 flex items-center gap-1.5 text-white text-sm">
           <Download className="h-4 w-4" /> Baixar
         </button>
       </div>
@@ -68,7 +75,7 @@ export function Lightbox({
         <ChevronRight className="h-6 w-6" />
       </button>
       <div className="max-w-[90vw] max-h-[80vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
-        <img src={photo.src} alt={photo.title ?? "Foto"} className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl" />
+        <Photo src={photo.src} alt={photo.title ?? "Foto"} className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl" />
         {(photo.title || photo.date) && (
           <div className="mt-4 text-center text-white">
             {photo.title && <p className="font-display text-lg">{photo.title}</p>}
