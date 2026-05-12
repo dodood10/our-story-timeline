@@ -7,13 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings as SettingsIcon, Camera, Download, RotateCcw } from "lucide-react";
-import { compressImage, estimateStorageBytes } from "@/lib/storage";
+import { Settings as SettingsIcon, Camera, Download, RotateCcw, Upload, Cloud, RefreshCw, Copy, Loader2 } from "lucide-react";
+import { compressImage } from "@/lib/storage";
 import { toast } from "sonner";
 import type { Couple, RelationshipStatus, Theme } from "@/lib/types";
 import jsPDF from "jspdf";
 import { formatDatePT, daysTogether } from "@/lib/dates";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { QuotaMeter } from "@/components/common/QuotaMeter";
+import { downloadBackup, importBackup, type BackupBundle } from "@/lib/backup";
+import { generateSyncCode, pushSync, pullSync } from "@/lib/sync";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
