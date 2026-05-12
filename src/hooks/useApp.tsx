@@ -146,6 +146,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addMemory,
       updateMemory,
       deleteMemory,
+      toggleFavoriteMemory,
       bucket,
       addBucket,
       toggleBucket,
@@ -162,7 +163,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setNotifications,
       resetSeed,
     }),
-    [hydrated, couple, setCouple, onboarded, setOnboarded, memories, addMemory, updateMemory, deleteMemory, bucket, addBucket, toggleBucket, deleteBucket, letters, addLetter, sealLetter, openLetter, deleteLetter, giftFavorites, toggleGiftFavorite, settings, setTheme, setNotifications, resetSeed],
+    [hydrated, couple, setCouple, onboarded, setOnboarded, memories, addMemory, updateMemory, deleteMemory, toggleFavoriteMemory, bucket, addBucket, toggleBucket, deleteBucket, letters, addLetter, sealLetter, openLetter, deleteLetter, giftFavorites, toggleGiftFavorite, settings, setTheme, setNotifications, resetSeed],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
