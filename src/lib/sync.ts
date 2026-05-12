@@ -13,7 +13,7 @@ export async function pushSync(code: string): Promise<void> {
   const bundle = await exportBackup();
   const { error } = await supabase
     .from("couple_syncs")
-    .upsert({ code, data: bundle as unknown as Record<string, unknown> }, { onConflict: "code" });
+    .upsert({ code, data: bundle as never }, { onConflict: "code" });
   if (error) throw error;
 }
 
