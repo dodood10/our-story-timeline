@@ -3,8 +3,8 @@ export type RelationshipStatus = "dating" | "engaged" | "married";
 export interface Couple {
   name1: string;
   name2: string;
-  photo?: string; // base64
-  startDate: string; // ISO
+  photo?: string;
+  startDate: string;
   status: RelationshipStatus;
   createdAt: string;
 }
@@ -23,11 +23,17 @@ export const EMOTIONS: { id: Emotion; emoji: string; label: string }[] = [
 export interface Memory {
   id: string;
   title: string;
-  date: string; // ISO date
+  date: string;
   description: string;
-  photos: string[]; // base64
+  /** Each entry is either a data URL or an "idb:KEY" reference. */
+  photos: string[];
   emotion: Emotion;
   location?: string;
+  /** Optional GPS coordinates [lat, lng] for map view. */
+  coords?: [number, number];
+  /** Free-form tags chosen by the couple. */
+  tags?: string[];
+  favorite?: boolean;
   createdAt: string;
 }
 
@@ -46,7 +52,7 @@ export interface BucketItem {
   category: BucketCategory;
   done: boolean;
   doneAt?: string;
-  photo?: string; // base64
+  photo?: string;
   createdAt: string;
 }
 
@@ -54,7 +60,7 @@ export interface Letter {
   id: string;
   title: string;
   message: string;
-  unlockDate?: string; // ISO; if undefined, condition-only (always openable when sealed)
+  unlockDate?: string;
   sealed: boolean;
   openedAt?: string;
   createdAt: string;
@@ -65,6 +71,8 @@ export type Theme = "romantic" | "minimal" | "modern";
 export interface Settings {
   theme: Theme;
   notifications: boolean;
+  /** Optional sync code; when present, app pushes/pulls to Supabase. */
+  syncCode?: string;
 }
 
 export interface GiftQuizAnswers {
