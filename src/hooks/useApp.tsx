@@ -17,6 +17,7 @@ interface AppState {
   addMemory: (m: Omit<Memory, "id" | "createdAt">) => Memory;
   updateMemory: (id: string, patch: Partial<Memory>) => void;
   deleteMemory: (id: string) => void;
+  toggleFavoriteMemory: (id: string) => void;
   // bucket
   bucket: BucketItem[];
   addBucket: (b: Omit<BucketItem, "id" | "createdAt" | "done">) => BucketItem;
@@ -75,6 +76,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const deleteMemory = useCallback((id: string) => {
     setMemories((prev) => prev.filter((m) => m.id !== id));
+  }, [setMemories]);
+
+  const toggleFavoriteMemory = useCallback((id: string) => {
+    setMemories((prev) => prev.map((m) => (m.id === id ? { ...m, favorite: !m.favorite } : m)));
   }, [setMemories]);
 
   const addBucket = useCallback<AppState["addBucket"]>((b) => {
