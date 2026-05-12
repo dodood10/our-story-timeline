@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Settings as SettingsIcon, Camera, Download, RotateCcw } from "lucide-react";
 import { compressImage, estimateStorageBytes } from "@/lib/storage";
 import { toast } from "sonner";
-import type { RelationshipStatus, Theme } from "@/lib/types";
+import type { Couple, RelationshipStatus, Theme } from "@/lib/types";
 import jsPDF from "jspdf";
 import { formatDatePT, daysTogether } from "@/lib/dates";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
@@ -26,17 +26,22 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
-  const { couple, setCouple, settings, setTheme, setNotifications, memories, resetSeed } = useApp();
-  const [saving, setSaving] = useState(false);
-  const [confirmReset, setConfirmReset] = useState(false);
+  const { couple } = useApp();
+  if (!couple) {
+    return <div className="p-12 text-center text-muted-foreground">Carregando...</div>;
+  }
+  return <SettingsForm couple={couple} />;
+}
 
-  if (!couple) return null;
-
+function SettingsForm({ couple }: { couple: Couple }) {
+  const { setCouple, settings, setTheme, setNotifications, memories, resetSeed } = useApp();
   const [name1, setName1] = useState(couple.name1);
   const [name2, setName2] = useState(couple.name2);
-  const [photo, setPhoto] = useState(couple.photo);
+  const [photo, setPhoto] = useState<string | undefined>(couple.photo);
   const [startDate, setStartDate] = useState(couple.startDate);
   const [status, setStatus] = useState<RelationshipStatus>(couple.status);
+  const [saving, setSaving] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   async function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -197,7 +202,7 @@ function SettingsPage() {
         open={confirmReset}
         onOpenChange={setConfirmReset}
         title="Restaurar memórias de exemplo?"
-        description="Isso vai substituir suas memórias, bucket list e cartas pelas de exemplo. Não pode ser desfeito."
+        description="Isso vai substituir suas memórias, bucket list e cartas pelas de exemplo."
         confirmLabel="Restaurar"
         destructive
         onConfirm={() => { resetSeed(); setConfirmReset(false); toast.success("Restaurado"); }}

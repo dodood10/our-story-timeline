@@ -75,7 +75,7 @@ function BucketListPage() {
                       item={item}
                       onToggle={() => onToggle(item.id)}
                       onDelete={() => setConfirmId(item.id)}
-                      onPhoto={(p) => toggleBucket(item.id) /* noop */ || addPhotoTo(item.id, p)}
+                      onPhoto={(p) => addPhotoTo(item.id, p)}
                     />
                   ))}
                 </div>
