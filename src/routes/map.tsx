@@ -17,7 +17,6 @@ export const Route = createFileRoute("/map")({
       { name: "description", content: "Os lugares onde construíram memórias." },
     ],
   }),
-  ssr: false,
   component: MapPage,
 });
 
