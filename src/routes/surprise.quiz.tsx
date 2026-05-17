@@ -54,18 +54,18 @@ function QuizPage() {
     );
   }
 
-  const steps = [
+  const steps: Step[] = [
     { key: "recipient", q: "Para quem é a surpresa?", options: Object.entries(LABELS.recipient) },
     { key: "place", q: "Onde será a surpresa?", options: Object.entries(LABELS.place) },
     { key: "budget", q: "Qual seu orçamento?", options: Object.entries(LABELS.budget) },
     { key: "style", q: "Qual estilo você quer?", options: Object.entries(LABELS.style) },
     { key: "time", q: "Quanto tempo você tem para montar?", options: Object.entries(LABELS.time) },
     { key: "likes", q: "O que o casal mais gosta?", options: Object.entries(LABELS.likes), multi: true },
-  ] as const;
+  ];
 
   const current = steps[step];
   const isLast = step === steps.length - 1;
-  const currentValue = answers[current.key as keyof Partial];
+  const currentValue = answers[current.key];
   const canAdvance = current.multi
     ? Array.isArray(currentValue) && currentValue.length > 0
     : !!currentValue;
@@ -129,7 +129,7 @@ function QuizPage() {
               {current.options.map(([value, label]) => {
                 const selected = current.multi
                   ? (answers.likes ?? []).includes(value as SurpriseAnswers["likes"][number])
-                  : (answers[current.key as keyof Partial] as string) === value;
+                  : (answers[current.key] as string | undefined) === value;
                 return (
                   <button
                     key={value}
