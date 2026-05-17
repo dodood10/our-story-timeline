@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TimelineRouteImport } from './routes/timeline'
+import { Route as SurpriseRouteImport } from './routes/surprise'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MilestonesRouteImport } from './routes/milestones'
@@ -28,6 +29,11 @@ import { Route as SurprisePlanRouteImport } from './routes/surprise.plan'
 const TimelineRoute = TimelineRouteImport.update({
   id: '/timeline',
   path: '/timeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SurpriseRoute = SurpriseRouteImport.update({
+  id: '/surprise',
+  path: '/surprise',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatsRoute = StatsRouteImport.update({
@@ -86,19 +92,19 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const SurpriseIndexRoute = SurpriseIndexRouteImport.update({
-  id: '/surprise/',
-  path: '/surprise/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => SurpriseRoute,
 } as any)
 const SurpriseQuizRoute = SurpriseQuizRouteImport.update({
-  id: '/surprise/quiz',
-  path: '/surprise/quiz',
-  getParentRoute: () => rootRouteImport,
+  id: '/quiz',
+  path: '/quiz',
+  getParentRoute: () => SurpriseRoute,
 } as any)
 const SurprisePlanRoute = SurprisePlanRouteImport.update({
-  id: '/surprise/plan',
-  path: '/surprise/plan',
-  getParentRoute: () => rootRouteImport,
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => SurpriseRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/milestones': typeof MilestonesRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/surprise': typeof SurpriseRouteWithChildren
   '/timeline': typeof TimelineRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
@@ -148,6 +155,7 @@ export interface FileRoutesById {
   '/milestones': typeof MilestonesRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/surprise': typeof SurpriseRouteWithChildren
   '/timeline': typeof TimelineRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
@@ -167,6 +175,7 @@ export interface FileRouteTypes {
     | '/milestones'
     | '/settings'
     | '/stats'
+    | '/surprise'
     | '/timeline'
     | '/surprise/plan'
     | '/surprise/quiz'
@@ -201,6 +210,7 @@ export interface FileRouteTypes {
     | '/milestones'
     | '/settings'
     | '/stats'
+    | '/surprise'
     | '/timeline'
     | '/surprise/plan'
     | '/surprise/quiz'
@@ -219,10 +229,8 @@ export interface RootRouteChildren {
   MilestonesRoute: typeof MilestonesRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
+  SurpriseRoute: typeof SurpriseRouteWithChildren
   TimelineRoute: typeof TimelineRoute
-  SurprisePlanRoute: typeof SurprisePlanRoute
-  SurpriseQuizRoute: typeof SurpriseQuizRoute
-  SurpriseIndexRoute: typeof SurpriseIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -232,6 +240,13 @@ declare module '@tanstack/react-router' {
       path: '/timeline'
       fullPath: '/timeline'
       preLoaderRoute: typeof TimelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/surprise': {
+      id: '/surprise'
+      path: '/surprise'
+      fullPath: '/surprise'
+      preLoaderRoute: typeof SurpriseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/stats': {
@@ -313,27 +328,43 @@ declare module '@tanstack/react-router' {
     }
     '/surprise/': {
       id: '/surprise/'
-      path: '/surprise'
+      path: '/'
       fullPath: '/surprise/'
       preLoaderRoute: typeof SurpriseIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SurpriseRoute
     }
     '/surprise/quiz': {
       id: '/surprise/quiz'
-      path: '/surprise/quiz'
+      path: '/quiz'
       fullPath: '/surprise/quiz'
       preLoaderRoute: typeof SurpriseQuizRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SurpriseRoute
     }
     '/surprise/plan': {
       id: '/surprise/plan'
-      path: '/surprise/plan'
+      path: '/plan'
       fullPath: '/surprise/plan'
       preLoaderRoute: typeof SurprisePlanRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SurpriseRoute
     }
   }
 }
+
+interface SurpriseRouteChildren {
+  SurprisePlanRoute: typeof SurprisePlanRoute
+  SurpriseQuizRoute: typeof SurpriseQuizRoute
+  SurpriseIndexRoute: typeof SurpriseIndexRoute
+}
+
+const SurpriseRouteChildren: SurpriseRouteChildren = {
+  SurprisePlanRoute: SurprisePlanRoute,
+  SurpriseQuizRoute: SurpriseQuizRoute,
+  SurpriseIndexRoute: SurpriseIndexRoute,
+}
+
+const SurpriseRouteWithChildren = SurpriseRoute._addFileChildren(
+  SurpriseRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -347,21 +378,9 @@ const rootRouteChildren: RootRouteChildren = {
   MilestonesRoute: MilestonesRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
+  SurpriseRoute: SurpriseRouteWithChildren,
   TimelineRoute: TimelineRoute,
-  SurprisePlanRoute: SurprisePlanRoute,
-  SurpriseQuizRoute: SurpriseQuizRoute,
-  SurpriseIndexRoute: SurpriseIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
