@@ -11,15 +11,22 @@ export const Route = createFileRoute("/surprise/quiz")({
   component: QuizPage,
 });
 
-type Partial = Partial<SurpriseAnswers>;
+type AnswersDraft = Partial<SurpriseAnswers>;
 
 const STORAGE_KEY = "ml.surprise.answers";
+
+type Step = {
+  key: keyof SurpriseAnswers;
+  q: string;
+  options: [string, string][];
+  multi?: boolean;
+};
 
 function QuizPage() {
   const { hasSurprise } = useAccess();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<Partial>({ likes: [] });
+  const [answers, setAnswers] = useState<AnswersDraft>({ likes: [] });
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {

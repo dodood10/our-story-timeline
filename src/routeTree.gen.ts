@@ -17,8 +17,13 @@ import { Route as MapRouteImport } from './routes/map'
 import { Route as LettersRouteImport } from './routes/letters'
 import { Route as GiftIdeasRouteImport } from './routes/gift-ideas'
 import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as DevUnlockRouteImport } from './routes/dev-unlock'
 import { Route as BucketListRouteImport } from './routes/bucket-list'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SurpriseIndexRouteImport } from './routes/surprise.index'
+import { Route as SurpriseQuizRouteImport } from './routes/surprise.quiz'
+import { Route as SurprisePlanRouteImport } from './routes/surprise.plan'
 
 const TimelineRoute = TimelineRouteImport.update({
   id: '/timeline',
@@ -60,9 +65,19 @@ const GalleryRoute = GalleryRouteImport.update({
   path: '/gallery',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevUnlockRoute = DevUnlockRouteImport.update({
+  id: '/dev-unlock',
+  path: '/dev-unlock',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BucketListRoute = BucketListRouteImport.update({
   id: '/bucket-list',
   path: '/bucket-list',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -70,10 +85,27 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SurpriseIndexRoute = SurpriseIndexRouteImport.update({
+  id: '/surprise/',
+  path: '/surprise/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SurpriseQuizRoute = SurpriseQuizRouteImport.update({
+  id: '/surprise/quiz',
+  path: '/surprise/quiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SurprisePlanRoute = SurprisePlanRouteImport.update({
+  id: '/surprise/plan',
+  path: '/surprise/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
   '/bucket-list': typeof BucketListRoute
+  '/dev-unlock': typeof DevUnlockRoute
   '/gallery': typeof GalleryRoute
   '/gift-ideas': typeof GiftIdeasRoute
   '/letters': typeof LettersRoute
@@ -82,10 +114,15 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/timeline': typeof TimelineRoute
+  '/surprise/plan': typeof SurprisePlanRoute
+  '/surprise/quiz': typeof SurpriseQuizRoute
+  '/surprise/': typeof SurpriseIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
   '/bucket-list': typeof BucketListRoute
+  '/dev-unlock': typeof DevUnlockRoute
   '/gallery': typeof GalleryRoute
   '/gift-ideas': typeof GiftIdeasRoute
   '/letters': typeof LettersRoute
@@ -94,11 +131,16 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/timeline': typeof TimelineRoute
+  '/surprise/plan': typeof SurprisePlanRoute
+  '/surprise/quiz': typeof SurpriseQuizRoute
+  '/surprise': typeof SurpriseIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
   '/bucket-list': typeof BucketListRoute
+  '/dev-unlock': typeof DevUnlockRoute
   '/gallery': typeof GalleryRoute
   '/gift-ideas': typeof GiftIdeasRoute
   '/letters': typeof LettersRoute
@@ -107,12 +149,17 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/timeline': typeof TimelineRoute
+  '/surprise/plan': typeof SurprisePlanRoute
+  '/surprise/quiz': typeof SurpriseQuizRoute
+  '/surprise/': typeof SurpriseIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/app'
     | '/bucket-list'
+    | '/dev-unlock'
     | '/gallery'
     | '/gift-ideas'
     | '/letters'
@@ -121,10 +168,15 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stats'
     | '/timeline'
+    | '/surprise/plan'
+    | '/surprise/quiz'
+    | '/surprise/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/app'
     | '/bucket-list'
+    | '/dev-unlock'
     | '/gallery'
     | '/gift-ideas'
     | '/letters'
@@ -133,10 +185,15 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stats'
     | '/timeline'
+    | '/surprise/plan'
+    | '/surprise/quiz'
+    | '/surprise'
   id:
     | '__root__'
     | '/'
+    | '/app'
     | '/bucket-list'
+    | '/dev-unlock'
     | '/gallery'
     | '/gift-ideas'
     | '/letters'
@@ -145,11 +202,16 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stats'
     | '/timeline'
+    | '/surprise/plan'
+    | '/surprise/quiz'
+    | '/surprise/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRoute
   BucketListRoute: typeof BucketListRoute
+  DevUnlockRoute: typeof DevUnlockRoute
   GalleryRoute: typeof GalleryRoute
   GiftIdeasRoute: typeof GiftIdeasRoute
   LettersRoute: typeof LettersRoute
@@ -158,6 +220,9 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
   TimelineRoute: typeof TimelineRoute
+  SurprisePlanRoute: typeof SurprisePlanRoute
+  SurpriseQuizRoute: typeof SurpriseQuizRoute
+  SurpriseIndexRoute: typeof SurpriseIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -218,11 +283,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GalleryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev-unlock': {
+      id: '/dev-unlock'
+      path: '/dev-unlock'
+      fullPath: '/dev-unlock'
+      preLoaderRoute: typeof DevUnlockRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/bucket-list': {
       id: '/bucket-list'
       path: '/bucket-list'
       fullPath: '/bucket-list'
       preLoaderRoute: typeof BucketListRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -232,12 +311,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/surprise/': {
+      id: '/surprise/'
+      path: '/surprise'
+      fullPath: '/surprise/'
+      preLoaderRoute: typeof SurpriseIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/surprise/quiz': {
+      id: '/surprise/quiz'
+      path: '/surprise/quiz'
+      fullPath: '/surprise/quiz'
+      preLoaderRoute: typeof SurpriseQuizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/surprise/plan': {
+      id: '/surprise/plan'
+      path: '/surprise/plan'
+      fullPath: '/surprise/plan'
+      preLoaderRoute: typeof SurprisePlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRoute,
   BucketListRoute: BucketListRoute,
+  DevUnlockRoute: DevUnlockRoute,
   GalleryRoute: GalleryRoute,
   GiftIdeasRoute: GiftIdeasRoute,
   LettersRoute: LettersRoute,
@@ -246,6 +348,9 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
   TimelineRoute: TimelineRoute,
+  SurprisePlanRoute: SurprisePlanRoute,
+  SurpriseQuizRoute: SurpriseQuizRoute,
+  SurpriseIndexRoute: SurpriseIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
