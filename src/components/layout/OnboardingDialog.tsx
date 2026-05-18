@@ -6,29 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Heart, Camera, Calendar } from "lucide-react";
 import { useApp } from "@/hooks/useApp";
-import { compressImage } from "@/lib/storage";
 import type { RelationshipStatus } from "@/lib/types";
 import { toast } from "sonner";
+import { useCouplePhoto } from "@/hooks/useCouplePhoto";
 
 export function OnboardingDialog({ open }: { open: boolean }) {
-  const { setCouple, setOnboarded, resetSeed } = useApp();
+  const { setCouple, setOnboarded, resetSeed, memories, bucket, letters } = useApp();
   const [step, setStep] = useState(0);
   const [name1, setName1] = useState("");
   const [name2, setName2] = useState("");
-  const [photo, setPhoto] = useState<string | undefined>();
+  const { photo, onPhotoChange } = useCouplePhoto();
   const [startDate, setStartDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [status, setStatus] = useState<RelationshipStatus>("dating");
-
-  async function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    try {
-      const compressed = await compressImage(f, 800, 0.85);
-      setPhoto(compressed);
-    } catch {
-      toast.error("Não consegui processar a foto");
-    }
-  }
 
   function finish() {
     if (!name1.trim() || !name2.trim()) {
@@ -43,7 +32,9 @@ export function OnboardingDialog({ open }: { open: boolean }) {
       status,
       createdAt: new Date().toISOString(),
     });
-    resetSeed();
+    if (memories.length === 0 && bucket.length === 0 && letters.length === 0) {
+      resetSeed();
+    }
     setOnboarded(true);
     toast.success("Bem-vindos ao Memory Lane 💕");
   }
@@ -91,7 +82,7 @@ export function OnboardingDialog({ open }: { open: boolean }) {
                   <span className="text-sm">Clique para enviar uma foto</span>
                 </div>
               )}
-              <input type="file" accept="image/*" className="hidden" onChange={onPhoto} />
+              <input type="file" accept="image/*" className="hidden" onChange={onPhotoChange} />
             </label>
             <div className="flex justify-between gap-2 pt-2">
               <Button variant="ghost" onClick={() => setStep(0)}>Voltar</Button>

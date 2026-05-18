@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useApp } from "@/hooks/useApp";
 import { upcomingMilestones, formatDatePT } from "@/lib/dates";
 import { Heart, Sparkles } from "lucide-react";
@@ -81,15 +81,19 @@ function DashboardHome() {
           <h2 className="font-display text-xl mb-3">Memórias recentes</h2>
           <div className="space-y-2">
             {recent.map((m) => (
-              <div key={m.id} className="rounded-xl bg-card p-3 border border-border flex items-center gap-3 transition hover:shadow-card">
+              <Link
+                key={m.id}
+                to="/timeline"
+                className="rounded-xl bg-card p-3 border border-border flex items-center gap-3 transition hover:shadow-card hover:border-primary/30"
+              >
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-xl overflow-hidden">
-                  {m.photos[0] ? <Photo src={m.photos[0]} alt="" className="h-full w-full object-cover" /> : "💞"}
+                  {m.photos[0] ? <Photo src={m.photos[0]} alt={m.title} className="h-full w-full object-cover" /> : "💞"}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{m.title}</p>
                   <p className="text-xs text-muted-foreground">{formatDatePT(m.date)}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

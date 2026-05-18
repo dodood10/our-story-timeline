@@ -1,6 +1,6 @@
 /** JSON backup/restore: bundles localStorage data + all IDB photos. */
 import { STORAGE_KEYS } from "./storage";
-import { listPhotoRefs, resolvePhoto, savePhotoDataUrl } from "./photos";
+import { gcPhotos, listPhotoRefs, resolvePhoto, savePhotoDataUrl } from "./photos";
 
 export interface BackupBundle {
   version: 1;
@@ -9,6 +9,9 @@ export interface BackupBundle {
   /** ref -> data URL */
   photos: Record<string, string>;
 }
+
+/** Recursive JSON-safe value type used by the remap traversal. */
+type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
 
 export async function exportBackup(): Promise<BackupBundle> {
   const data: Record<string, unknown> = {};
@@ -25,7 +28,12 @@ export async function exportBackup(): Promise<BackupBundle> {
   const refs = await listPhotoRefs();
   const photos: Record<string, string> = {};
   for (const ref of refs) {
-    photos[ref] = await resolvePhoto(ref);
+    try {
+      const resolved = await resolvePhoto(ref);
+      if (resolved) photos[ref] = resolved;
+    } catch {
+      // Skip unresolvable photos — memory data is still exported.
+    }
   }
   return {
     version: 1,
@@ -54,23 +62,40 @@ export async function importBackup(bundle: BackupBundle): Promise<void> {
 
   // Remap photo refs to fresh keys to avoid collisions with existing data.
   const refMap = new Map<string, string>();
+  let photosFailed = 0;
   for (const [oldRef, dataUrl] of Object.entries(bundle.photos ?? {})) {
-    const newRef = await savePhotoDataUrl(dataUrl);
-    refMap.set(oldRef, newRef);
+    try {
+      const newRef = await savePhotoDataUrl(dataUrl);
+      refMap.set(oldRef, newRef);
+    } catch {
+      photosFailed++;
+    }
+  }
+  if (photosFailed > 0) {
+    console.warn(`[backup] ${photosFailed} foto(s) não puderam ser importadas por falta de espaço`);
   }
 
-  function remap<T>(value: T): T {
-    if (typeof value === "string" && refMap.has(value)) return refMap.get(value) as unknown as T;
-    if (Array.isArray(value)) return value.map(remap) as unknown as T;
-    if (value && typeof value === "object") {
-      const out: Record<string, unknown> = {};
+  function remap(value: JSONValue): JSONValue {
+    if (typeof value === "string") return refMap.get(value) ?? value;
+    if (Array.isArray(value)) return value.map(remap);
+    if (value !== null && typeof value === "object") {
+      const out: Record<string, JSONValue> = {};
       for (const [k, v] of Object.entries(value)) out[k] = remap(v);
-      return out as unknown as T;
+      return out;
     }
     return value;
   }
 
   for (const [key, value] of Object.entries(bundle.data ?? {})) {
-    localStorage.setItem(key, JSON.stringify(remap(value)));
+    localStorage.setItem(key, JSON.stringify(remap(value as JSONValue)));
   }
+
+  const used = new Set<string>();
+  for (const key of Object.values(STORAGE_KEYS)) {
+    const raw = localStorage.getItem(key) ?? "";
+    for (const match of raw.matchAll(/idb:[a-z0-9-]+/gi)) {
+      used.add(match[0]);
+    }
+  }
+  await gcPhotos(used);
 }

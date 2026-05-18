@@ -48,6 +48,7 @@ export function LetterFormDialog({
 
   function seal() {
     if (!title.trim() || !message.trim()) return toast.error("Preencha título e mensagem");
+    if (!unlockDate) return toast.error("Defina uma data para lacrar a carta");
     setConfirmSeal(true);
   }
 

@@ -4,6 +4,7 @@ import { useApp } from "@/hooks/useApp";
 import { Lightbox } from "@/components/gallery/Lightbox";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/common/PageHeader";
 import { Image as ImageIcon, Play } from "lucide-react";
 import { formatDatePT } from "@/lib/dates";
 import { parseISO } from "date-fns";
@@ -19,9 +20,12 @@ export const Route = createFileRoute("/gallery")({
   component: GalleryPage,
 });
 
+const PAGE_SIZE = 24;
+
 function GalleryPage() {
   const { memories } = useApp();
   const [lightbox, setLightbox] = useState<{ index: number; slideshow?: boolean } | null>(null);
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   const allPhotos = useMemo(() => {
     return memories
@@ -34,19 +38,17 @@ function GalleryPage() {
 
   return (
     <div className="px-4 sm:px-8 py-8 max-w-6xl mx-auto">
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl sm:text-4xl flex items-center gap-2">
-            <ImageIcon className="h-7 w-7 text-primary" /> Galeria
-          </h1>
-          <p className="text-muted-foreground mt-1">{allPhotos.length} fotos guardadas</p>
-        </div>
-        {allPhotos.length > 0 && (
+      <PageHeader
+        icon={ImageIcon}
+        title="Galeria"
+        subtitle={`${allPhotos.length} fotos guardadas`}
+        className="mb-6"
+        action={allPhotos.length > 0 ? (
           <Button onClick={() => setLightbox({ index: 0, slideshow: true })}>
             <Play className="h-4 w-4 mr-1.5" /> Slideshow
           </Button>
-        )}
-      </header>
+        ) : undefined}
+      />
 
       {allPhotos.length === 0 ? (
         <EmptyState
@@ -54,10 +56,13 @@ function GalleryPage() {
           description="Adicione fotos nas memórias para vê-las aqui."
         />
       ) : (
+        <>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {allPhotos.map((p, i) => (
+          {allPhotos.slice(0, visible).map((p, i) => (
             <button
               key={i}
+              type="button"
+              aria-label={p.title ? `Abrir ${p.title}` : `Abrir foto ${i + 1}`}
               onClick={() => setLightbox({ index: i })}
               className="relative aspect-square overflow-hidden rounded-xl bg-muted group"
             >
@@ -68,6 +73,14 @@ function GalleryPage() {
             </button>
           ))}
         </div>
+        {visible < allPhotos.length && (
+          <div className="mt-6 flex justify-center">
+            <Button variant="outline" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
+              Carregar mais ({allPhotos.length - visible} restantes)
+            </Button>
+          </div>
+        )}
+        </>
       )}
 
       {lightbox && (

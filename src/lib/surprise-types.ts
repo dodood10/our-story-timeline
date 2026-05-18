@@ -14,6 +14,9 @@ export const SurpriseAnswersSchema = z.object({
 
 export type SurpriseAnswers = z.infer<typeof SurpriseAnswersSchema>;
 
+/** Plan generation tier — subset of SurpriseTier that excludes "none". */
+export type PlanTier = SurpriseAnswers["tier"];
+
 export const SurprisePlanSchema = z.object({
   title: z.string(),
   concept: z.string(),

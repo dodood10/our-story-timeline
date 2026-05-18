@@ -3,6 +3,7 @@ import { useApp } from "@/hooks/useApp";
 import { computeBadges } from "@/lib/badges";
 import { Trophy } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { PageHeader } from "@/components/common/PageHeader";
 
 export const Route = createFileRoute("/milestones")({
   head: () => ({
@@ -21,14 +22,12 @@ function MilestonesPage() {
 
   return (
     <div className="px-4 sm:px-8 py-8 max-w-4xl mx-auto">
-      <header className="mb-6">
-        <h1 className="font-display text-3xl sm:text-4xl flex items-center gap-2">
-          <Trophy className="h-7 w-7 text-primary" /> Conquistas
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {badges.filter((b) => b.unlocked).length} de {badges.length} desbloqueadas
-        </p>
-      </header>
+      <PageHeader
+        icon={Trophy}
+        title="Conquistas"
+        subtitle={`${badges.filter((b) => b.unlocked).length} de ${badges.length} desbloqueadas`}
+        className="mb-6"
+      />
 
       {next && next.progress && (
         <div className="rounded-2xl bg-gradient-romantic p-5 mb-6 shadow-soft">

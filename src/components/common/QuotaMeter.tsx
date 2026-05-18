@@ -1,15 +1,25 @@
 import { useEffect, useState } from "react";
 import { storageEstimate } from "@/lib/photos";
+import { estimateStorageBytes } from "@/lib/storage";
 import { HardDrive } from "lucide-react";
 
 export function QuotaMeter() {
   const [info, setInfo] = useState<{ used: number; quota: number } | null>(null);
 
   useEffect(() => {
-    storageEstimate().then(setInfo);
+    storageEstimate()
+      .then((e) => {
+        if (e?.quota) { setInfo(e); return; }
+        const used = estimateStorageBytes();
+        setInfo({ used, quota: Math.max(used * 2, 5 * 1024 * 1024) });
+      })
+      .catch(() => {
+        const used = estimateStorageBytes();
+        setInfo({ used, quota: Math.max(used * 2, 5 * 1024 * 1024) });
+      });
   }, []);
 
-  if (!info || !info.quota) return null;
+  if (!info) return null;
   const usedMb = info.used / 1024 / 1024;
   const quotaMb = info.quota / 1024 / 1024;
   const pct = Math.min(100, (info.used / info.quota) * 100);

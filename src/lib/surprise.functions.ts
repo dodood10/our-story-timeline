@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway";
 import { SurpriseAnswersSchema, SurprisePlanSchema, LABELS, type SurpriseAnswers } from "./surprise-types";
+import { checkSurpriseRateLimit, clientKeyFromRequest } from "./surprise-rate-limit";
 
 function buildPrompt(a: SurpriseAnswers) {
   const likes = a.likes.map((k) => LABELS.likes[k]).join(", ");
@@ -24,11 +26,23 @@ Regras importantes:
 - O título deve ser cativante (5-8 palavras).`;
 }
 
+function mapAiError(err: unknown): Error {
+  const e = err as { statusCode?: number; status?: number; message?: string };
+  const status = e?.statusCode ?? e?.status;
+  if (status === 429) return new Error("Muitas requisições. Tente novamente em alguns segundos.");
+  if (status === 402) return new Error("Créditos de IA esgotados. Adicione créditos no workspace.");
+  if (status === 401 || status === 403) return new Error("Serviço de IA indisponível. Tente mais tarde.");
+  return new Error("Falha ao gerar o plano. Tente novamente.");
+}
+
 export const generateSurprisePlan = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => SurpriseAnswersSchema.parse(data))
   .handler(async ({ data }) => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY não configurado");
+
+    const request = getRequest();
+    checkSurpriseRateLimit(clientKeyFromRequest(request));
 
     const gateway = createLovableAiGatewayProvider(key);
     const model = gateway("google/gemini-3-flash-preview");
@@ -41,10 +55,6 @@ export const generateSurprisePlan = createServerFn({ method: "POST" })
       });
       return object;
     } catch (err: unknown) {
-      const e = err as { statusCode?: number; status?: number; message?: string };
-      const status = e?.statusCode ?? e?.status;
-      if (status === 429) throw new Error("Muitas requisições. Tente novamente em alguns segundos.");
-      if (status === 402) throw new Error("Créditos de IA esgotados. Adicione créditos no workspace.");
-      throw new Error(e?.message ?? "Falha ao gerar o plano. Tente novamente.");
+      throw mapAiError(err);
     }
   });

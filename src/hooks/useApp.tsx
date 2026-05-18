@@ -3,6 +3,7 @@ import { useLocalStorage } from "./useLocalStorage";
 import { STORAGE_KEYS, uid } from "@/lib/storage";
 import type { Couple, Memory, BucketItem, Letter, Settings, Theme } from "@/lib/types";
 import { seedBucket, seedLetters, seedMemories } from "@/lib/seed";
+import { deletePhoto, isPhotoRef } from "@/lib/photos";
 
 interface AppState {
   hydrated: boolean;
@@ -36,6 +37,7 @@ interface AppState {
   settings: Settings;
   setTheme: (t: Theme) => void;
   setNotifications: (v: boolean) => void;
+  setSyncCode: (code: string) => void;
   // util
   resetSeed: () => void;
 }
@@ -75,7 +77,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [setMemories]);
 
   const deleteMemory = useCallback((id: string) => {
-    setMemories((prev) => prev.filter((m) => m.id !== id));
+    setMemories((prev) => {
+      const target = prev.find((m) => m.id === id);
+      if (target) {
+        for (const ref of target.photos) {
+          if (isPhotoRef(ref)) deletePhoto(ref).catch(() => { /* orphan photo, not critical */ });
+        }
+      }
+      return prev.filter((m) => m.id !== id);
+    });
   }, [setMemories]);
 
   const toggleFavoriteMemory = useCallback((id: string) => {
@@ -128,6 +138,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setTheme = useCallback((t: Theme) => setSettings((s) => ({ ...s, theme: t })), [setSettings]);
   const setNotifications = useCallback((v: boolean) => setSettings((s) => ({ ...s, notifications: v })), [setSettings]);
+  const setSyncCode = useCallback((code: string) => setSettings((s) => ({ ...s, syncCode: code })), [setSettings]);
 
   const resetSeed = useCallback(() => {
     setMemories(seedMemories());
@@ -161,9 +172,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       settings,
       setTheme,
       setNotifications,
+      setSyncCode,
       resetSeed,
     }),
-    [hydrated, couple, setCouple, onboarded, setOnboarded, memories, addMemory, updateMemory, deleteMemory, toggleFavoriteMemory, bucket, addBucket, toggleBucket, deleteBucket, letters, addLetter, sealLetter, openLetter, deleteLetter, giftFavorites, toggleGiftFavorite, settings, setTheme, setNotifications, resetSeed],
+    [hydrated, couple, setCouple, onboarded, setOnboarded, memories, addMemory, updateMemory, deleteMemory, toggleFavoriteMemory, bucket, addBucket, toggleBucket, deleteBucket, letters, addLetter, sealLetter, openLetter, deleteLetter, giftFavorites, toggleGiftFavorite, settings, setTheme, setNotifications, setSyncCode, resetSeed],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -1,25 +1,71 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { z } from "zod";
+import { toast } from "sonner";
 import { useAccess } from "@/hooks/useAccess";
 import { Button } from "@/components/ui/button";
-import { Heart, Sparkles, CheckCircle2, ArrowRight, ShieldCheck } from "lucide-react";
+import { UrgencyBar } from "@/components/checkout/UrgencyBar";
+import { ProductSummaryColumn } from "@/components/checkout/ProductSummaryColumn";
+import { CheckoutFormColumn } from "@/components/checkout/CheckoutFormColumn";
+import { OrderSummary } from "@/components/checkout/OrderSummary";
+import { TrustFooter } from "@/components/checkout/TrustFooter";
+import {
+  calcTotalCents,
+  getCheckoutProduct,
+  type CheckoutProductId,
+  type PaymentMethod,
+} from "@/lib/checkout-products";
+import {
+  persistCheckoutDraft,
+  readCheckoutBumps,
+  readCheckoutLead,
+  setBump,
+  submitCheckoutMock,
+  type CheckoutLead,
+} from "@/lib/checkout-storage";
+import { CheckCircle2, ArrowRight, Heart, Loader2 } from "lucide-react";
 
-export const Route = createFileRoute("/surprise/")({
-  head: () => ({
-    meta: [
-      { title: "Comprar Surpresa Romântica" },
-      { name: "description", content: "Adquira seu plano e gere a sua surpresa em minutos." },
-    ],
-  }),
-  component: SurpriseIntro,
+const checkoutSearchSchema = z.object({
+  plan: z.enum(["premium", "basic"]).optional(),
 });
 
-function SurpriseIntro() {
-  const { surprise, setSurprise } = useAccess();
+export const Route = createFileRoute("/surprise/")({
+  validateSearch: (search) => checkoutSearchSchema.parse(search),
+  head: () => ({
+    meta: [
+      {
+        title: "Finalize sua compra — Minha Noite Romântica Premium",
+      },
+      {
+        name: "description",
+        content: "Complete seus dados e libere o gerador de surpresa personalizada.",
+      },
+    ],
+  }),
+  component: SurpriseCheckout,
+});
+
+function SurpriseCheckout() {
+  const { plan } = Route.useSearch();
+  const productId: CheckoutProductId = plan ?? "premium";
+  const product = getCheckoutProduct(productId);
+  const { surprise, setSurprise, hydrated } = useAccess();
   const navigate = useNavigate();
 
-  function purchase(tier: "basic" | "premium") {
-    setSurprise(tier);
-    navigate({ to: "/surprise/quiz" });
+  const [bumps, setBumps] = useState(readCheckoutBumps);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("pix");
+  const [pixOpen, setPixOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const totalCents = calcTotalCents(product, bumps);
+  const defaultLead = readCheckoutLead();
+
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+      </div>
+    );
   }
 
   if (surprise === "basic" || surprise === "premium") {
@@ -29,10 +75,13 @@ function SurpriseIntro() {
           <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
           <h1 className="font-display text-3xl mt-4">Tudo pronto!</h1>
           <p className="text-muted-foreground mt-2">
-            Você já tem acesso ao plano <strong>{surprise === "premium" ? "Premium" : "Básico"}</strong>. Bora gerar a surpresa?
+            Você já tem acesso ao plano{" "}
+            <strong>{surprise === "premium" ? "Premium" : "Básico"}</strong>. Bora gerar a surpresa?
           </p>
           <Button asChild size="lg" className="w-full mt-6">
-            <Link to="/surprise/quiz">Começar o quiz <ArrowRight className="h-4 w-4 ml-1" /></Link>
+            <Link to="/surprise/quiz">
+              Começar o quiz <ArrowRight className="h-4 w-4 ml-1" />
+            </Link>
           </Button>
           <Button asChild variant="ghost" className="w-full mt-2">
             <Link to="/">Voltar ao início</Link>
@@ -42,91 +91,76 @@ function SurpriseIntro() {
     );
   }
 
+  function handleBumpChange(id: keyof typeof bumps, value: boolean) {
+    setBumps((prev) => {
+      const next = { ...prev, [id]: value };
+      setBump(id, value);
+      return next;
+    });
+  }
+
+  function completeCheckout(lead: CheckoutLead) {
+    setSubmitting(true);
+    try {
+      persistCheckoutDraft(lead, bumps, productId);
+      submitCheckoutMock();
+      setSurprise(product.tier);
+      toast.success("Pagamento confirmado! Seu acesso foi liberado.");
+      navigate({ to: "/surprise/upsell" });
+    } finally {
+      setSubmitting(false);
+      setPixOpen(false);
+    }
+  }
+
   return (
-    <div className="min-h-screen px-4 py-12 bg-gradient-soft">
-      <div className="max-w-3xl mx-auto">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition">
+    <div className="min-h-screen bg-gradient-soft flex flex-col">
+      <UrgencyBar product={product} />
+
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8 sm:py-10">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition"
+        >
           <Heart className="h-4 w-4 text-primary" /> Surpresa Romântica
         </Link>
 
-        <div className="mt-8 text-center">
-          <h1 className="font-display text-3xl sm:text-4xl">Escolha seu plano</h1>
-          <p className="text-muted-foreground mt-3">Pagamento único. Acesso imediato.</p>
-        </div>
+        <p className="mt-4 text-sm text-muted-foreground max-w-xl">{product.subtitle}</p>
 
-        <div className="mt-10 grid md:grid-cols-2 gap-5">
-          <PlanCard
-            name="Básico"
-            price="10"
-            features={["Gerador personalizado", "Decoração por ambiente", "Lista de compras", "Roteiro simples"]}
-            onSelect={() => purchase("basic")}
+        <div className="mt-8 flex flex-col gap-8 lg:grid lg:grid-cols-2 lg:gap-10 lg:items-start">
+          <OrderSummary
+            product={product}
+            bumps={bumps}
+            totalCents={totalCents}
+            compact
+            className="lg:hidden"
           />
-          <PlanCard
-            name="Premium"
-            price="19,90"
-            highlight
-            badge="Mais escolhido"
-            features={[
-              "Tudo do Básico, mais:",
-              "Frases românticas",
-              "Ideias de jantar",
-              "Plano emergência 1h",
-              "Checklist completo",
-              "Exportação em PDF",
-            ]}
-            onSelect={() => purchase("premium")}
-          />
+
+          <ProductSummaryColumn product={product} />
+
+          <div className="space-y-6">
+            <OrderSummary
+              product={product}
+              bumps={bumps}
+              totalCents={totalCents}
+              className="hidden lg:block"
+            />
+            <CheckoutFormColumn
+              bumps={bumps}
+              onBumpChange={handleBumpChange}
+              paymentMethod={paymentMethod}
+              onPaymentMethodChange={setPaymentMethod}
+              defaultLead={defaultLead}
+              pixDialogOpen={pixOpen}
+              onPixDialogOpenChange={setPixOpen}
+              onSubmit={completeCheckout}
+              submitting={submitting}
+            />
+          </div>
         </div>
+      </main>
 
-        <p className="mt-8 text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-          <ShieldCheck className="h-3.5 w-3.5" /> Pagamento simulado (modo de teste). Em breve com Stripe/Mercado Pago.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function PlanCard({
-  name,
-  price,
-  features,
-  highlight,
-  badge,
-  onSelect,
-}: {
-  name: string;
-  price: string;
-  features: string[];
-  highlight?: boolean;
-  badge?: string;
-  onSelect: () => void;
-}) {
-  return (
-    <div className={`relative rounded-3xl p-7 border bg-card ${highlight ? "border-primary shadow-soft scale-[1.02]" : "border-border"}`}>
-      {badge && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full bg-primary text-primary-foreground font-medium">
-          {badge}
-        </span>
-      )}
-      <div className="flex items-center gap-2">
-        {highlight && <Sparkles className="h-4 w-4 text-primary" />}
-        <p className="font-display text-2xl">{name}</p>
-      </div>
-      <p className="mt-3">
-        <span className="font-display text-5xl">R${price}</span>
-        <span className="text-sm text-muted-foreground ml-1">/ único</span>
-      </p>
-      <ul className="mt-6 space-y-2.5">
-        {features.map((f) => (
-          <li key={f} className="flex gap-2 text-sm">
-            <CheckCircle2 className={`h-4 w-4 shrink-0 mt-0.5 ${highlight ? "text-primary" : "text-muted-foreground"}`} />
-            <span>{f}</span>
-          </li>
-        ))}
-      </ul>
-      <Button className="w-full mt-7" variant={highlight ? "default" : "outline"} onClick={onSelect}>
-        Quero o {name}
-      </Button>
+      <TrustFooter />
     </div>
   );
 }

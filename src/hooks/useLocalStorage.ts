@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+
+function notifyStorageError() {
+  toast.error("Não foi possível salvar no dispositivo. Libere espaço e tente de novo.");
+}
 
 export function useLocalStorage<T>(key: string, initial: T) {
   const [value, setValue] = useState<T>(initial);
@@ -9,7 +14,7 @@ export function useLocalStorage<T>(key: string, initial: T) {
       const raw = typeof window !== "undefined" ? window.localStorage.getItem(key) : null;
       if (raw != null) setValue(JSON.parse(raw) as T);
     } catch {
-      /* ignore */
+      /* ignore corrupt read */
     }
     setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -20,11 +25,10 @@ export function useLocalStorage<T>(key: string, initial: T) {
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
     } catch {
-      /* quota or serialization error */
+      notifyStorageError();
     }
   }, [key, value, hydrated]);
 
-  // cross-tab sync
   useEffect(() => {
     function onStorage(e: StorageEvent) {
       if (e.key !== key || e.newValue == null) return;

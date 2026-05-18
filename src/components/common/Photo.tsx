@@ -12,9 +12,9 @@ export function Photo({ src, fallback, ...rest }: Props) {
   useEffect(() => {
     let alive = true;
     if (isPhotoRef(src)) {
-      resolvePhoto(src).then((url) => {
-        if (alive) setResolved(url);
-      });
+      resolvePhoto(src)
+        .then((url) => { if (alive) setResolved(url); })
+        .catch(() => { if (alive) setResolved(""); });
     } else {
       setResolved(src);
     }
@@ -32,5 +32,5 @@ export function Photo({ src, fallback, ...rest }: Props) {
       />
     );
   }
-  return <img {...rest} src={resolved || fallback} />;
+  return <img width={1} height={1} {...rest} src={resolved || fallback} />;
 }

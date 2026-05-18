@@ -20,6 +20,9 @@ export const EMOTIONS: { id: Emotion; emoji: string; label: string }[] = [
   { id: "dinner", emoji: "🍽️", label: "Jantar" },
 ];
 
+/** GPS coordinate pair [latitude, longitude]. */
+export type Coords = [number, number];
+
 export interface Memory {
   id: string;
   title: string;
@@ -29,8 +32,8 @@ export interface Memory {
   photos: string[];
   emotion: Emotion;
   location?: string;
-  /** Optional GPS coordinates [lat, lng] for map view. */
-  coords?: [number, number];
+  /** Optional GPS coordinates for map view. */
+  coords?: Coords;
   /** Free-form tags chosen by the couple. */
   tags?: string[];
   favorite?: boolean;
@@ -75,17 +78,23 @@ export interface Settings {
   syncCode?: string;
 }
 
-export interface GiftQuizAnswers {
-  hobby: string;
-  style: "classic" | "modern" | "adventurous";
-  budget: "low" | "mid" | "high";
-}
+/** Visual style of a gift idea / quiz answer. */
+export type GiftStyle = "classic" | "modern" | "adventurous";
 
-export interface GiftIdea {
+/** Price tier for gift ideas. */
+export type GiftBudget = "low" | "mid" | "high";
+
+export type GiftQuizAnswers = {
+  hobby: string;
+  style: GiftStyle;
+  budget: GiftBudget;
+};
+
+export type GiftIdea = {
   id: string;
   name: string;
   why: string;
-  category: "classic" | "modern" | "adventurous";
-  budget: "low" | "mid" | "high";
+  category: GiftStyle;
+  budget: GiftBudget;
   hobbies: string[];
-}
+};

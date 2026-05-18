@@ -23,6 +23,7 @@ import { Route as BucketListRouteImport } from './routes/bucket-list'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SurpriseIndexRouteImport } from './routes/surprise.index'
+import { Route as SurpriseUpsellRouteImport } from './routes/surprise.upsell'
 import { Route as SurpriseQuizRouteImport } from './routes/surprise.quiz'
 import { Route as SurprisePlanRouteImport } from './routes/surprise.plan'
 
@@ -96,6 +97,11 @@ const SurpriseIndexRoute = SurpriseIndexRouteImport.update({
   path: '/',
   getParentRoute: () => SurpriseRoute,
 } as any)
+const SurpriseUpsellRoute = SurpriseUpsellRouteImport.update({
+  id: '/upsell',
+  path: '/upsell',
+  getParentRoute: () => SurpriseRoute,
+} as any)
 const SurpriseQuizRoute = SurpriseQuizRouteImport.update({
   id: '/quiz',
   path: '/quiz',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/timeline': typeof TimelineRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
+  '/surprise/upsell': typeof SurpriseUpsellRoute
   '/surprise/': typeof SurpriseIndexRoute
 }
 export interface FileRoutesByTo {
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/timeline': typeof TimelineRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
+  '/surprise/upsell': typeof SurpriseUpsellRoute
   '/surprise': typeof SurpriseIndexRoute
 }
 export interface FileRoutesById {
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/timeline': typeof TimelineRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
+  '/surprise/upsell': typeof SurpriseUpsellRoute
   '/surprise/': typeof SurpriseIndexRoute
 }
 export interface FileRouteTypes {
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/timeline'
     | '/surprise/plan'
     | '/surprise/quiz'
+    | '/surprise/upsell'
     | '/surprise/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/timeline'
     | '/surprise/plan'
     | '/surprise/quiz'
+    | '/surprise/upsell'
     | '/surprise'
   id:
     | '__root__'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/timeline'
     | '/surprise/plan'
     | '/surprise/quiz'
+    | '/surprise/upsell'
     | '/surprise/'
   fileRoutesById: FileRoutesById
 }
@@ -333,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SurpriseIndexRouteImport
       parentRoute: typeof SurpriseRoute
     }
+    '/surprise/upsell': {
+      id: '/surprise/upsell'
+      path: '/upsell'
+      fullPath: '/surprise/upsell'
+      preLoaderRoute: typeof SurpriseUpsellRouteImport
+      parentRoute: typeof SurpriseRoute
+    }
     '/surprise/quiz': {
       id: '/surprise/quiz'
       path: '/quiz'
@@ -353,12 +372,14 @@ declare module '@tanstack/react-router' {
 interface SurpriseRouteChildren {
   SurprisePlanRoute: typeof SurprisePlanRoute
   SurpriseQuizRoute: typeof SurpriseQuizRoute
+  SurpriseUpsellRoute: typeof SurpriseUpsellRoute
   SurpriseIndexRoute: typeof SurpriseIndexRoute
 }
 
 const SurpriseRouteChildren: SurpriseRouteChildren = {
   SurprisePlanRoute: SurprisePlanRoute,
   SurpriseQuizRoute: SurpriseQuizRoute,
+  SurpriseUpsellRoute: SurpriseUpsellRoute,
   SurpriseIndexRoute: SurpriseIndexRoute,
 }
 

@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Camera, X } from "lucide-react";
-import { savePhotoFile } from "@/lib/photos";
+import { deletePhoto, isPhotoRef, savePhotoFile } from "@/lib/photos";
 import { toast } from "sonner";
 import { Photo } from "@/components/common/Photo";
 
@@ -35,6 +35,8 @@ export function PhotoUploader({
   }
 
   function remove(i: number) {
+    const ref = photos[i];
+    if (ref && isPhotoRef(ref)) void deletePhoto(ref);
     onChange(photos.filter((_, idx) => idx !== i));
   }
 

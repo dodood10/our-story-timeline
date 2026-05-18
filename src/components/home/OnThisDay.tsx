@@ -5,16 +5,18 @@ import { Sparkles } from "lucide-react";
 import { Photo } from "@/components/common/Photo";
 import { motion } from "framer-motion";
 
+const TODAY = new Date();
+const TODAY_MMDD = format(TODAY, "MM-dd");
+const CURRENT_YEAR = TODAY.getFullYear();
+
 export function OnThisDay() {
   const { memories } = useApp();
-  const today = new Date();
-  const mmdd = format(today, "MM-dd");
 
   const matches = useMemo(() => {
     return memories
-      .filter((m) => format(parseISO(m.date), "MM-dd") === mmdd && parseISO(m.date).getFullYear() < today.getFullYear())
+      .filter((m) => format(parseISO(m.date), "MM-dd") === TODAY_MMDD && parseISO(m.date).getFullYear() < CURRENT_YEAR)
       .sort((a, b) => +parseISO(b.date) - +parseISO(a.date));
-  }, [memories, mmdd, today]);
+  }, [memories]);
 
   if (matches.length === 0) return null;
 
@@ -31,7 +33,7 @@ export function OnThisDay() {
       </div>
       <div className="space-y-2">
         {matches.map((m) => {
-          const yearsAgo = differenceInCalendarYears(today, parseISO(m.date));
+          const yearsAgo = differenceInCalendarYears(TODAY, parseISO(m.date));
           return (
             <div key={m.id} className="flex items-center gap-3 rounded-xl bg-card p-3 border border-border">
               <div className="h-12 w-12 rounded-full bg-primary/10 overflow-hidden shrink-0 flex items-center justify-center text-xl">

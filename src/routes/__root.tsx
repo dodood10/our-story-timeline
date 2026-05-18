@@ -21,6 +21,7 @@ import { MemoryFormDialog } from "@/components/memories/MemoryFormDialog";
 import { Toaster } from "@/components/ui/sonner";
 import { Heart, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 function NotFoundComponent() {
   return (
@@ -63,8 +64,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Surpresa Romântica — Plano personalizado para o Dia dos Namorados" },
-      { name: "description", content: "Quiz rápido + IA monta um plano completo de surpresa romântica em minutos: decoração, lista de compras, roteiro e frases." },
+      { title: "Memory Lane — História do casal" },
+      { name: "description", content: "Guarde memórias, cartas e momentos especiais. Surpresa romântica com plano personalizado por IA." },
       { property: "og:title", content: "Surpresa Romântica em Minutos" },
       { property: "og:description", content: "Monte uma surpresa inesquecível em casa, mesmo sem criatividade e gastando pouco." },
       { property: "og:type", content: "website" },
@@ -126,21 +127,19 @@ const MARKETING_PREFIXES = ["/", "/surprise", "/dev-unlock"];
 function LayoutSwitch() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isMarketing =
-    pathname === "/" ||
-    pathname.startsWith("/surprise") ||
-    pathname.startsWith("/dev-unlock");
+    MARKETING_PREFIXES.some((p) => (p === "/" ? pathname === "/" : pathname.startsWith(p)));
 
   if (isMarketing) {
     return (
       <div className="min-h-screen bg-background">
-        <Outlet />
+        <ErrorBoundary section="surprise">
+          <Outlet />
+        </ErrorBoundary>
       </div>
     );
   }
   return <AppShell />;
 }
-
-void MARKETING_PREFIXES;
 
 function AppShell() {
   const { hydrated, onboarded } = useApp();
@@ -163,9 +162,17 @@ function AppShell() {
 
   return (
     <div className="min-h-screen flex bg-background">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
+      >
+        Pular para o conteúdo
+      </a>
       <AppSidebar />
-      <main className="flex-1 min-w-0 pb-20 lg:pb-0">
-        <Outlet />
+      <main id="main-content" className="flex-1 min-w-0 pb-20 lg:pb-0">
+        <ErrorBoundary section="app">
+          <Outlet />
+        </ErrorBoundary>
       </main>
       <BottomBar />
       {!onboarded && <OnboardingDialog open />}
@@ -187,7 +194,7 @@ function FullAppPaywall() {
           Linha do tempo, galeria, cartas seladas, mapa e muito mais — o app inteiro para guardar a história de vocês.
         </p>
         <p className="text-sm text-muted-foreground mt-4">
-          Em breve disponível como plano. Por enquanto, comece pela surpresa do Dia dos Namorados.
+          O diário completo está em preview fechado. Por enquanto, monte sua surpresa romântica com o gerador — ou use o desbloqueio de desenvolvimento no ambiente local.
         </p>
         <div className="mt-6 flex flex-col gap-2">
           <Button asChild className="w-full">

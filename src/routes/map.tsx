@@ -4,10 +4,12 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useApp } from "@/hooks/useApp";
+import type { Coords } from "@/lib/types";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Map as MapIcon } from "lucide-react";
 import { formatDatePT } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/common/PageHeader";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/map")({
@@ -39,18 +41,18 @@ interface Pin {
 
 const COORDS_KEY = "ml.geocodedLocations";
 
-function loadCache(): Record<string, [number, number] | null> {
+function loadCache(): Record<string, Coords | null> {
   try {
     return JSON.parse(localStorage.getItem(COORDS_KEY) || "{}");
   } catch {
     return {};
   }
 }
-function saveCache(c: Record<string, [number, number] | null>) {
+function saveCache(c: Record<string, Coords | null>) {
   localStorage.setItem(COORDS_KEY, JSON.stringify(c));
 }
 
-async function geocode(query: string): Promise<[number, number] | null> {
+async function geocode(query: string): Promise<Coords | null> {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`,
@@ -68,7 +70,7 @@ function FitBounds({ pins }: { pins: Pin[] }) {
   const map = useMap();
   useEffect(() => {
     if (pins.length === 0) return;
-    const b = L.latLngBounds(pins.map((p) => [p.lat, p.lng] as [number, number]));
+    const b = L.latLngBounds(pins.map((p) => [p.lat, p.lng] as Coords));
     map.fitBounds(b, { padding: [40, 40], maxZoom: 12 });
   }, [pins, map]);
   return null;
@@ -87,73 +89,82 @@ function MapPage() {
     [memories],
   );
 
+  const locationKey = useMemo(
+    () => withLocation.map((m) => `${m.id}:${m.location ?? ""}:${m.coords?.join(",") ?? ""}`).join("|"),
+    [withLocation],
+  );
+
   useEffect(() => {
     let alive = true;
     (async () => {
-      setLoading(true);
-      const cache = loadCache();
-      const next: Pin[] = [];
-      for (const m of withLocation) {
-        let coords = m.coords;
-        if (!coords && m.location) {
-          const key = m.location.toLowerCase();
-          if (key in cache) {
-            coords = cache[key] ?? undefined;
-          } else {
-            await new Promise((r) => setTimeout(r, 1100)); // nominatim rate limit
-            const c = await geocode(m.location);
-            cache[key] = c;
-            saveCache(cache);
-            if (c) coords = c;
+      try {
+        setLoading(true);
+        const cache = loadCache();
+        const next: Pin[] = [];
+        for (const m of withLocation) {
+          let coords = m.coords;
+          if (!coords && m.location) {
+            const key = m.location.toLowerCase();
+            if (key in cache) {
+              coords = cache[key] ?? undefined;
+            } else {
+              await new Promise((r) => setTimeout(r, 1100));
+              const c = await geocode(m.location);
+              cache[key] = c;
+              saveCache(cache);
+              if (c) {
+                coords = c;
+              } else {
+                toast.error(`Não localizei: ${m.location}`);
+              }
+            }
+            if (coords && !m.coords) {
+              updateMemory(m.id, { coords });
+            }
           }
-          if (coords && !m.coords) {
-            updateMemory(m.id, { coords });
+          if (coords) {
+            next.push({
+              id: m.id,
+              lat: coords[0],
+              lng: coords[1],
+              title: m.title,
+              date: formatDatePT(m.date),
+              location: m.location ?? "",
+            });
           }
         }
-        if (coords) {
-          next.push({
-            id: m.id,
-            lat: coords[0],
-            lng: coords[1],
-            title: m.title,
-            date: formatDatePT(m.date),
-            location: m.location ?? "",
-          });
+        if (alive) {
+          setPins(next);
+          setLoading(false);
         }
-      }
-      if (alive) {
-        setPins(next);
-        setLoading(false);
+      } catch {
+        if (alive) setLoading(false);
       }
     })();
     return () => {
       alive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memories.length]);
+  }, [locationKey, updateMemory, withLocation]);
 
   return (
     <div className="px-4 sm:px-8 py-8 max-w-6xl mx-auto">
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl sm:text-4xl flex items-center gap-2">
-            <MapIcon className="h-7 w-7 text-primary" /> Mapa das memórias
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {pins.length} {pins.length === 1 ? "lugar" : "lugares"} no mapa
-            {loading && " · localizando..."}
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            localStorage.removeItem(COORDS_KEY);
-            toast.success("Cache limpo. Recarregue a página.");
-          }}
-        >
-          Recalcular localizações
-        </Button>
-      </header>
+      <PageHeader
+        icon={MapIcon}
+        title="Mapa das memórias"
+        subtitle={<>{pins.length} {pins.length === 1 ? "lugar" : "lugares"} no mapa{loading && " · localizando..."}</>}
+        className="mb-6"
+        action={
+          <Button
+            variant="outline"
+            onClick={() => {
+              localStorage.removeItem(COORDS_KEY);
+              toast.success("Cache limpo. Recarregue a página.");
+            }}
+          >
+            Recalcular localizações
+          </Button>
+        }
+      />
 
       {withLocation.length === 0 ? (
         <EmptyState

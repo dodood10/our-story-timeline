@@ -50,12 +50,22 @@ export function Lightbox({
   if (!photo) return null;
 
   async function download() {
-    const url = isPhotoRef(photo.src) ? await resolvePhoto(photo.src) : photo.src;
-    if (url) downloadDataUrl(url, `memoria-${index + 1}.jpg`);
+    try {
+      const url = isPhotoRef(photo.src) ? await resolvePhoto(photo.src) : photo.src;
+      if (url) downloadDataUrl(url, `memoria-${index + 1}.jpg`);
+    } catch {
+      // resolvePhoto handles errors internally; this guards against any remaining edge cases
+    }
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center animate-in fade-in" onClick={onClose}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Visualizador de fotos"
+      className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center animate-in fade-in"
+      onClick={onClose}
+    >
       <button onClick={onClose} className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white" aria-label="Fechar">
         <X className="h-5 w-5" />
       </button>
@@ -68,10 +78,10 @@ export function Lightbox({
           <Download className="h-4 w-4" /> Baixar
         </button>
       </div>
-      <button onClick={(e) => { e.stopPropagation(); onIndexChange((index - 1 + photos.length) % photos.length); }} className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+      <button type="button" aria-label="Foto anterior" onClick={(e) => { e.stopPropagation(); onIndexChange((index - 1 + photos.length) % photos.length); }} className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
         <ChevronLeft className="h-6 w-6" />
       </button>
-      <button onClick={(e) => { e.stopPropagation(); onIndexChange((index + 1) % photos.length); }} className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+      <button type="button" aria-label="Próxima foto" onClick={(e) => { e.stopPropagation(); onIndexChange((index + 1) % photos.length); }} className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
         <ChevronRight className="h-6 w-6" />
       </button>
       <div className="max-w-[90vw] max-h-[80vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>

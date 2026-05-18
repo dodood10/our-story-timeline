@@ -27,39 +27,47 @@ import {
   type SurpriseAnswers,
   type SurprisePlan,
 } from "@/lib/surprise-types";
+import {
+  ANSWERS_KEY,
+  readCachedPlan,
+  writeCachedPlan,
+  clearPlanCache,
+} from "@/lib/surprise-cache";
+import { AccessGateDenied, AccessGateLoading } from "@/components/surprise/AccessGate";
 
 export const Route = createFileRoute("/surprise/plan")({
   head: () => ({ meta: [{ title: "Seu plano romântico" }] }),
   component: PlanPage,
 });
 
-const PLAN_KEY = "ml.surprise.plan";
-const ANSWERS_KEY = "ml.surprise.answers";
-
 function PlanPage() {
-  const { hasSurprise, isPremium } = useAccess();
+  const { hasSurprise, isPremium, hydrated } = useAccess();
   const navigate = useNavigate();
   const generate = useServerFn(generateSurprisePlan);
+  const tier = isPremium ? "premium" : "basic";
   const [plan, setPlan] = useState<SurprisePlan | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
+  const loadKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!hasSurprise) {
       navigate({ to: "/surprise" });
       return;
     }
-    try {
-      const cached = localStorage.getItem(PLAN_KEY);
-      if (cached) {
-        setPlan(JSON.parse(cached));
-        return;
-      }
-    } catch { /* */ }
+    if (loadKeyRef.current === tier) return;
+    loadKeyRef.current = tier;
+
+    const cached = readCachedPlan(tier);
+    if (cached) {
+      setPlan(cached);
+      setLoading(false);
+      return;
+    }
     void doGenerate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hydrated, hasSurprise, tier, navigate]);
 
   async function doGenerate() {
     setError(null);
@@ -73,11 +81,11 @@ function PlanPage() {
       const partial = JSON.parse(rawAnswers);
       const data = SurpriseAnswersSchema.parse({
         ...partial,
-        tier: isPremium ? "premium" : "basic",
+        tier,
       } satisfies SurpriseAnswers);
       const result = await generate({ data });
       setPlan(result);
-      localStorage.setItem(PLAN_KEY, JSON.stringify(result));
+      writeCachedPlan(tier, result);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro ao gerar o plano.";
       setError(msg);
@@ -88,16 +96,24 @@ function PlanPage() {
   }
 
   function regenerate() {
-    localStorage.removeItem(PLAN_KEY);
+    clearPlanCache();
     setPlan(null);
+    loadKeyRef.current = null;
     void doGenerate();
   }
+
+  if (!hydrated) return <AccessGateLoading />;
+  if (!hasSurprise) return <AccessGateDenied />;
 
   async function copyAll() {
     if (!plan) return;
     const text = planToText(plan);
-    await navigator.clipboard.writeText(text);
-    toast.success("Plano copiado!");
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Plano copiado!");
+    } catch {
+      toast.error("Não foi possível copiar. Selecione o texto e copie manualmente.");
+    }
   }
 
   async function downloadPdf() {
@@ -137,7 +153,7 @@ function PlanPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !plan) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
@@ -281,7 +297,11 @@ function PlanPage() {
           <div className="mt-6 rounded-2xl border-2 border-primary/30 bg-primary/5 p-5 text-center">
             <p className="font-display text-xl">Desbloqueie tudo no Premium</p>
             <p className="text-sm text-muted-foreground mt-1">Frases, ideias de jantar, plano emergência, checklist e PDF.</p>
-            <Button asChild className="mt-4"><Link to="/surprise">Upgrade por R$19,90</Link></Button>
+            <Button asChild className="mt-4">
+              <Link to="/surprise" search={{ plan: "premium" }}>
+                Upgrade por R$19,90
+              </Link>
+            </Button>
           </div>
         )}
       </div>
@@ -320,7 +340,11 @@ function PremiumSection({
       <div className={!isPremium ? "blur-sm select-none pointer-events-none" : ""}>{children}</div>
       {!isPremium && (
         <div className="absolute inset-x-0 bottom-0 flex justify-center pb-2">
-          <Link to="/surprise" className="text-sm font-medium text-primary hover:underline">
+          <Link
+            to="/surprise"
+            search={{ plan: "premium" }}
+            className="text-sm font-medium text-primary hover:underline"
+          >
             Disponível no Premium →
           </Link>
         </div>
@@ -350,13 +374,16 @@ function ChecklistList({
   highlight?: boolean;
 }) {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [listHydrated, setListHydrated] = useState(false);
   useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) setChecked(JSON.parse(raw));
     } catch { /* */ }
+    setListHydrated(true);
   }, [storageKey]);
   function toggle(k: string) {
+    if (!listHydrated) return;
     setChecked((c) => {
       const next = { ...c, [k]: !c[k] };
       localStorage.setItem(storageKey, JSON.stringify(next));
@@ -372,7 +399,7 @@ function ChecklistList({
             <label className="flex gap-2 text-sm items-start cursor-pointer">
               <input
                 type="checkbox"
-                checked={!!checked[it]}
+                checked={listHydrated ? !!checked[it] : false}
                 onChange={() => toggle(it)}
                 className="mt-1 accent-primary"
               />

@@ -5,8 +5,8 @@ import { formatShortPT } from "@/lib/dates";
 import { parseISO } from "date-fns";
 
 export function isLetterUnlockable(letter: Letter, ref: Date = new Date()): boolean {
-  if (!letter.sealed) return true; // not sealed = open at will
-  if (!letter.unlockDate) return true; // condition-only letters are always openable
+  if (!letter.sealed) return true;
+  if (!letter.unlockDate) return false;
   return ref >= parseISO(letter.unlockDate);
 }
 

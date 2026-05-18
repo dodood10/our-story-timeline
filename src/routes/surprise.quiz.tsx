@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAccess } from "@/hooks/useAccess";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Heart, Lock } from "lucide-react";
+import { ArrowLeft, ArrowRight, Heart } from "lucide-react";
 import { LABELS, type SurpriseAnswers } from "@/lib/surprise-types";
+import { ANSWERS_KEY, clearPlanCache } from "@/lib/surprise-cache";
+import { AccessGateDenied, AccessGateLoading } from "@/components/surprise/AccessGate";
 
 export const Route = createFileRoute("/surprise/quiz")({
   head: () => ({ meta: [{ title: "Quiz — Surpresa Romântica" }] }),
@@ -12,8 +14,6 @@ export const Route = createFileRoute("/surprise/quiz")({
 });
 
 type AnswersDraft = Partial<SurpriseAnswers>;
-
-const STORAGE_KEY = "ml.surprise.answers";
 
 type Step = {
   key: keyof SurpriseAnswers;
@@ -23,36 +23,26 @@ type Step = {
 };
 
 function QuizPage() {
-  const { hasSurprise } = useAccess();
+  const { hasSurprise, hydrated: accessHydrated } = useAccess();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<AnswersDraft>({ likes: [] });
-  const [hydrated, setHydrated] = useState(false);
+  const [answersHydrated, setAnswersHydrated] = useState(false);
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(ANSWERS_KEY);
       if (raw) setAnswers(JSON.parse(raw));
     } catch { /* */ }
-    setHydrated(true);
+    setAnswersHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
-  }, [answers, hydrated]);
+    if (answersHydrated) localStorage.setItem(ANSWERS_KEY, JSON.stringify(answers));
+  }, [answers, answersHydrated]);
 
-  if (!hasSurprise) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="max-w-md w-full text-center bg-card border border-border rounded-3xl p-8 shadow-card">
-          <Lock className="h-10 w-10 text-primary mx-auto" />
-          <h1 className="font-display text-2xl mt-4">Acesso restrito</h1>
-          <p className="text-muted-foreground mt-2">Você precisa de um plano para usar o gerador.</p>
-          <Button asChild className="w-full mt-6"><Link to="/surprise">Ver planos</Link></Button>
-        </div>
-      </div>
-    );
-  }
+  if (!accessHydrated || !answersHydrated) return <AccessGateLoading />;
+  if (!hasSurprise) return <AccessGateDenied />;
 
   const steps: Step[] = [
     { key: "recipient", q: "Para quem é a surpresa?", options: Object.entries(LABELS.recipient) },
@@ -83,9 +73,9 @@ function QuizPage() {
   }
 
   async function finish() {
-    if (!hydrated) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
-    localStorage.removeItem("ml.surprise.plan");
+    if (!answersHydrated) return;
+    localStorage.setItem(ANSWERS_KEY, JSON.stringify(answers));
+    clearPlanCache();
     navigate({ to: "/surprise/plan" });
   }
 

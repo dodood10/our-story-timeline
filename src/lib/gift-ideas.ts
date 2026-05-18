@@ -11,7 +11,10 @@ export const HOBBIES = [
   "Tecnologia",
   "Jogos",
   "Jardinagem",
-];
+] as const;
+
+/** Union of all valid hobby strings derived from the HOBBIES constant. */
+export type Hobby = (typeof HOBBIES)[number];
 
 export const GIFT_IDEAS: GiftIdea[] = [
   { id: "g1", name: "Caixa de cartas escritas à mão", why: "Cada palavra fica eternizada — algo para reler em dias difíceis.", category: "classic", budget: "low", hobbies: ["Leitura"] },
@@ -32,16 +35,24 @@ export const GIFT_IDEAS: GiftIdea[] = [
   { id: "g16", name: "Trilha + piquenique surpresa", why: "Natureza, comida boa e ninguém ao redor — clássico.", category: "adventurous", budget: "low", hobbies: ["Esportes", "Aventura"] },
 ];
 
+function shuffle<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export function pickGifts(answers: GiftQuizAnswers, count = 6): GiftIdea[] {
-  const scored = GIFT_IDEAS.map((g) => {
+  const scored = shuffle(GIFT_IDEAS.map((g) => {
     let score = 0;
     if (g.category === answers.style) score += 3;
     if (g.budget === answers.budget) score += 2;
     if (g.hobbies.includes(answers.hobby)) score += 4;
     return { g, score };
-  });
+  }));
   return scored
-    .sort((a, b) => b.score - a.score || Math.random() - 0.5)
+    .sort((a, b) => b.score - a.score)
     .slice(0, count)
     .map((s) => s.g);
 }

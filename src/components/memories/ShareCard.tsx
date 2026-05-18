@@ -31,9 +31,9 @@ export function ShareCard({
       setPhotoUrl("");
       return;
     }
-    (isPhotoRef(first) ? resolvePhoto(first) : Promise.resolve(first)).then((u) => {
-      if (alive) setPhotoUrl(u);
-    });
+    (isPhotoRef(first) ? resolvePhoto(first) : Promise.resolve(first))
+      .then((u) => { if (alive) setPhotoUrl(u); })
+      .catch(() => { if (alive) setPhotoUrl(""); });
     return () => {
       alive = false;
     };
@@ -44,12 +44,17 @@ export function ShareCard({
 
   async function generate(): Promise<string | null> {
     if (!cardRef.current) return null;
-    const canvas = await html2canvas(cardRef.current, {
-      backgroundColor: null,
-      scale: 2,
-      useCORS: true,
-    });
-    return canvas.toDataURL("image/png");
+    try {
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+      });
+      return canvas.toDataURL("image/png");
+    } catch {
+      toast.error("Não foi possível gerar a imagem do cartão");
+      return null;
+    }
   }
 
   async function download() {
@@ -72,8 +77,11 @@ export function ShareCard({
         downloadDataUrl(url, `memory-${memory!.id}.png`);
         toast.success("Cartão baixado para compartilhar");
       }
-    } catch {
-      /* user cancelled */
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return; // user cancelled share sheet
+      // Share API not available or fetch failed — fallback to direct download
+      downloadDataUrl(url, `memory-${memory!.id}.png`);
+      toast.success("Cartão baixado para compartilhar");
     }
   }
 

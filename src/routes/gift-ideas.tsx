@@ -4,10 +4,11 @@ import { useApp } from "@/hooks/useApp";
 import { GIFT_IDEAS, HOBBIES, pickGifts } from "@/lib/gift-ideas";
 import type { GiftQuizAnswers, GiftIdea } from "@/lib/types";
 import { Gift, Heart, RotateCcw } from "lucide-react";
+import { PageHeader } from "@/components/common/PageHeader";
+import { FadeIn } from "@/components/common/FadeIn";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { motion } from "framer-motion";
 
 export const Route = createFileRoute("/gift-ideas")({
   head: () => ({
@@ -32,12 +33,7 @@ function GiftPage() {
 
   return (
     <div className="px-4 sm:px-8 py-8 max-w-4xl mx-auto space-y-8">
-      <header>
-        <h1 className="font-display text-3xl sm:text-4xl flex items-center gap-2">
-          <Gift className="h-7 w-7 text-primary" /> Ideias de Presente
-        </h1>
-        <p className="text-muted-foreground mt-1">Responda 3 perguntas e receba ideias personalizadas.</p>
-      </header>
+      <PageHeader icon={Gift} title="Ideias de Presente" subtitle="Responda 3 perguntas e receba ideias personalizadas." />
 
       {!results ? (
         <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-5">
@@ -96,11 +92,9 @@ function GiftPage() {
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             {results.map((g, i) => (
-              <motion.div
+              <FadeIn
                 key={g.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
+                delay={i * 0.05}
                 className="rounded-2xl bg-card border border-border p-5 shadow-card"
               >
                 <div className="flex items-start justify-between gap-2">
@@ -114,7 +108,7 @@ function GiftPage() {
                   </button>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">{g.why}</p>
-              </motion.div>
+              </FadeIn>
             ))}
           </div>
         </section>

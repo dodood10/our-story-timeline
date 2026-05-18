@@ -1,6 +1,6 @@
 // Memory Lane service worker — offline-first cache for app shell.
 const CACHE = "memory-lane-v1";
-const ASSETS = ["/", "/manifest.webmanifest"];
+const ASSETS = ["/", "/app", "/manifest.webmanifest", "/icon-192.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).catch(() => {}));

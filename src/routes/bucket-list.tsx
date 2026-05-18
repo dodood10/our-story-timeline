@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useApp } from "@/hooks/useApp";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BUCKET_CATEGORIES, type BucketCategory } from "@/lib/types";
@@ -8,6 +8,8 @@ import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Target } from "lucide-react";
 import { celebrate, hearts } from "@/lib/confetti";
+import { PageHeader } from "@/components/common/PageHeader";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 
 export const Route = createFileRoute("/bucket-list")({
   head: () => ({
@@ -22,30 +24,38 @@ export const Route = createFileRoute("/bucket-list")({
 function BucketListPage() {
   const { bucket, addBucket, toggleBucket, deleteBucket } = useApp();
   const [tab, setTab] = useState<BucketCategory>("travel");
-  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const { openConfirm, dialogProps: deleteDialogProps } = useConfirmDelete(deleteBucket);
 
   const total = bucket.length;
   const done = bucket.filter((b) => b.done).length;
 
-  function onToggle(id: string) {
+  const handleToggle = useCallback((id: string) => {
     const item = bucket.find((b) => b.id === id);
     toggleBucket(id);
-    if (item && !item.done) {
-      celebrate();
-      hearts();
+    if (item && !item.done) { celebrate(); hearts(); }
+  }, [bucket, toggleBucket]);
+
+  const handleDelete = useCallback((id: string) => openConfirm(id), [openConfirm]);
+
+  const handlePhoto = useCallback((id: string, photo: string) => {
+    const item = bucket.find((b) => b.id === id);
+    if (!item) return;
+    if (item.done) {
+      toggleBucket(id);
+      toggleBucket(id, photo);
+    } else {
+      toggleBucket(id, photo);
     }
-  }
+  }, [bucket, toggleBucket]);
 
   return (
     <div className="px-4 sm:px-8 py-8 max-w-3xl mx-auto">
-      <header className="mb-6">
-        <h1 className="font-display text-3xl sm:text-4xl flex items-center gap-2">
-          <Target className="h-7 w-7 text-primary" /> Bucket List
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {done} de {total} sonhos realizados ✨
-        </p>
-      </header>
+      <PageHeader
+        icon={Target}
+        title="Bucket List"
+        subtitle={<>{done} de {total} sonhos realizados ✨</>}
+        className="mb-6"
+      />
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as BucketCategory)}>
         <TabsList className="grid grid-cols-4 w-full mb-4">
@@ -73,9 +83,9 @@ function BucketListPage() {
                     <BucketItemCard
                       key={item.id}
                       item={item}
-                      onToggle={() => onToggle(item.id)}
-                      onDelete={() => setConfirmId(item.id)}
-                      onPhoto={(p) => addPhotoTo(item.id, p)}
+                      onToggle={handleToggle}
+                      onDelete={handleDelete}
+                      onPhoto={handlePhoto}
                     />
                   ))}
                 </div>
@@ -86,28 +96,12 @@ function BucketListPage() {
       </Tabs>
 
       <ConfirmDialog
-        open={!!confirmId}
-        onOpenChange={(v) => !v && setConfirmId(null)}
+        {...deleteDialogProps}
         title="Remover esse sonho?"
         confirmLabel="Remover"
         destructive
-        onConfirm={() => { if (confirmId) deleteBucket(confirmId); setConfirmId(null); }}
       />
     </div>
   );
 
-  function addPhotoTo(id: string, photo: string) {
-    // mark photo on already-done item without toggling done off
-    const item = bucket.find((b) => b.id === id);
-    if (!item) return;
-    // toggle off + on hack would lose done state; instead update via a different path:
-    // We just set done=true and pass photo — toggleBucket flips state, so call twice if needed.
-    if (item.done) {
-      // turn off, then on with photo (results in done=true with new photo)
-      toggleBucket(id); // now done=false
-      toggleBucket(id, photo); // now done=true with photo
-    } else {
-      toggleBucket(id, photo);
-    }
-  }
 }

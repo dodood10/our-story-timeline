@@ -8,15 +8,17 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Settings as SettingsIcon, Camera, Download, RotateCcw, Upload, Cloud, RefreshCw, Copy, Loader2 } from "lucide-react";
-import { compressImage } from "@/lib/storage";
 import { toast } from "sonner";
+import { useCouplePhoto } from "@/hooks/useCouplePhoto";
 import type { Couple, RelationshipStatus, Theme } from "@/lib/types";
 import jsPDF from "jspdf";
 import { formatDatePT, daysTogether } from "@/lib/dates";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { QuotaMeter } from "@/components/common/QuotaMeter";
 import { downloadBackup, importBackup, type BackupBundle } from "@/lib/backup";
-import { generateSyncCode, pushSync, pullSync } from "@/lib/sync";
+import { generateSyncCode, pushSync, pullSync, isSupabaseConfigured } from "@/lib/sync";
+import { Link } from "@tanstack/react-router";
+import { PageHeader } from "@/components/common/PageHeader";
 import { useRef } from "react";
 
 export const Route = createFileRoute("/settings")({
@@ -30,33 +32,41 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
-  const { couple } = useApp();
-  if (!couple) {
+  const { couple, hydrated, onboarded } = useApp();
+  if (!hydrated) {
     return <div className="p-12 text-center text-muted-foreground">Carregando...</div>;
+  }
+  if (!couple) {
+    return (
+      <div className="p-12 max-w-md mx-auto text-center space-y-4">
+        <p className="text-muted-foreground">Perfil do casal não encontrado.</p>
+        {!onboarded && (
+          <Button asChild>
+            <Link to="/app">Completar cadastro</Link>
+          </Button>
+        )}
+      </div>
+    );
   }
   return <SettingsForm couple={couple} />;
 }
 
 function SettingsForm({ couple }: { couple: Couple }) {
-  const { setCouple, settings, setTheme, setNotifications, memories, resetSeed } = useApp();
+  const { setCouple, settings, setTheme, setNotifications, setSyncCode: persistSyncCode, memories, resetSeed } = useApp();
+  const supabaseReady = isSupabaseConfigured();
+  const syncCode = settings.syncCode ?? "";
   const [name1, setName1] = useState(couple.name1);
   const [name2, setName2] = useState(couple.name2);
-  const [photo, setPhoto] = useState<string | undefined>(couple.photo);
+  const { photo, setPhoto, onPhotoChange } = useCouplePhoto(couple.photo);
   const [startDate, setStartDate] = useState(couple.startDate);
   const [status, setStatus] = useState<RelationshipStatus>(couple.status);
   const [saving, setSaving] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [syncCode, setSyncCode] = useState(settings.syncCode ?? "");
   const [syncBusy, setSyncBusy] = useState(false);
+  const [confirmPush, setConfirmPush] = useState(false);
   const [pullCode, setPullCode] = useState("");
   const [confirmPull, setConfirmPull] = useState(false);
-
-  async function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setPhoto(await compressImage(f, 800, 0.85));
-  }
 
   function save() {
     if (!name1.trim() || !name2.trim()) return toast.error("Preencha os nomes");
@@ -66,6 +76,7 @@ function SettingsForm({ couple }: { couple: Couple }) {
   }
 
   async function exportPdf() {
+    try {
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const margin = 48;
     let y = margin;
@@ -106,6 +117,10 @@ function SettingsForm({ couple }: { couple: Couple }) {
     }
     doc.save(`memory-lane-${couple.name1}-${couple.name2}.pdf`);
     toast.success("PDF gerado 💕");
+    } catch (e) {
+      console.error(e);
+      toast.error("Falha ao gerar o PDF");
+    }
   }
 
   async function onImportFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -125,24 +140,14 @@ function SettingsForm({ couple }: { couple: Couple }) {
   }
 
   async function doPush() {
-    if (!syncCode.trim()) {
-      const code = generateSyncCode();
-      setSyncCode(code);
-      try {
-        setSyncBusy(true);
-        await pushSync(code);
-        toast.success("Sincronizado! Guarde seu código.");
-      } catch (e) {
-        toast.error((e as Error).message);
-      } finally {
-        setSyncBusy(false);
-      }
-      return;
-    }
+    setConfirmPush(false);
+    const code = syncCode.trim() || generateSyncCode();
+    if (!syncCode.trim()) persistSyncCode(code);
     try {
       setSyncBusy(true);
-      await pushSync(syncCode.trim().toUpperCase());
-      toast.success("Enviado para a nuvem 💕");
+      await pushSync(code);
+      persistSyncCode(code.trim().toUpperCase());
+      toast.success("Sincronizado! Guarde seu código.");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -166,11 +171,7 @@ function SettingsForm({ couple }: { couple: Couple }) {
 
   return (
     <div className="px-4 sm:px-8 py-8 max-w-2xl mx-auto space-y-8">
-      <header>
-        <h1 className="font-display text-3xl sm:text-4xl flex items-center gap-2">
-          <SettingsIcon className="h-7 w-7 text-primary" /> Configurações
-        </h1>
-      </header>
+      <PageHeader icon={SettingsIcon} title="Configurações" />
 
       <section className="space-y-4 rounded-2xl bg-card border border-border p-6 shadow-card">
         <h2 className="font-display text-xl">Perfil do casal</h2>
@@ -184,7 +185,7 @@ function SettingsForm({ couple }: { couple: Couple }) {
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100">
               <Camera className="h-5 w-5 text-white" />
             </div>
-            <input type="file" accept="image/*" className="hidden" onChange={onPhoto} />
+            <input type="file" accept="image/*" className="hidden" onChange={onPhotoChange} />
           </label>
           <div className="flex-1 grid sm:grid-cols-2 gap-2">
             <Input value={name1} onChange={(e) => setName1(e.target.value)} placeholder="Nome 1" />
@@ -239,7 +240,7 @@ function SettingsForm({ couple }: { couple: Couple }) {
             <p className="font-display text-lg">Lembretes de datas</p>
             <p className="text-sm text-muted-foreground">Receba avisos sobre datas importantes (em breve)</p>
           </div>
-          <Switch checked={settings.notifications} onCheckedChange={setNotifications} />
+          <Switch checked={settings.notifications} onCheckedChange={setNotifications} disabled />
         </div>
       </section>
 
@@ -249,7 +250,7 @@ function SettingsForm({ couple }: { couple: Couple }) {
           Baixe um arquivo com todas as memórias, fotos, bucket list e cartas — para guardar em segurança ou levar para outro navegador.
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => downloadBackup().then(() => toast.success("Backup baixado"))}>
+          <Button variant="outline" onClick={() => downloadBackup().then(() => toast.success("Backup baixado")).catch(() => toast.error("Falha ao baixar o backup"))}>
             <Download className="h-4 w-4 mr-1.5" /> Baixar backup (JSON)
           </Button>
           <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
@@ -264,13 +265,19 @@ function SettingsForm({ couple }: { couple: Couple }) {
 
       <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-4">
         <h2 className="font-display text-xl flex items-center gap-2"><Cloud className="h-5 w-5 text-primary" /> Sincronizar entre dispositivos</h2>
+        {!supabaseReady ? (
+          <p className="text-sm text-muted-foreground">
+            Sync indisponível: configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY.
+          </p>
+        ) : (
+          <>
         <p className="text-sm text-muted-foreground">
-          Opcional. Gere um código secreto e use-o no celular do(a) parceiro(a) para sincronizar tudo. Sem cadastro — quem tem o código tem acesso.
+          Opcional. Gere um código secreto e use-o no celular do(a) parceiro(a). Quem tem o código tem acesso. O último envio substitui o backup na nuvem.
         </p>
         <div className="flex flex-wrap gap-2">
           <Input
             value={syncCode}
-            onChange={(e) => setSyncCode(e.target.value.toUpperCase())}
+            onChange={(e) => persistSyncCode(e.target.value.toUpperCase())}
             placeholder="Seu código (gerado automaticamente)"
             className="font-mono max-w-xs"
           />
@@ -282,7 +289,7 @@ function SettingsForm({ couple }: { couple: Couple }) {
               <Copy className="h-4 w-4 mr-1.5" /> Copiar
             </Button>
           )}
-          <Button onClick={doPush} disabled={syncBusy}>
+          <Button onClick={() => setConfirmPush(true)} disabled={syncBusy || !supabaseReady}>
             {syncBusy ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Cloud className="h-4 w-4 mr-1.5" />}
             {syncCode ? "Enviar para nuvem" : "Gerar código e enviar"}
           </Button>
@@ -301,6 +308,8 @@ function SettingsForm({ couple }: { couple: Couple }) {
             </Button>
           </div>
         </div>
+          </>
+        )}
       </section>
 
       <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-3">
@@ -322,6 +331,14 @@ function SettingsForm({ couple }: { couple: Couple }) {
         confirmLabel="Restaurar"
         destructive
         onConfirm={() => { resetSeed(); setConfirmReset(false); toast.success("Restaurado"); }}
+      />
+      <ConfirmDialog
+        open={confirmPush}
+        onOpenChange={setConfirmPush}
+        title="Enviar para a nuvem?"
+        description="O backup anterior neste código será substituído pelos dados deste dispositivo."
+        confirmLabel="Enviar"
+        onConfirm={doPush}
       />
       <ConfirmDialog
         open={confirmPull}

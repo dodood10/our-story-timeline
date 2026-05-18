@@ -23,7 +23,7 @@ export interface NavItem {
 import { Map as MapIcon } from "lucide-react";
 
 export const NAV_ITEMS: NavItem[] = [
-  { to: "/", label: "Início", icon: Home, emoji: "🏠" },
+  { to: "/app", label: "Início", icon: Home, emoji: "🏠" },
   { to: "/timeline", label: "Linha do Tempo", icon: Clock, emoji: "⏱️" },
   { to: "/bucket-list", label: "Bucket List", icon: Target, emoji: "🎯" },
   { to: "/gallery", label: "Galeria", icon: ImageIcon, emoji: "📸" },

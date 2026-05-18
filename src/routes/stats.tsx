@@ -4,9 +4,9 @@ import { useApp } from "@/hooks/useApp";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { BarChart3, Camera, Sparkles, MapPin } from "lucide-react";
 import { EMOTIONS } from "@/lib/types";
-import { format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { upcomingMilestones, formatDatePT } from "@/lib/dates";
+import { parseISO } from "date-fns";
+import { upcomingMilestones, formatDatePT, formatMonthPT } from "@/lib/dates";
+import { PageHeader } from "@/components/common/PageHeader";
 
 export const Route = createFileRoute("/stats")({
   head: () => ({
@@ -25,7 +25,7 @@ function StatsPage() {
   const byMonth = useMemo(() => {
     const map = new Map<string, number>();
     for (const m of memories) {
-      const key = format(parseISO(m.date), "MMM/yy", { locale: ptBR });
+      const key = formatMonthPT(m.date);
       map.set(key, (map.get(key) ?? 0) + 1);
     }
     return Array.from(map.entries()).map(([month, count]) => ({ month, count })).slice(-12);
@@ -51,12 +51,7 @@ function StatsPage() {
 
   return (
     <div className="px-4 sm:px-8 py-8 max-w-5xl mx-auto space-y-6">
-      <header>
-        <h1 className="font-display text-3xl sm:text-4xl flex items-center gap-2">
-          <BarChart3 className="h-7 w-7 text-primary" /> Estatísticas
-        </h1>
-        <p className="text-muted-foreground mt-1">Os números dessa história.</p>
-      </header>
+      <PageHeader icon={BarChart3} title="Estatísticas" subtitle="Os números dessa história." />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard label="Memórias" value={memories.length} icon={<Sparkles className="h-4 w-4" />} />
@@ -70,6 +65,10 @@ function StatsPage() {
         {byMonth.length === 0 ? (
           <p className="text-sm text-muted-foreground">Adicione memórias para ver o gráfico.</p>
         ) : (
+          <>
+            <p className="sr-only">
+              Gráfico de memórias por mês: {byMonth.map((r) => `${r.month} ${r.count}`).join(", ")}.
+            </p>
           <div className="h-64 w-full">
             <ResponsiveContainer>
               <BarChart data={byMonth}>
@@ -84,6 +83,7 @@ function StatsPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
+          </>
         )}
       </section>
 

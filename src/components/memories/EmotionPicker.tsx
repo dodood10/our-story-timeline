@@ -16,6 +16,8 @@ export function EmotionPicker({
           <button
             key={e.id}
             type="button"
+            aria-label={e.label}
+            aria-pressed={active}
             onClick={() => onChange(e.id)}
             className={cn(
               "flex flex-col items-center gap-1 p-2.5 rounded-xl border transition-all",

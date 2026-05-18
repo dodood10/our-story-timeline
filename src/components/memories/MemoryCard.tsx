@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { MoreVertical, MapPin, Pencil, Trash2, Heart, Share2 } from "lucide-react";
 import type { Memory } from "@/lib/types";
@@ -11,8 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
-export function MemoryCard({
+export const MemoryCard = memo(function MemoryCard({
   memory,
   onEdit,
   onDelete,
@@ -21,20 +23,21 @@ export function MemoryCard({
   onShare,
 }: {
   memory: Memory;
-  onEdit: () => void;
-  onDelete: () => void;
-  onPhotoClick?: (idx: number) => void;
-  onToggleFavorite?: () => void;
-  onShare?: () => void;
+  onEdit: (memory: Memory) => void;
+  onDelete: (id: string) => void;
+  onPhotoClick?: (memory: Memory, idx: number) => void;
+  onToggleFavorite?: (id: string) => void;
+  onShare?: (memory: Memory) => void;
 }) {
+  const reducedMotion = useReducedMotion();
   const emo = EMOTIONS.find((e) => e.id === memory.emotion);
   return (
     <motion.article
-      layout
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      whileHover={{ y: -2 }}
+      layout={!reducedMotion}
+      initial={reducedMotion ? false : { opacity: 0, y: 12 }}
+      animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+      exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
+      whileHover={reducedMotion ? undefined : { y: -2 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
       className="group bg-card rounded-2xl shadow-card hover:shadow-soft border border-border overflow-hidden transition-shadow"
     >
@@ -52,7 +55,7 @@ export function MemoryCard({
           <div className="flex items-center gap-1">
             {onToggleFavorite && (
               <button
-                onClick={onToggleFavorite}
+                onClick={() => onToggleFavorite(memory.id)}
                 aria-label={memory.favorite ? "Remover dos favoritos" : "Favoritar"}
                 className="p-1.5 rounded-md hover:bg-muted transition active:scale-90"
               >
@@ -65,19 +68,19 @@ export function MemoryCard({
               </button>
             )}
             <DropdownMenu>
-              <DropdownMenuTrigger className="p-1.5 rounded-md hover:bg-muted">
+              <DropdownMenuTrigger className="p-1.5 rounded-md hover:bg-muted" aria-label="Ações da memória">
                 <MoreVertical className="h-4 w-4 text-muted-foreground" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {onShare && (
-                  <DropdownMenuItem onClick={onShare}>
+                  <DropdownMenuItem onClick={() => onShare(memory)}>
                     <Share2 className="h-4 w-4 mr-2" /> Compartilhar
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={onEdit}>
+                <DropdownMenuItem onClick={() => onEdit(memory)}>
                   <Pencil className="h-4 w-4 mr-2" /> Editar
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onDelete} className="text-destructive">
+                <DropdownMenuItem onClick={() => onDelete(memory.id)} className="text-destructive">
                   <Trash2 className="h-4 w-4 mr-2" /> Excluir
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -112,7 +115,7 @@ export function MemoryCard({
             <button
               key={i}
               type="button"
-              onClick={() => onPhotoClick?.(i)}
+              onClick={() => onPhotoClick?.(memory, i)}
               className="relative aspect-[4/3] overflow-hidden bg-muted"
             >
               <Photo
@@ -127,4 +130,4 @@ export function MemoryCard({
       )}
     </motion.article>
   );
-}
+});

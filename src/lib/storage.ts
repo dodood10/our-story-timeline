@@ -9,6 +9,9 @@ export const STORAGE_KEYS = {
 } as const;
 
 export function uid(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 
@@ -30,7 +33,7 @@ function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(r.result as string);
-    r.onerror = reject;
+    r.onerror = () => reject(new Error(`Não foi possível ler o arquivo "${file.name}"`));
     r.readAsDataURL(file);
   });
 }
@@ -39,7 +42,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = reject;
+    img.onerror = () => reject(new Error("Não foi possível carregar a imagem para compressão"));
     img.src = src;
   });
 }

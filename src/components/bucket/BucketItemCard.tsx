@@ -1,20 +1,20 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Trash2, Camera } from "lucide-react";
 import type { BucketItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { compressImage } from "@/lib/storage";
 
-export function BucketItemCard({
+export const BucketItemCard = memo(function BucketItemCard({
   item,
   onToggle,
   onDelete,
   onPhoto,
 }: {
   item: BucketItem;
-  onToggle: () => void;
-  onDelete: () => void;
-  onPhoto: (photo: string) => void;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+  onPhoto: (id: string, photo: string) => void;
 }) {
   const [uploading, setUploading] = useState(false);
 
@@ -24,7 +24,7 @@ export function BucketItemCard({
     setUploading(true);
     try {
       const c = await compressImage(f);
-      onPhoto(c);
+      onPhoto(item.id, c);
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -40,7 +40,7 @@ export function BucketItemCard({
     >
       <div className="flex items-center gap-3">
         <button
-          onClick={onToggle}
+          onClick={() => onToggle(item.id)}
           className={`shrink-0 h-10 w-10 rounded-full border-2 flex items-center justify-center transition-all ${
             item.done
               ? "bg-primary border-primary text-primary-foreground"
@@ -51,7 +51,7 @@ export function BucketItemCard({
           {item.done && <Check className="h-5 w-5" />}
         </button>
         <p className={`flex-1 ${item.done ? "line-through text-muted-foreground" : ""}`}>{item.title}</p>
-        <button onClick={onDelete} className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive p-1.5">
+        <button onClick={() => onDelete(item.id)} className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive p-1.5">
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
@@ -70,7 +70,7 @@ export function BucketItemCard({
       )}
     </motion.div>
   );
-}
+});
 
 export function BucketAddInline({ onAdd }: { onAdd: (title: string) => void }) {
   const [val, setVal] = useState("");

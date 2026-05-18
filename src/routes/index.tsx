@@ -289,6 +289,8 @@ function PricingSection() {
           <PricingCard
             name="Básico"
             price="10"
+            compareAt="19,90"
+            checkoutSearch={{ plan: "basic" }}
             highlight={false}
             features={[
               "Gerador de surpresa personalizada",
@@ -300,17 +302,17 @@ function PricingSection() {
           <PricingCard
             name="Premium"
             price="19,90"
+            compareAt="39,90"
+            checkoutSearch={{ plan: "premium" }}
             highlight
             badge="Mais escolhido"
             features={[
               "Tudo do Básico, mais:",
               "Frases românticas prontas",
-              "Cartões imprimíveis",
               "Ideias de jantar",
               "Plano emergência de 1h",
               "Checklist completo",
-              "Exportação em PDF",
-              "Bônus: 20 ideias extras",
+              "Acesso imediato após pagamento",
             ]}
           />
         </div>
@@ -322,12 +324,16 @@ function PricingSection() {
 function PricingCard({
   name,
   price,
+  compareAt,
+  checkoutSearch,
   features,
   highlight,
   badge,
 }: {
   name: string;
   price: string;
+  compareAt?: string;
+  checkoutSearch?: { plan: "basic" | "premium" };
   features: string[];
   highlight: boolean;
   badge?: string;
@@ -347,6 +353,9 @@ function PricingCard({
       )}
       <p className="font-display text-2xl">{name}</p>
       <p className="mt-3">
+        {compareAt && (
+          <span className="text-sm text-muted-foreground line-through mr-2">R${compareAt}</span>
+        )}
         <span className="font-display text-5xl">R${price}</span>
         <span className="text-sm text-muted-foreground ml-1">/ único</span>
       </p>
@@ -359,7 +368,9 @@ function PricingCard({
         ))}
       </ul>
       <Button asChild className="w-full mt-7" variant={highlight ? "default" : "outline"}>
-        <Link to="/surprise">Quero o {name}</Link>
+        <Link to="/surprise" search={checkoutSearch ?? { plan: "premium" }}>
+          Quero o {name}
+        </Link>
       </Button>
     </div>
   );
@@ -431,9 +442,11 @@ function Footer() {
     <footer className="border-t border-border py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
         <p>© {new Date().getFullYear()} Surpresa Romântica. Feito com 💖</p>
-        <div className="flex gap-4">
-          <Link to="/dev-unlock" className="hover:text-foreground transition">Acesso de teste</Link>
-        </div>
+        {import.meta.env.DEV && (
+          <div className="flex gap-4">
+            <Link to="/dev-unlock" className="hover:text-foreground transition">Acesso de teste</Link>
+          </div>
+        )}
       </div>
     </footer>
   );

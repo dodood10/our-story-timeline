@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { Heart, Search } from "lucide-react";
 
+export type EmotionFilter = Emotion | "all";
+
 export function TimelineFilters({
   years,
   year,
@@ -17,11 +19,11 @@ export function TimelineFilters({
 }: {
   years: number[];
   year: string;
-  emotion: string;
+  emotion: EmotionFilter;
   query: string;
   favoritesOnly: boolean;
   onYearChange: (v: string) => void;
-  onEmotionChange: (v: string) => void;
+  onEmotionChange: (v: EmotionFilter) => void;
   onQueryChange: (v: string) => void;
   onFavoritesChange: (v: boolean) => void;
 }) {
@@ -45,11 +47,11 @@ export function TimelineFilters({
           ))}
         </SelectContent>
       </Select>
-      <Select value={emotion} onValueChange={onEmotionChange}>
+      <Select value={emotion} onValueChange={(v) => onEmotionChange(v as EmotionFilter)}>
         <SelectTrigger className="w-[170px] h-9"><SelectValue placeholder="Emoção" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todas as emoções</SelectItem>
-          {EMOTIONS.map((e: { id: Emotion; emoji: string; label: string }) => (
+          {EMOTIONS.map((e) => (
             <SelectItem key={e.id} value={e.id}>{e.emoji} {e.label}</SelectItem>
           ))}
         </SelectContent>

@@ -40,7 +40,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_couple_sync: { Args: { p_code: string }; Returns: Json }
+      get_couple_sync: {
+        Args: { p_code: string }
+        Returns: Json
+      }
       upsert_couple_sync: {
         Args: { p_code: string; p_data: Json }
         Returns: undefined
