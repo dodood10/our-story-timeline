@@ -73,6 +73,7 @@ export const generateSurprisePlan = createServerFn({ method: "POST" })
       const { object } = await generateObject({
         model,
         schema: SurprisePlanSchema,
+        mode: "tool",
         prompt: buildPrompt(data),
       });
       return object;
