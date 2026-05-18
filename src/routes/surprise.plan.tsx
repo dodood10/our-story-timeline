@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useAccess } from "@/hooks/useAccess";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import {
   Copy,
   Download,
   Heart,
-  Loader2,
   Lock,
   RotateCcw,
   Sparkles,
@@ -37,6 +36,20 @@ export const Route = createFileRoute("/surprise/plan")({
   component: PlanPage,
 });
 
+const LOADING_MESSAGES = [
+  { emoji: "✨", text: "Analisando suas preferências..." },
+  { emoji: "🎨", text: "Escolhendo as melhores decorações..." },
+  { emoji: "🛒", text: "Montando sua lista de compras..." },
+  { emoji: "💌", text: "Escrevendo frases românticas..." },
+  { emoji: "📋", text: "Finalizando seu roteiro da noite..." },
+];
+
+const PLAN_THEME: Record<string, string> = {
+  elegante: "plan-theme-elegant",
+  sensual: "plan-theme-sensual",
+  pinterest: "plan-theme-pinterest",
+};
+
 function PlanPage() {
   const { hasSurprise, isPremium, hydrated } = useAccess();
   const navigate = useNavigate();
@@ -45,8 +58,38 @@ function PlanPage() {
   const [plan, setPlan] = useState<SurprisePlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showReveal, setShowReveal] = useState(false);
+  const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
+  const [partnerName, setPartnerName] = useState("");
+  const [planStyle, setPlanStyle] = useState("");
   const printRef = useRef<HTMLDivElement>(null);
   const loadKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ANSWERS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, unknown>;
+        setPartnerName(typeof parsed.partnerName === "string" ? parsed.partnerName : "");
+        setPlanStyle(typeof parsed.style === "string" ? parsed.style : "");
+      }
+    } catch { /* */ }
+  }, []);
+
+  useEffect(() => {
+    if (!loading) return;
+    const t = setInterval(
+      () => setLoadingMsgIndex((i) => (i + 1) % LOADING_MESSAGES.length),
+      2000,
+    );
+    return () => clearInterval(t);
+  }, [loading]);
+
+  useEffect(() => {
+    if (!showReveal) return;
+    const t = setTimeout(() => setShowReveal(false), 3500);
+    return () => clearTimeout(t);
+  }, [showReveal]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -69,25 +112,28 @@ function PlanPage() {
   async function doGenerate() {
     setError(null);
     setLoading(true);
+    setShowReveal(false);
     try {
       const rawAnswers = localStorage.getItem(ANSWERS_KEY);
       if (!rawAnswers) {
         navigate({ to: "/surprise/quiz" });
         return;
       }
-      const partial = JSON.parse(rawAnswers);
-      const data = SurpriseAnswersSchema.parse({
-        ...partial,
-        tier,
-      } satisfies SurpriseAnswers);
+      const partial = JSON.parse(rawAnswers) as Record<string, unknown>;
+      const name = typeof partial.partnerName === "string" ? partial.partnerName : "";
+      if (name) setPartnerName(name);
+      const style = typeof partial.style === "string" ? partial.style : "";
+      if (style) setPlanStyle(style);
+      const data = SurpriseAnswersSchema.parse({ ...partial, tier });
       const result = await generate({ data });
       setPlan(result);
       writeCachedPlan(tier, result);
+      setLoading(false);
+      setShowReveal(true);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro ao gerar o plano.";
       setError(msg);
       toast.error(msg);
-    } finally {
       setLoading(false);
     }
   }
@@ -151,13 +197,90 @@ function PlanPage() {
   }
 
   if (loading && !plan) {
+    const msg = LOADING_MESSAGES[loadingMsgIndex];
     return (
       <SurpriseShell footer={false} mainClassName="flex items-center justify-center px-4 py-16">
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 text-primary mx-auto animate-spin" />
-          <p className="font-display text-2xl mt-4">Montando seu plano...</p>
-          <p className="text-muted-foreground mt-2 text-sm">Isso leva uns 10 segundos. ✨</p>
+        <div className="text-center max-w-sm w-full">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={loadingMsgIndex}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="mb-8"
+            >
+              <p className="text-5xl mb-5">{msg.emoji}</p>
+              <p className="font-display text-2xl">{msg.text}</p>
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex gap-2 justify-center mt-2">
+            {LOADING_MESSAGES.map((_, i) => (
+              <motion.div
+                key={i}
+                className="w-2 h-2 rounded-full bg-primary"
+                animate={{ opacity: i <= loadingMsgIndex ? 1 : 0.25 }}
+                transition={{ duration: 0.3 }}
+              />
+            ))}
+          </div>
+          <p className="text-muted-foreground text-sm mt-6">Isso leva uns 10 segundos. ✨</p>
         </div>
+      </SurpriseShell>
+    );
+  }
+
+  if (showReveal && plan) {
+    return (
+      <SurpriseShell footer={false} mainClassName="flex items-center justify-center px-4 py-16">
+        <motion.div
+          className="text-center max-w-sm"
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.45 }}
+        >
+          <motion.div
+            animate={{ scale: [1, 1.18, 1] }}
+            transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Heart className="h-16 w-16 text-primary fill-primary mx-auto" />
+          </motion.div>
+          <motion.p
+            className="font-display text-4xl sm:text-5xl mt-6"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            Pronto! ✨
+          </motion.p>
+          <motion.p
+            className="text-lg mt-3 text-foreground"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+          >
+            {partnerName
+              ? `Seu plano para ${partnerName} está criado.`
+              : "Seu plano romântico está criado."}
+          </motion.p>
+          <motion.p
+            className="text-muted-foreground mt-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            Agora é só executar — e ela vai adorar. ❤️
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.4 }}
+          >
+            <Button className="mt-8" onClick={() => setShowReveal(false)}>
+              Ver meu plano →
+            </Button>
+          </motion.div>
+        </motion.div>
       </SurpriseShell>
     );
   }
@@ -207,13 +330,19 @@ function PlanPage() {
 
       <div
         ref={printRef}
-        className="bg-card border border-border rounded-3xl p-6 sm:p-10 shadow-card space-y-8"
+        className={`bg-card border border-border rounded-3xl p-6 sm:p-10 shadow-card space-y-8 ${PLAN_THEME[planStyle] ?? ""}`}
       >
         <header className="text-center">
           <Heart className="h-8 w-8 text-primary mx-auto fill-primary/20" />
           <span className="inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
             <Sparkles className="h-3 w-3" /> {BRAND_NAME} · Plano {isPremium ? "Premium" : "Básico"}
           </span>
+          {partnerName && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Criado especialmente para{" "}
+              <span className="font-medium text-primary">{partnerName}</span> ❤️
+            </p>
+          )}
           <h1 className="font-display text-3xl sm:text-5xl mt-3 leading-tight">{plan.title}</h1>
           <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{plan.concept}</p>
         </header>

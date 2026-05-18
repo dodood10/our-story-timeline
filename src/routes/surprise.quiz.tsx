@@ -22,6 +22,7 @@ type Step = {
   q: string;
   options: [string, string][];
   multi?: boolean;
+  isText?: boolean;
 };
 
 function QuizPage() {
@@ -50,6 +51,7 @@ function QuizPage() {
 
   const steps: Step[] = [
     { key: "recipient", q: "Para quem é a surpresa?", options: Object.entries(LABELS.recipient) },
+    { key: "partnerName", q: "Qual o nome dela/dele?", options: [], isText: true },
     { key: "place", q: "Onde será a surpresa?", options: Object.entries(LABELS.place) },
     { key: "budget", q: "Qual seu orçamento?", options: Object.entries(LABELS.budget) },
     { key: "style", q: "Qual estilo você quer?", options: Object.entries(LABELS.style) },
@@ -65,7 +67,9 @@ function QuizPage() {
   const current = steps[step];
   const isLast = step === steps.length - 1;
   const currentValue = answers[current.key];
-  const canAdvance = current.multi
+  const canAdvance = current.isText
+    ? true
+    : current.multi
     ? Array.isArray(currentValue) && currentValue.length > 0
     : !!currentValue;
 
@@ -126,26 +130,49 @@ function QuizPage() {
             <p className="text-sm text-muted-foreground mt-1">Pode escolher mais de uma opção.</p>
           )}
 
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            {current.options.map(([value, label]) => {
-              const selected = current.multi
-                ? (answers.likes ?? []).includes(value as SurpriseAnswers["likes"][number])
-                : (answers[current.key] as string | undefined) === value;
-              return (
-                <button
-                  key={value}
-                  onClick={() => pick(value)}
-                  className={`p-4 rounded-2xl border text-sm text-left transition-all ${
-                    selected
-                      ? "border-primary bg-primary/10 text-foreground font-medium shadow-soft"
-                      : "border-border bg-card hover:border-primary/40 hover:bg-card"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          {current.isText ? (
+            <div className="mt-6 space-y-3">
+              <input
+                type="text"
+                autoFocus
+                value={(answers.partnerName as string) ?? ""}
+                onChange={(e) => setAnswers((a) => ({ ...a, partnerName: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (isLast) void finish();
+                    else setStep((s) => s + 1);
+                  }
+                }}
+                placeholder="Ex: Ana, Maria, João..."
+                className="w-full text-2xl font-display bg-transparent border-b-2 border-primary focus:outline-none py-3 placeholder:text-muted-foreground/40 transition-colors"
+              />
+              <p className="text-xs text-muted-foreground">
+                Opcional — mas deixa o plano muito mais especial ✨
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {current.options.map(([value, label]) => {
+                const selected = current.multi
+                  ? (answers.likes ?? []).includes(value as SurpriseAnswers["likes"][number])
+                  : (answers[current.key] as string | undefined) === value;
+                return (
+                  <button
+                    key={value}
+                    onClick={() => pick(value)}
+                    className={`p-4 rounded-2xl border text-sm text-left transition-all ${
+                      selected
+                        ? "border-primary bg-primary/10 text-foreground font-medium shadow-soft"
+                        : "border-border bg-card hover:border-primary/40 hover:bg-card"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           <div className="mt-8 flex justify-between gap-3">
             <Button

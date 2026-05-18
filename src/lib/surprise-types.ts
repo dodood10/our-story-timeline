@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const SurpriseAnswersSchema = z.object({
   recipient: z.enum(["namorada", "namorado", "esposa", "marido", "ficante", "noivo_noiva"]),
+  partnerName: z.string().optional(),
   place: z.enum(["quarto", "sala", "mesa", "varanda", "hotel", "casa_inteira"]),
   budget: z.enum(["50", "100", "200", "caprichar"]),
   style: z.enum(["fofo", "elegante", "sensual", "simples", "pinterest", "pedido"]),
