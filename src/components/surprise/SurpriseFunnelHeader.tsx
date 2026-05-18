@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BRAND_NAME, BRAND_SHORT } from "@/lib/brand";
-import { PROMO_BAR_HEIGHT } from "@/components/landing/PromoTimerBar";
+import { PROMO_BAR_HEIGHT } from "@/lib/promo-timer";
 
 interface SurpriseFunnelHeaderProps {
   showCta?: boolean;

@@ -10,8 +10,13 @@ const EMPTY: PromoTimerSnapshot = {
   display: "08:00:00",
 };
 
+function readInitialSnapshot(): PromoTimerSnapshot {
+  if (typeof window === "undefined") return EMPTY;
+  return getPromoTimerSnapshot();
+}
+
 export function usePromoTimer(): PromoTimerSnapshot {
-  const [snapshot, setSnapshot] = useState<PromoTimerSnapshot>(EMPTY);
+  const [snapshot, setSnapshot] = useState<PromoTimerSnapshot>(readInitialSnapshot);
 
   useEffect(() => {
     const tick = () => setSnapshot(getPromoTimerSnapshot());

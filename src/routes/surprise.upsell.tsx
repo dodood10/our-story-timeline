@@ -27,17 +27,19 @@ function UpsellPage() {
 
   if (!hydrated) {
     return (
-      <SurpriseShell
-        showTimer={false}
-        footer={false}
-        mainClassName="flex items-center justify-center py-16"
-      >
+      <SurpriseShell footer={false} mainClassName="flex items-center justify-center py-16">
         <Loader2 className="h-10 w-10 text-primary animate-spin" />
       </SurpriseShell>
     );
   }
 
-  if (!hasSurprise) return null;
+  if (!hasSurprise) {
+    return (
+      <SurpriseShell footer={false} mainClassName="flex items-center justify-center py-16">
+        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+      </SurpriseShell>
+    );
+  }
 
   function accept() {
     writeUpsellKit(true);
@@ -50,11 +52,7 @@ function UpsellPage() {
   }
 
   return (
-    <SurpriseShell
-      showTimer={false}
-      footer={false}
-      mainClassName="max-w-lg mx-auto px-4 py-10 sm:py-12"
-    >
+    <SurpriseShell footer={false} mainClassName="max-w-lg mx-auto px-4 py-10 sm:py-12">
       <div className="text-center">
         <span className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-primary/15 text-primary">
           <CheckCircle2 className="h-7 w-7" />

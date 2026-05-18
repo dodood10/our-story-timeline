@@ -1,7 +1,7 @@
 import { usePromoTimer } from "@/hooks/usePromoTimer";
+import { PROMO_BAR_HEIGHT } from "@/lib/promo-timer";
 
-/** Height of the fixed promo bar — use for header offset. */
-export const PROMO_BAR_HEIGHT = "2.5rem";
+export { PROMO_BAR_HEIGHT };
 
 export function PromoTimerBar() {
   const { display, phase } = usePromoTimer();

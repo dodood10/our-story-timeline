@@ -94,3 +94,20 @@ export function snapshotFromState(state: PromoTimerState, now = Date.now()): Pro
 export function getPromoTimerSnapshot(now = Date.now()): PromoTimerSnapshot {
   return snapshotFromState(resolvePromoTimerState(), now);
 }
+
+/** Fixed height of the promo urgency bar (sticky header offset). */
+export const PROMO_BAR_HEIGHT = "2.5rem";
+
+/** Promo bar on landing (`/`) only. */
+export function shouldShowLandingPromoTimer(pathname: string): boolean {
+  return pathname === "/";
+}
+
+/** Promo bar in checkout funnel: `/surprise` → upsell (not quiz/plan). */
+export function shouldShowFunnelPromoTimer(pathname: string): boolean {
+  return (
+    pathname === "/surprise" ||
+    pathname === "/surprise/" ||
+    pathname === "/surprise/upsell"
+  );
+}

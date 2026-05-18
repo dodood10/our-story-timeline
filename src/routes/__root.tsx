@@ -128,7 +128,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem('ml.settings');if(s){var t=JSON.parse(s).theme||'romantic';document.documentElement.classList.remove('theme-romantic','theme-minimal','theme-modern');document.documentElement.classList.add('theme-'+t);}}catch(e){}if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}})();`,
+            __html: `(function(){try{var s=localStorage.getItem('ml.settings');if(s){var t=JSON.parse(s).theme||'romantic';document.documentElement.classList.remove('theme-romantic','theme-minimal','theme-modern');document.documentElement.classList.add('theme-'+t);}}catch(e){}if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js?v=2').then(function(reg){reg.update();function onWaiting(w){w&&w.postMessage({type:'SKIP_WAITING'});}onWaiting(reg.waiting);reg.addEventListener('updatefound',function(){onWaiting(reg.installing);});var reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(reloaded)return;reloaded=true;location.reload();});}).catch(function(){});});}})();`,
           }}
         />
       </head>
