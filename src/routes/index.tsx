@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PromoTimerBar, PROMO_BAR_HEIGHT } from "@/components/landing/PromoTimerBar";
+import { usePromoTimer } from "@/hooks/usePromoTimer";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { CuriositySection } from "@/components/landing/CuriositySection";
@@ -38,10 +39,13 @@ export const Route = createFileRoute("/")({
 });
 
 function LandingPage() {
+  const { phase } = usePromoTimer();
+  const barVisible = phase !== "expired";
+
   return (
     <div className="bg-background text-foreground">
-      <PromoTimerBar />
-      <div style={{ paddingTop: PROMO_BAR_HEIGHT }}>
+      {barVisible && <PromoTimerBar />}
+      <div style={{ paddingTop: barVisible ? PROMO_BAR_HEIGHT : "0" }}>
         <LandingHeader />
         <HeroSection />
         <CuriositySection />

@@ -27,9 +27,42 @@ import {
   type SurprisePlan,
 } from "@/lib/surprise-types";
 import { ANSWERS_KEY, readCachedPlan, writeCachedPlan, clearPlanCache } from "@/lib/surprise-cache";
+import { readUpsellKit } from "@/lib/checkout-storage";
 import { AccessGateDenied, AccessGateLoading } from "@/components/surprise/AccessGate";
 import { SurpriseShell } from "@/components/surprise/SurpriseShell";
 import { BRAND_NAME } from "@/lib/brand";
+
+const KIT_THEMES = [
+  { name: "Cantinho do Cinema", items: "Mantas, pipoca, projetor ou TV, almofadas no chão" },
+  { name: "Jardim de Velas", items: "Velas brancas espalhadas, flores no chão, pétalas de rosa" },
+  { name: "Noite de Spa", items: "Toalhas felpudas, óleos aromáticos, música suave, velas" },
+  { name: "Piquenique Indoor", items: "Tapete no chão, cesta, frutas, queijos e snacks favoritos" },
+  { name: "Estilo Pinterest", items: "Guirlandas de luz, balões, florzinhas, letras luminosas" },
+  { name: "Degustação Íntima", items: "Mesa baixa com vinho, queijos, uvas e iluminação âmbar" },
+  { name: "Café da Manhã Especial", items: "Bandeja arrumada com bilhete, flor e comida favorita dela" },
+  { name: "Banheiro Romântico", items: "Espuma de banho, velas, sais aromáticos, toalha morna" },
+  { name: "Noite Estrelada", items: "Teto de led azul/branco, cobertor, música tranquila" },
+  { name: "Jantar à Luz de Velas", items: "Toalha de mesa, 2 velas, prataria, prato especial dela" },
+];
+
+const KIT_PLAYLISTS = [
+  { mood: "Romântico", tip: "Bossa nova instrumental, jazz suave, MPB lenta" },
+  { mood: "Sensual", tip: "R&B lento, soul, músicas em tom de voz baixo" },
+  { mood: "Fofo", tip: "Pop acústico, Ed Sheeran, Olivia Rodrigo, Maroon 5" },
+  { mood: "Nostalgia", tip: "As músicas que marcaram o início do relacionamento de vocês" },
+];
+
+const KIT_GIFTS = [
+  { range: "Até R$30", ideas: "Chocolate artesanal + cartão escrito à mão · Flores do mercado" },
+  { range: "Até R$60", ideas: "Vinho + taças · Kit de spa básico (esfoliante + vela)" },
+  { range: "Até R$100", ideas: "Perfume favorito dela · Jantar temático em casa bem montado" },
+];
+
+const KIT_CARD_TEMPLATES = [
+  "Não sei fazer grandes gestos, mas sei que você merece sentir que é a pessoa mais especial do mundo. E é isso que você é pra mim.",
+  "[nome dela], cada dia com você me lembra por que eu escolhi estar aqui. Hoje eu quis mostrar isso de um jeito que você não vai esquecer.",
+  "Você me ensinou que amor de verdade não é perfeito — é real. E o nosso é real demais.",
+];
 
 export const Route = createFileRoute("/surprise/plan")({
   head: () => ({ meta: [{ title: `Seu plano — ${BRAND_NAME}` }] }),
@@ -62,6 +95,7 @@ function PlanPage() {
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
   const [partnerName, setPartnerName] = useState("");
   const [planStyle, setPlanStyle] = useState("");
+  const [hasKit, setHasKit] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const loadKeyRef = useRef<string | null>(null);
 
@@ -74,6 +108,7 @@ function PlanPage() {
         setPlanStyle(typeof parsed.style === "string" ? parsed.style : "");
       }
     } catch { /* */ }
+    setHasKit(readUpsellKit());
   }, []);
 
   useEffect(() => {
@@ -472,7 +507,70 @@ function PlanPage() {
           </Button>
         </div>
       )}
+
+      {hasKit && <KitBonusSection />}
     </SurpriseShell>
+  );
+}
+
+function KitBonusSection() {
+  return (
+    <div className="mt-6 rounded-3xl border-2 border-amber-400/40 bg-amber-50/50 dark:bg-amber-950/20 p-6 sm:p-8 space-y-7">
+      <header className="flex items-center gap-2">
+        <span className="text-2xl">🎁</span>
+        <div>
+          <h2 className="font-display text-xl text-amber-900 dark:text-amber-200">Kit Surpresa Premium</h2>
+          <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">Conteúdo exclusivo do seu kit adicional</p>
+        </div>
+      </header>
+
+      <section>
+        <h3 className="font-medium text-sm mb-3">🏠 10 Temas de Decoração Prontos</h3>
+        <div className="grid sm:grid-cols-2 gap-2">
+          {KIT_THEMES.map((t) => (
+            <div key={t.name} className="rounded-xl bg-white/70 dark:bg-white/5 border border-amber-200/60 dark:border-amber-800/40 p-3">
+              <p className="text-sm font-medium">{t.name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t.items}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h3 className="font-medium text-sm mb-3">🎵 Playlists por Clima</h3>
+        <div className="grid sm:grid-cols-2 gap-2">
+          {KIT_PLAYLISTS.map((p) => (
+            <div key={p.mood} className="rounded-xl bg-white/70 dark:bg-white/5 border border-amber-200/60 dark:border-amber-800/40 p-3">
+              <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">{p.mood}</p>
+              <p className="text-sm mt-1">{p.tip}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h3 className="font-medium text-sm mb-3">🎀 Ideias de Presente por Orçamento</h3>
+        <div className="space-y-2">
+          {KIT_GIFTS.map((g) => (
+            <div key={g.range} className="flex gap-3 items-start text-sm">
+              <span className="shrink-0 px-2 py-0.5 rounded-full bg-amber-200/60 dark:bg-amber-900/40 text-amber-900 dark:text-amber-300 text-xs font-medium">{g.range}</span>
+              <span className="text-muted-foreground">{g.ideas}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h3 className="font-medium text-sm mb-3">💌 Modelos de Bilhete</h3>
+        <div className="space-y-2">
+          {KIT_CARD_TEMPLATES.map((t, i) => (
+            <div key={i} className="rounded-xl bg-white/70 dark:bg-white/5 border border-amber-200/60 dark:border-amber-800/40 p-3 text-sm italic text-muted-foreground">
+              "{t}"
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }
 

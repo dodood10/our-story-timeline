@@ -2,6 +2,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { shouldShowFunnelPromoTimer, PROMO_BAR_HEIGHT } from "@/lib/promo-timer";
 import { PromoTimerBar } from "@/components/landing/PromoTimerBar";
+import { usePromoTimer } from "@/hooks/usePromoTimer";
 import { TrustFooter } from "@/components/checkout/TrustFooter";
 import { SurpriseFunnelHeader } from "./SurpriseFunnelHeader";
 
@@ -24,7 +25,8 @@ export function SurpriseShell({
   mainClassName,
 }: SurpriseShellProps) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const timerVisible = showTimer ?? shouldShowFunnelPromoTimer(pathname);
+  const { phase } = usePromoTimer();
+  const timerVisible = phase !== "expired" && (showTimer ?? shouldShowFunnelPromoTimer(pathname));
   const topOffset = timerVisible ? PROMO_BAR_HEIGHT : "0px";
 
   return (

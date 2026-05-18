@@ -2,6 +2,7 @@ import { BRAND_NAME } from "@/lib/brand";
 
 export { BRAND_NAME as LANDING_BRAND };
 
+/** Pre-Dia dos Namorados discount window. Update this date for each new campaign. */
 export const PROMO_END_DATE = new Date("2026-05-31T23:59:59");
 
 export function isPreValentinesPromo(): boolean {

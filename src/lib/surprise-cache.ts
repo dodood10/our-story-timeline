@@ -27,4 +27,8 @@ export function clearPlanCache(): void {
   localStorage.removeItem(`${PLAN_PREFIX}basic`);
   localStorage.removeItem(`${PLAN_PREFIX}premium`);
   localStorage.removeItem("ml.surprise.plan");
+  // Clear checklist check states so they don't bleed into a regenerated plan
+  localStorage.removeItem("ml.surprise.essential");
+  localStorage.removeItem("ml.surprise.optional");
+  localStorage.removeItem("ml.surprise.checklist");
 }
