@@ -3,8 +3,9 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { useAccess } from "@/hooks/useAccess";
 import { Button } from "@/components/ui/button";
-import { UPSELL_KIT, formatBRL } from "@/lib/checkout-products";
-import { writeUpsellKit } from "@/lib/checkout-storage";
+import { UPSELL_KIT, formatBRL, calcTotalCents, getCheckoutProduct } from "@/lib/checkout-products";
+import { readCheckoutBumps, readLastProductId, writeUpsellKit } from "@/lib/checkout-storage";
+import { trackEvent } from "@/lib/meta-pixel";
 import { SurpriseShell } from "@/components/surprise/SurpriseShell";
 import { BRAND_NAME } from "@/lib/brand";
 import { CheckCircle2, Gift, Loader2, Sparkles } from "lucide-react";
@@ -41,13 +42,30 @@ function UpsellPage() {
     );
   }
 
+  const productId = readLastProductId();
+  const product = getCheckoutProduct(productId);
+  const bumps = readCheckoutBumps();
+  const baseTotal = calcTotalCents(product, bumps);
+
   function accept() {
     writeUpsellKit(true);
+    trackEvent("Purchase", {
+      value: (baseTotal + UPSELL_KIT.priceCents) / 100,
+      currency: "BRL",
+      content_ids: [product.id, "upsell-kit"],
+      content_type: "product",
+    });
     toast.success("Kit Surpresa Premium adicionado ao seu acesso!");
     navigate({ to: "/surprise/quiz" });
   }
 
   function decline() {
+    trackEvent("Purchase", {
+      value: baseTotal / 100,
+      currency: "BRL",
+      content_ids: [product.id],
+      content_type: "product",
+    });
     navigate({ to: "/surprise/quiz" });
   }
 

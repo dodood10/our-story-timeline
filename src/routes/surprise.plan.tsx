@@ -28,6 +28,7 @@ import {
 } from "@/lib/surprise-types";
 import { ANSWERS_KEY, readCachedPlan, writeCachedPlan, clearPlanCache } from "@/lib/surprise-cache";
 import { readUpsellKit } from "@/lib/checkout-storage";
+import { trackEvent } from "@/lib/meta-pixel";
 import { AccessGateDenied, AccessGateLoading } from "@/components/surprise/AccessGate";
 import { SurpriseShell } from "@/components/surprise/SurpriseShell";
 import { BRAND_NAME } from "@/lib/brand";
@@ -125,6 +126,17 @@ function PlanPage() {
     const t = setTimeout(() => setShowReveal(false), 3500);
     return () => clearTimeout(t);
   }, [showReveal]);
+
+  useEffect(() => {
+    if (plan && !loading) {
+      trackEvent("ViewContent", {
+        content_name: "Plano Surpresa Romantica",
+        content_category: tier,
+        value: isPremium ? 19.9 : 10.0,
+        currency: "BRL",
+      });
+    }
+  }, [plan, loading, tier, isPremium]);
 
   useEffect(() => {
     if (!hydrated) return;

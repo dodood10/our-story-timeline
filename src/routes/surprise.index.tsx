@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useAccess } from "@/hooks/useAccess";
@@ -23,6 +23,7 @@ import {
   submitCheckoutMock,
   type CheckoutLead,
 } from "@/lib/checkout-storage";
+import { trackEvent } from "@/lib/meta-pixel";
 import { CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
 
 const checkoutSearchSchema = z.object({
@@ -59,6 +60,17 @@ function SurpriseCheckout() {
 
   const totalCents = calcTotalCents(product, bumps);
   const defaultLead = readCheckoutLead();
+
+  useEffect(() => {
+    if (hydrated && surprise !== "basic" && surprise !== "premium") {
+      trackEvent("InitiateCheckout", {
+        value: totalCents / 100,
+        currency: "BRL",
+        content_ids: [product.id],
+        content_type: "product",
+      });
+    }
+  }, [hydrated, surprise, totalCents, product.id]);
 
   if (!hydrated) {
     return (

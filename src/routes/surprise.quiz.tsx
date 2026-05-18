@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { LABELS, type SurpriseAnswers } from "@/lib/surprise-types";
 import { ANSWERS_KEY, clearPlanCache } from "@/lib/surprise-cache";
+import { trackEvent } from "@/lib/meta-pixel";
 import { AccessGateDenied, AccessGateLoading } from "@/components/surprise/AccessGate";
 import { SurpriseShell } from "@/components/surprise/SurpriseShell";
 import { BRAND_NAME } from "@/lib/brand";
@@ -94,6 +95,10 @@ function QuizPage() {
     if (!answersHydrated) return;
     localStorage.setItem(ANSWERS_KEY, JSON.stringify(answers));
     clearPlanCache();
+    trackEvent("Lead", {
+      content_name: "Quiz Surpresa Romantica",
+      status: "completed",
+    });
     navigate({ to: "/surprise/plan" });
   }
 
