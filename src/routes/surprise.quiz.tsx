@@ -95,6 +95,10 @@ function QuizPage() {
     if (!answersHydrated) return;
     localStorage.setItem(ANSWERS_KEY, JSON.stringify(answers));
     clearPlanCache();
+    trackEvent("Lead", {
+      content_name: "Quiz Surpresa Romantica",
+      status: "completed",
+    });
     navigate({ to: "/surprise/plan" });
   }
 
