@@ -2,14 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PromoTimerBar, PROMO_BAR_HEIGHT } from "@/components/landing/PromoTimerBar";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { TrustBadgesSection } from "@/components/landing/TrustBadgesSection";
+import { CuriositySection } from "@/components/landing/CuriositySection";
 import { SceneSection } from "@/components/landing/SceneSection";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { DeliverablesSection } from "@/components/landing/DeliverablesSection";
-import { QualificationSection } from "@/components/landing/QualificationSection";
+import { BenefitsSection } from "@/components/landing/BenefitsSection";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
-import { WhyCheapSection } from "@/components/landing/WhyCheapSection";
+import { ObjectionSection } from "@/components/landing/ObjectionSection";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { FaqSection } from "@/components/landing/FaqSection";
 import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
@@ -24,13 +24,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Plano personalizado com decoração, lista de compras, roteiro e frases prontas. Quiz rápido + IA. Surpreenda em casa gastando pouco.",
+          "Método para homens criarem uma surpresa emocionante no Dia dos Namorados. Quiz + plano personalizado por IA: roteiro, decoração, lista de compras e frases prontas.",
       },
       { property: "og:title", content: "Método Surpresa Perfeita™ — Dia dos Namorados 2026" },
       {
         property: "og:description",
         content:
-          "Método completo para uma noite inesquecível em casa. Acesso imediato após o pagamento.",
+          "Transforme uma noite comum em uma experiência inesquecível. Plano personalizado em minutos — acesso imediato.",
       },
     ],
   }),
@@ -44,14 +44,14 @@ function LandingPage() {
       <div style={{ paddingTop: PROMO_BAR_HEIGHT }}>
         <LandingHeader />
         <HeroSection />
-        <TrustBadgesSection />
+        <CuriositySection />
         <SceneSection />
         <ProblemSection />
-        <HowItWorksSection />
         <DeliverablesSection />
-        <QualificationSection />
+        <HowItWorksSection />
+        <BenefitsSection />
         <TestimonialsSection />
-        <WhyCheapSection />
+        <ObjectionSection />
         <PricingSection />
         <FaqSection />
         <FinalCtaSection />

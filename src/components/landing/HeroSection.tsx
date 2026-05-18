@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Heart } from "lucide-react";
 import { hero } from "@/lib/landing-content";
 import { LandingCta } from "./LandingCta";
 
@@ -22,17 +22,26 @@ export function HeroSection() {
           <p className="text-base sm:text-lg text-muted-foreground mt-5 max-w-2xl mx-auto">
             {hero.subtitle}
           </p>
-          <ul className="mt-8 flex flex-col sm:flex-row flex-wrap justify-center gap-x-6 gap-y-2 text-sm max-w-3xl mx-auto">
-            {hero.checkmarks.map((item) => (
-              <li key={item} className="flex items-center gap-2 justify-center">
-                <Check className="h-4 w-4 text-primary shrink-0" strokeWidth={2.5} />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-8 max-w-md mx-auto text-left">
+            <p className="text-sm font-medium flex items-center gap-1.5 justify-center sm:justify-start">
+              <Heart className="h-4 w-4 text-primary fill-primary/20" />
+              {hero.idealForLabel}
+            </p>
+            <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+              {hero.idealFor.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="text-primary shrink-0">•</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
           <div className="mt-8 flex flex-col items-center gap-2">
-            <LandingCta plan="premium">👉 {hero.cta}</LandingCta>
+            <LandingCta plan="premium">💝 {hero.cta}</LandingCta>
             <p className="text-xs text-muted-foreground">✓ {hero.microcopy}</p>
+            <p className="text-xs text-amber-800 dark:text-amber-200 max-w-md mt-2">
+              ⚠️ {hero.urgencyWarning}
+            </p>
           </div>
         </motion.div>
       </div>

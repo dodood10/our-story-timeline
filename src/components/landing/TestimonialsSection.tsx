@@ -10,7 +10,7 @@ export function TestimonialsSection() {
         <h2 className="font-display text-2xl sm:text-3xl text-center max-w-2xl mx-auto">
           {testimonials.title}
         </h2>
-        <div className="mt-10 grid sm:grid-cols-2 gap-4">
+        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {testimonials.items.map((it, i) => (
             <motion.blockquote
               key={it.name}
@@ -27,8 +27,8 @@ export function TestimonialsSection() {
               </div>
               <p className="mt-3 text-sm leading-relaxed">&ldquo;{it.text}&rdquo;</p>
               <footer className="mt-4 text-xs text-muted-foreground">
-                <strong className="text-foreground">{it.name}</strong>
-                <span> · {it.context}</span>
+                <strong className="text-foreground">— {it.name}</strong>
+                {it.context ? <span> · {it.context}</span> : null}
               </footer>
             </motion.blockquote>
           ))}
