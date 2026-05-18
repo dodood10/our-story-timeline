@@ -5,6 +5,9 @@
 DROP POLICY IF EXISTS "anyone can read by code" ON public.couple_syncs;
 DROP POLICY IF EXISTS "anyone can insert" ON public.couple_syncs;
 DROP POLICY IF EXISTS "anyone can update by code" ON public.couple_syncs;
+DROP POLICY IF EXISTS "deny direct select for anon" ON public.couple_syncs;
+DROP POLICY IF EXISTS "deny direct insert for anon" ON public.couple_syncs;
+DROP POLICY IF EXISTS "deny direct update for anon" ON public.couple_syncs;
 
 CREATE POLICY "deny direct select for anon"
   ON public.couple_syncs FOR SELECT

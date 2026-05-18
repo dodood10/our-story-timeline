@@ -24,11 +24,11 @@ const hasAdmin =
   process.env.SUPABASE_ACCESS_TOKEN || process.env.SUPABASE_DB_PASSWORD || process.env.DATABASE_URL;
 
 if (hasAdmin) {
-  spawnSync("node", ["scripts/apply-supabase-migration.mjs"], {
+  const r = spawnSync("node", ["scripts/apply-supabase-migration.mjs"], {
     stdio: "inherit",
     shell: true,
   });
-  process.exit(0);
+  process.exit(r.status ?? 0);
 }
 
 console.log("→ Sem token/senha no .env; tentando CLI logado…");

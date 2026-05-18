@@ -37,14 +37,14 @@ function classifyKey(key) {
   return "unknown";
 }
 
-async function applyViaManagementApi(token) {
+async function applyViaManagementApi(token, query = sql) {
   const res = await fetch(`https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ query: sql }),
+    body: JSON.stringify({ query }),
   });
   const body = await res.text();
   if (!res.ok) {
@@ -98,7 +98,7 @@ if (tokenKind === "pat") {
   console.log("→ Aplicando SQL via Management API (token sbp_)…");
   await applyViaManagementApi(accessToken);
   console.log("→ Recarregando cache do PostgREST…");
-  await applyViaManagementApi("NOTIFY pgrst, 'reload schema'");
+  await applyViaManagementApi(accessToken, "NOTIFY pgrst, 'reload schema'");
   console.log("→ OK");
 } else if (databaseUrl || dbPassword) {
   console.log("→ Aplicando SQL via Postgres…");
