@@ -9,10 +9,7 @@ const env = Object.fromEntries(
       const i = l.indexOf("=");
       const k = l.slice(0, i).trim();
       let v = l.slice(i + 1).trim();
-      if (
-        (v.startsWith('"') && v.endsWith('"')) ||
-        (v.startsWith("'") && v.endsWith("'"))
-      ) {
+      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
         v = v.slice(1, -1);
       }
       return [k, v];

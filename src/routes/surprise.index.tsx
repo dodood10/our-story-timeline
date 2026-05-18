@@ -4,11 +4,11 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useAccess } from "@/hooks/useAccess";
 import { Button } from "@/components/ui/button";
-import { UrgencyBar } from "@/components/checkout/UrgencyBar";
 import { ProductSummaryColumn } from "@/components/checkout/ProductSummaryColumn";
 import { CheckoutFormColumn } from "@/components/checkout/CheckoutFormColumn";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
-import { TrustFooter } from "@/components/checkout/TrustFooter";
+import { SurpriseShell } from "@/components/surprise/SurpriseShell";
+import { BRAND_NAME } from "@/lib/brand";
 import {
   calcTotalCents,
   getCheckoutProduct,
@@ -23,7 +23,7 @@ import {
   submitCheckoutMock,
   type CheckoutLead,
 } from "@/lib/checkout-storage";
-import { CheckCircle2, ArrowRight, Heart, Loader2 } from "lucide-react";
+import { CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
 
 const checkoutSearchSchema = z.object({
   plan: z.enum(["premium", "basic"]).optional(),
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/surprise/")({
   head: () => ({
     meta: [
       {
-        title: "Finalize sua compra — Minha Noite Romântica Premium",
+        title: `Finalize sua compra — ${BRAND_NAME}`,
       },
       {
         name: "description",
@@ -62,15 +62,15 @@ function SurpriseCheckout() {
 
   if (!hydrated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <SurpriseShell footer={false} mainClassName="flex items-center justify-center py-16">
         <Loader2 className="h-10 w-10 text-primary animate-spin" />
-      </div>
+      </SurpriseShell>
     );
   }
 
   if (surprise === "basic" || surprise === "premium") {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <SurpriseShell footer={false} mainClassName="flex items-center justify-center px-4 py-16">
         <div className="max-w-md w-full text-center bg-card border border-border rounded-3xl p-8 shadow-card">
           <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
           <h1 className="font-display text-3xl mt-4">Tudo pronto!</h1>
@@ -87,7 +87,7 @@ function SurpriseCheckout() {
             <Link to="/">Voltar ao início</Link>
           </Button>
         </div>
-      </div>
+      </SurpriseShell>
     );
   }
 
@@ -114,53 +114,40 @@ function SurpriseCheckout() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-soft flex flex-col">
-      <UrgencyBar product={product} />
+    <SurpriseShell footer mainClassName="max-w-6xl mx-auto px-4 py-8 sm:py-10">
+      <p className="text-sm text-muted-foreground max-w-xl">{product.subtitle}</p>
 
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8 sm:py-10">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition"
-        >
-          <Heart className="h-4 w-4 text-primary" /> Surpresa Romântica
-        </Link>
+      <div className="mt-8 flex flex-col gap-8 lg:grid lg:grid-cols-2 lg:gap-10 lg:items-start">
+        <OrderSummary
+          product={product}
+          bumps={bumps}
+          totalCents={totalCents}
+          compact
+          className="lg:hidden"
+        />
 
-        <p className="mt-4 text-sm text-muted-foreground max-w-xl">{product.subtitle}</p>
+        <ProductSummaryColumn product={product} />
 
-        <div className="mt-8 flex flex-col gap-8 lg:grid lg:grid-cols-2 lg:gap-10 lg:items-start">
+        <div className="space-y-6">
           <OrderSummary
             product={product}
             bumps={bumps}
             totalCents={totalCents}
-            compact
-            className="lg:hidden"
+            className="hidden lg:block"
           />
-
-          <ProductSummaryColumn product={product} />
-
-          <div className="space-y-6">
-            <OrderSummary
-              product={product}
-              bumps={bumps}
-              totalCents={totalCents}
-              className="hidden lg:block"
-            />
-            <CheckoutFormColumn
-              bumps={bumps}
-              onBumpChange={handleBumpChange}
-              paymentMethod={paymentMethod}
-              onPaymentMethodChange={setPaymentMethod}
-              defaultLead={defaultLead}
-              pixDialogOpen={pixOpen}
-              onPixDialogOpenChange={setPixOpen}
-              onSubmit={completeCheckout}
-              submitting={submitting}
-            />
-          </div>
+          <CheckoutFormColumn
+            bumps={bumps}
+            onBumpChange={handleBumpChange}
+            paymentMethod={paymentMethod}
+            onPaymentMethodChange={setPaymentMethod}
+            defaultLead={defaultLead}
+            pixDialogOpen={pixOpen}
+            onPixDialogOpenChange={setPixOpen}
+            onSubmit={completeCheckout}
+            submitting={submitting}
+          />
         </div>
-      </main>
-
-      <TrustFooter />
-    </div>
+      </div>
+    </SurpriseShell>
   );
 }

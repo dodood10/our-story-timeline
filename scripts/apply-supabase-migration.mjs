@@ -38,17 +38,14 @@ function classifyKey(key) {
 }
 
 async function applyViaManagementApi(token) {
-  const res = await fetch(
-    `https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ query: sql }),
+  const res = await fetch(`https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({ query: sql }),
+  });
   const body = await res.text();
   if (!res.ok) {
     throw new Error(`Management API ${res.status}: ${body}`);
@@ -88,7 +85,9 @@ Depois: npm run supabase:apply
 }
 
 if (tokenKind === "anon") {
-  console.error("SUPABASE_ACCESS_TOKEN parece ser a chave anon/publishable. Use sbp_... ou SUPABASE_DB_PASSWORD.");
+  console.error(
+    "SUPABASE_ACCESS_TOKEN parece ser a chave anon/publishable. Use sbp_... ou SUPABASE_DB_PASSWORD.",
+  );
   process.exit(1);
 }
 

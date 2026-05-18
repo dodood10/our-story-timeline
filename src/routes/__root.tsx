@@ -28,9 +28,14 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="font-display text-7xl">404</h1>
         <h2 className="mt-4 text-xl font-semibold">Página não encontrada</h2>
-        <p className="mt-2 text-sm text-muted-foreground">A página que você procura não existe ou foi movida.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          A página que você procura não existe ou foi movida.
+        </p>
         <div className="mt-6">
-          <Link to="/" className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+          <Link
+            to="/"
+            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
             Voltar para o início
           </Link>
         </div>
@@ -48,10 +53,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <h1 className="text-xl font-semibold">Algo deu errado</h1>
         <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button onClick={() => { router.invalidate(); reset(); }} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+          <button
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
             Tentar de novo
           </button>
-          <a href="/" className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-accent">Início</a>
+          <a href="/" className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-accent">
+            Início
+          </a>
         </div>
       </div>
     </div>
@@ -63,14 +76,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Surpresa Romântica — Plano personalizado para o Dia dos Namorados" },
-      { name: "description", content: "Quiz rápido monta um plano completo de surpresa romântica em minutos: decoração, lista de compras, roteiro e frases." },
-      { property: "og:title", content: "Surpresa Romântica — Plano personalizado para o Dia dos Namorados" },
-      { property: "og:description", content: "Quiz rápido monta um plano completo de surpresa romântica em minutos: decoração, lista de compras, roteiro e frases." },
+      { title: "Memory Lane — História do casal" },
+      {
+        name: "description",
+        content:
+          "Guarde memórias, cartas e momentos especiais. Surpresa romântica com plano personalizado por IA.",
+      },
+      { property: "og:title", content: "Método Surpresa Perfeita™ — Dia dos Namorados 2026" },
+      {
+        property: "og:description",
+        content:
+          "Monte uma surpresa inesquecível em casa, mesmo sem criatividade e gastando pouco.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Surpresa Romântica — Plano personalizado para o Dia dos Namorados" },
-      { name: "twitter:description", content: "Quiz rápido monta um plano completo de surpresa romântica em minutos: decoração, lista de compras, roteiro e frases." },
+      {
+        name: "twitter:title",
+        content: "Método Surpresa Perfeita™ — Dia dos Namorados 2026",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Monte uma surpresa inesquecível em casa, mesmo sem criatividade e gastando pouco.",
+      },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7794435d-7f69-4a31-a1cf-faa1159dc1c1/id-preview-54b887b2--0245b738-ed74-4eb8-a4d4-f0b4532ba2bf.lovable.app-1779072730436.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7794435d-7f69-4a31-a1cf-faa1159dc1c1/id-preview-54b887b2--0245b738-ed74-4eb8-a4d4-f0b4532ba2bf.lovable.app-1779072730436.png" },
     ],
@@ -125,14 +153,13 @@ function RootComponent() {
 }
 
 /** Routes that render a bare layout (no sidebar, no paywall). */
-const MARKETING_PREFIXES = ["/", "/surprise", "/dev-unlock"];
+const MARKETING_PREFIXES = ["/", "/surprise", "/dev-unlock", "/termos", "/privacidade"];
 
 function LayoutSwitch() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isMarketing =
-    pathname === "/" ||
-    pathname.startsWith("/surprise") ||
-    pathname.startsWith("/dev-unlock");
+  const isMarketing = MARKETING_PREFIXES.some((p) =>
+    p === "/" ? pathname === "/" : pathname.startsWith(p),
+  );
 
   if (isMarketing) {
     return (
@@ -143,8 +170,6 @@ function LayoutSwitch() {
   }
   return <AppShell />;
 }
-
-void MARKETING_PREFIXES;
 
 function AppShell() {
   const { hydrated, onboarded } = useApp();
@@ -173,7 +198,11 @@ function AppShell() {
       </main>
       <BottomBar />
       {!onboarded && <OnboardingDialog open />}
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onNewMemory={() => setNewMemoryOpen(true)} />
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        onNewMemory={() => setNewMemoryOpen(true)}
+      />
       <MemoryFormDialog open={newMemoryOpen} onOpenChange={setNewMemoryOpen} />
     </div>
   );
@@ -188,7 +217,8 @@ function FullAppPaywall() {
         </div>
         <h1 className="font-display text-3xl">Memory Lane completo</h1>
         <p className="text-muted-foreground mt-2">
-          Linha do tempo, galeria, cartas seladas, mapa e muito mais — o app inteiro para guardar a história de vocês.
+          Linha do tempo, galeria, cartas seladas, mapa e muito mais — o app inteiro para guardar a
+          história de vocês.
         </p>
         <p className="text-sm text-muted-foreground mt-4">
           Em breve disponível como plano. Por enquanto, comece pela surpresa do Dia dos Namorados.

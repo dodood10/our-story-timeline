@@ -21,9 +21,7 @@ function run(cmd, args, opts = {}) {
 }
 
 const hasAdmin =
-  process.env.SUPABASE_ACCESS_TOKEN ||
-  process.env.SUPABASE_DB_PASSWORD ||
-  process.env.DATABASE_URL;
+  process.env.SUPABASE_ACCESS_TOKEN || process.env.SUPABASE_DB_PASSWORD || process.env.DATABASE_URL;
 
 if (hasAdmin) {
   spawnSync("node", ["scripts/apply-supabase-migration.mjs"], {

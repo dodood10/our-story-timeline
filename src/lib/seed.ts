@@ -40,10 +40,34 @@ export function seedMemories(): Memory[] {
 
 export function seedBucket(): BucketItem[] {
   return [
-    { id: uid(), title: "Conhecer Paris juntos", category: "travel", done: false, createdAt: new Date().toISOString() },
-    { id: uid(), title: "Jantar em um restaurante japonês fino", category: "food", done: false, createdAt: new Date().toISOString() },
-    { id: uid(), title: "Andar de balão", category: "adventure", done: false, createdAt: new Date().toISOString() },
-    { id: uid(), title: "Comprar nossa primeira casa", category: "goal", done: false, createdAt: new Date().toISOString() },
+    {
+      id: uid(),
+      title: "Conhecer Paris juntos",
+      category: "travel",
+      done: false,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: uid(),
+      title: "Jantar em um restaurante japonês fino",
+      category: "food",
+      done: false,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: uid(),
+      title: "Andar de balão",
+      category: "adventure",
+      done: false,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: uid(),
+      title: "Comprar nossa primeira casa",
+      category: "goal",
+      done: false,
+      createdAt: new Date().toISOString(),
+    },
   ];
 }
 
@@ -52,14 +76,16 @@ export function seedLetters(): Letter[] {
     {
       id: uid(),
       title: "Abra quando estiver triste 💙",
-      message: "Lembra que você não está sozinho(a). Eu estou aqui, sempre. Respira fundo, eu te amo.",
+      message:
+        "Lembra que você não está sozinho(a). Eu estou aqui, sempre. Respira fundo, eu te amo.",
       sealed: true,
       createdAt: new Date().toISOString(),
     },
     {
       id: uid(),
       title: "Abra quando precisar sorrir 😊",
-      message: "Lembra daquela vez que rimos por 20 minutos sem motivo? É isso. Eu te amo do jeitinho que você é.",
+      message:
+        "Lembra daquela vez que rimos por 20 minutos sem motivo? É isso. Eu te amo do jeitinho que você é.",
       sealed: true,
       createdAt: new Date().toISOString(),
     },

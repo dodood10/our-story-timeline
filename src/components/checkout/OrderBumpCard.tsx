@@ -15,7 +15,9 @@ export function OrderBumpCard({
     <label
       htmlFor={id}
       className={`flex gap-3 rounded-2xl border p-4 cursor-pointer transition-all ${
-        checked ? "border-primary bg-primary/5 shadow-soft" : "border-border bg-card hover:border-primary/30"
+        checked
+          ? "border-primary bg-primary/5 shadow-soft"
+          : "border-border bg-card hover:border-primary/30"
       }`}
     >
       <Checkbox
@@ -27,10 +29,14 @@ export function OrderBumpCard({
       />
       <div className="flex-1 min-w-0">
         <p id={`${id}-title`} className="font-medium text-sm leading-snug">
-          {bump.id === "cards" ? "Adicione o Kit Cartões Românticos para Imprimir" : "Adicione 100 Frases e Mensagens Românticas"}
+          {bump.id === "cards"
+            ? "Adicione o Kit Cartões Românticos para Imprimir"
+            : "Adicione 100 Frases e Mensagens Românticas"}
         </p>
         <p className="text-sm mt-1">
-          <span className="text-muted-foreground line-through mr-1.5">{formatBRL(bump.compareAtCents)}</span>
+          <span className="text-muted-foreground line-through mr-1.5">
+            {formatBRL(bump.compareAtCents)}
+          </span>
           <span className="font-semibold text-primary">por {formatBRL(bump.priceCents)}</span>
         </p>
         <p className="text-xs text-muted-foreground mt-2">{bump.description}</p>

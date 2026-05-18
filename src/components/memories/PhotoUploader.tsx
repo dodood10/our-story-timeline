@@ -78,7 +78,9 @@ export function PhotoUploader({
           e.target.value = "";
         }}
       />
-      <p className="text-xs text-muted-foreground">{photos.length}/{max} fotos</p>
+      <p className="text-xs text-muted-foreground">
+        {photos.length}/{max} fotos
+      </p>
     </div>
   );
 }

@@ -28,6 +28,7 @@ This is a **TanStack Start** (React 19 + Vite + TanStack Router) app written in 
 File-based routes live in `src/routes/`. The router plugin auto-generates `src/routeTree.gen.ts` — never edit it manually.
 
 `__root.tsx` contains `LayoutSwitch`, which routes by pathname prefix:
+
 - Paths starting with `/`, `/surprise`, or `/dev-unlock` → bare layout (no sidebar)
 - Everything else → `AppShell` (sidebar + bottom bar + paywall guard)
 
@@ -36,6 +37,7 @@ File-based routes live in `src/routes/`. The router plugin auto-generates `src/r
 ### Access control (mocked)
 
 `src/hooks/useAccess.ts` manages two localStorage flags:
+
 - `ml.access.surprise` — `"none" | "basic" | "premium"` — controls which surprise features are available
 - `ml.access.full` — boolean — gates the entire Memory Lane app
 

@@ -35,28 +35,67 @@ function DevUnlock() {
         </div>
 
         <div>
-          <p className="text-sm font-medium mb-2">Surpresa: <span className="text-primary">{surprise}</span></p>
+          <p className="text-sm font-medium mb-2">
+            Surpresa: <span className="text-primary">{surprise}</span>
+          </p>
           <div className="grid grid-cols-3 gap-2">
-            <Button size="sm" variant={surprise === "none" ? "default" : "outline"} onClick={() => setSurprise("none")}>Nenhum</Button>
-            <Button size="sm" variant={surprise === "basic" ? "default" : "outline"} onClick={() => setSurprise("basic")}>Básico</Button>
-            <Button size="sm" variant={surprise === "premium" ? "default" : "outline"} onClick={() => setSurprise("premium")}>Premium</Button>
+            <Button
+              size="sm"
+              variant={surprise === "none" ? "default" : "outline"}
+              onClick={() => setSurprise("none")}
+            >
+              Nenhum
+            </Button>
+            <Button
+              size="sm"
+              variant={surprise === "basic" ? "default" : "outline"}
+              onClick={() => setSurprise("basic")}
+            >
+              Básico
+            </Button>
+            <Button
+              size="sm"
+              variant={surprise === "premium" ? "default" : "outline"}
+              onClick={() => setSurprise("premium")}
+            >
+              Premium
+            </Button>
           </div>
         </div>
 
         <div>
-          <p className="text-sm font-medium mb-2">App Memory Lane: <span className="text-primary">{full ? "desbloqueado" : "bloqueado"}</span></p>
+          <p className="text-sm font-medium mb-2">
+            App Memory Lane:{" "}
+            <span className="text-primary">{full ? "desbloqueado" : "bloqueado"}</span>
+          </p>
           <div className="grid grid-cols-2 gap-2">
-            <Button size="sm" variant={!full ? "default" : "outline"} onClick={() => setFull(false)}>Bloquear</Button>
-            <Button size="sm" variant={full ? "default" : "outline"} onClick={() => setFull(true)}>Desbloquear</Button>
+            <Button
+              size="sm"
+              variant={!full ? "default" : "outline"}
+              onClick={() => setFull(false)}
+            >
+              Bloquear
+            </Button>
+            <Button size="sm" variant={full ? "default" : "outline"} onClick={() => setFull(true)}>
+              Desbloquear
+            </Button>
           </div>
         </div>
 
-        <Button variant="ghost" className="w-full" onClick={reset}>Resetar tudo</Button>
+        <Button variant="ghost" className="w-full" onClick={reset}>
+          Resetar tudo
+        </Button>
 
         <div className="flex gap-2 pt-2 border-t border-border">
-          <Button asChild variant="link" size="sm"><Link to="/">/</Link></Button>
-          <Button asChild variant="link" size="sm"><Link to="/surprise">/surprise</Link></Button>
-          <Button asChild variant="link" size="sm"><Link to="/app">/app</Link></Button>
+          <Button asChild variant="link" size="sm">
+            <Link to="/">/</Link>
+          </Button>
+          <Button asChild variant="link" size="sm">
+            <Link to="/surprise">/surprise</Link>
+          </Button>
+          <Button asChild variant="link" size="sm">
+            <Link to="/app">/app</Link>
+          </Button>
         </div>
       </div>
     </div>

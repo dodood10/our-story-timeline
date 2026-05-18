@@ -68,7 +68,10 @@ export const MemoryCard = memo(function MemoryCard({
               </button>
             )}
             <DropdownMenu>
-              <DropdownMenuTrigger className="p-1.5 rounded-md hover:bg-muted" aria-label="Ações da memória">
+              <DropdownMenuTrigger
+                className="p-1.5 rounded-md hover:bg-muted"
+                aria-label="Ações da memória"
+              >
                 <MoreVertical className="h-4 w-4 text-muted-foreground" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -99,7 +102,10 @@ export const MemoryCard = memo(function MemoryCard({
             </span>
           )}
           {memory.tags?.map((t) => (
-            <span key={t} className="text-[11px] rounded-full bg-secondary text-secondary-foreground px-2 py-0.5">
+            <span
+              key={t}
+              className="text-[11px] rounded-full bg-secondary text-secondary-foreground px-2 py-0.5"
+            >
               #{t}
             </span>
           ))}
@@ -108,7 +114,11 @@ export const MemoryCard = memo(function MemoryCard({
       {memory.photos.length > 0 && (
         <div
           className={`grid gap-1 ${
-            memory.photos.length === 1 ? "grid-cols-1" : memory.photos.length === 2 ? "grid-cols-2" : "grid-cols-3"
+            memory.photos.length === 1
+              ? "grid-cols-1"
+              : memory.photos.length === 2
+                ? "grid-cols-2"
+                : "grid-cols-3"
           }`}
         >
           {memory.photos.map((src, i) => (

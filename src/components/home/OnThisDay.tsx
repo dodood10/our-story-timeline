@@ -14,7 +14,11 @@ export function OnThisDay() {
 
   const matches = useMemo(() => {
     return memories
-      .filter((m) => format(parseISO(m.date), "MM-dd") === TODAY_MMDD && parseISO(m.date).getFullYear() < CURRENT_YEAR)
+      .filter(
+        (m) =>
+          format(parseISO(m.date), "MM-dd") === TODAY_MMDD &&
+          parseISO(m.date).getFullYear() < CURRENT_YEAR,
+      )
       .sort((a, b) => +parseISO(b.date) - +parseISO(a.date));
   }, [memories]);
 
@@ -35,7 +39,10 @@ export function OnThisDay() {
         {matches.map((m) => {
           const yearsAgo = differenceInCalendarYears(TODAY, parseISO(m.date));
           return (
-            <div key={m.id} className="flex items-center gap-3 rounded-xl bg-card p-3 border border-border">
+            <div
+              key={m.id}
+              className="flex items-center gap-3 rounded-xl bg-card p-3 border border-border"
+            >
               <div className="h-12 w-12 rounded-full bg-primary/10 overflow-hidden shrink-0 flex items-center justify-center text-xl">
                 {m.photos[0] ? (
                   <Photo src={m.photos[0]} alt="" className="h-full w-full object-cover" />

@@ -7,12 +7,16 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 
 const MOBILE_PRIMARY = ["/app", "/timeline", "/bucket-list", "/gallery", "/letters"] as const;
 
-const MORE_ITEMS = NAV_ITEMS.filter((i) => !MOBILE_PRIMARY.includes(i.to as (typeof MOBILE_PRIMARY)[number]));
+const MORE_ITEMS = NAV_ITEMS.filter(
+  (i) => !MOBILE_PRIMARY.includes(i.to as (typeof MOBILE_PRIMARY)[number]),
+);
 
 export function BottomBar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [moreOpen, setMoreOpen] = useState(false);
-  const primaryItems = NAV_ITEMS.filter((i) => MOBILE_PRIMARY.includes(i.to as (typeof MOBILE_PRIMARY)[number]));
+  const primaryItems = NAV_ITEMS.filter((i) =>
+    MOBILE_PRIMARY.includes(i.to as (typeof MOBILE_PRIMARY)[number]),
+  );
   const moreActive = MORE_ITEMS.some((i) => pathname === i.to);
 
   return (

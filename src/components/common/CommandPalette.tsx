@@ -1,5 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { useNavigate } from "@tanstack/react-router";
 import { useApp } from "@/hooks/useApp";
 import { NAV_ITEMS } from "@/components/layout/AppSidebar";
@@ -37,7 +44,12 @@ export function CommandPalette({
         <CommandEmpty>Nada encontrado.</CommandEmpty>
         <CommandGroup heading="Ações">
           {onNewMemory && (
-            <CommandItem onSelect={() => { onOpenChange(false); onNewMemory(); }}>
+            <CommandItem
+              onSelect={() => {
+                onOpenChange(false);
+                onNewMemory();
+              }}
+            >
               <Plus className="h-4 w-4 mr-2" /> Nova memória
             </CommandItem>
           )}
@@ -67,7 +79,11 @@ export function CommandPalette({
         {bucket.length > 0 && (
           <CommandGroup heading="Bucket list">
             {bucket.slice(0, 20).map((b) => (
-              <CommandItem key={b.id} value={`bucket ${b.title}`} onSelect={() => go("/bucket-list")}>
+              <CommandItem
+                key={b.id}
+                value={`bucket ${b.title}`}
+                onSelect={() => go("/bucket-list")}
+              >
                 {b.done ? "✅" : "🎯"} <span className="ml-2">{b.title}</span>
               </CommandItem>
             ))}

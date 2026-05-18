@@ -15,10 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { OrderBumpCard } from "@/components/checkout/OrderBumpCard";
 import { PaymentMethodTabs } from "@/components/checkout/PaymentMethodTabs";
-import {
-  ORDER_BUMPS,
-  type PaymentMethod,
-} from "@/lib/checkout-products";
+import { ORDER_BUMPS, type PaymentMethod } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
 import { writeCheckoutLead } from "@/lib/checkout-storage";
 
@@ -222,8 +219,8 @@ export function CheckoutFormColumn({
           <DialogHeader>
             <DialogTitle>Pagamento de teste (Pix)</DialogTitle>
             <DialogDescription>
-              Em produção, aqui aparecerá o QR Code do Mercado Pago. Por agora, confirme para simular o
-              pagamento e liberar seu acesso.
+              Em produção, aqui aparecerá o QR Code do Mercado Pago. Por agora, confirme para
+              simular o pagamento e liberar seu acesso.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">

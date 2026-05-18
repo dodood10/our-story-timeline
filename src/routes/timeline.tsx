@@ -37,20 +37,35 @@ function TimelinePage() {
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const { openConfirm, dialogProps: deleteDialogProps } = useConfirmDelete(deleteMemory);
   const [shareMem, setShareMem] = useState<Memory | null>(null);
-  const [lightbox, setLightbox] = useState<{ photos: { src: string; title: string; date: string }[]; index: number } | null>(null);
+  const [lightbox, setLightbox] = useState<{
+    photos: { src: string; title: string; date: string }[];
+    index: number;
+  } | null>(null);
 
-  const handleEdit = useCallback((m: Memory) => { setEditing(m); setOpen(true); }, []);
+  const handleEdit = useCallback((m: Memory) => {
+    setEditing(m);
+    setOpen(true);
+  }, []);
   const handleDelete = useCallback((id: string) => openConfirm(id), [openConfirm]);
-  const handleToggleFavorite = useCallback((id: string) => toggleFavoriteMemory(id), [toggleFavoriteMemory]);
+  const handleToggleFavorite = useCallback(
+    (id: string) => toggleFavoriteMemory(id),
+    [toggleFavoriteMemory],
+  );
   const handleShare = useCallback((m: Memory) => setShareMem(m), []);
-  const handlePhotoClick = useCallback((m: Memory, i: number) =>
-    setLightbox({
-      photos: m.photos.map((src) => ({ src, title: m.title, date: formatDatePT(m.date) })),
-      index: i,
-    }), []);
+  const handlePhotoClick = useCallback(
+    (m: Memory, i: number) =>
+      setLightbox({
+        photos: m.photos.map((src) => ({ src, title: m.title, date: formatDatePT(m.date) })),
+        index: i,
+      }),
+    [],
+  );
 
   const years = useMemo(
-    () => Array.from(new Set(memories.map((m) => parseISO(m.date).getFullYear()))).sort((a, b) => b - a),
+    () =>
+      Array.from(new Set(memories.map((m) => parseISO(m.date).getFullYear()))).sort(
+        (a, b) => b - a,
+      ),
     [memories],
   );
 
@@ -63,7 +78,8 @@ function TimelinePage() {
         if (emotion !== "all" && m.emotion !== emotion) return false;
         if (favoritesOnly && !m.favorite) return false;
         if (q) {
-          const hay = `${m.title} ${m.description ?? ""} ${m.location ?? ""} ${(m.tags ?? []).join(" ")}`.toLowerCase();
+          const hay =
+            `${m.title} ${m.description ?? ""} ${m.location ?? ""} ${(m.tags ?? []).join(" ")}`.toLowerCase();
           if (!hay.includes(q)) return false;
         }
         return true;
@@ -80,7 +96,13 @@ function TimelinePage() {
         subtitle="Sua história, em ordem."
         className="mb-6"
         action={
-          <Button onClick={() => { setEditing(null); setOpen(true); }} className="hidden sm:inline-flex">
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setOpen(true);
+            }}
+            className="hidden sm:inline-flex"
+          >
             <Plus className="h-4 w-4 mr-1" /> Nova memória
           </Button>
         }
@@ -102,10 +124,23 @@ function TimelinePage() {
 
       {filtered.length === 0 ? (
         <EmptyState
-          title={query || favoritesOnly || year !== "all" || emotion !== "all" ? "Nada encontrado" : "Ainda não há memórias"}
-          description={query || favoritesOnly || year !== "all" || emotion !== "all" ? "Ajuste os filtros para ver mais." : "Adicione a primeira memória dessa história linda."}
+          title={
+            query || favoritesOnly || year !== "all" || emotion !== "all"
+              ? "Nada encontrado"
+              : "Ainda não há memórias"
+          }
+          description={
+            query || favoritesOnly || year !== "all" || emotion !== "all"
+              ? "Ajuste os filtros para ver mais."
+              : "Adicione a primeira memória dessa história linda."
+          }
           action={
-            <Button onClick={() => { setEditing(null); setOpen(true); }}>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+            >
               <Plus className="h-4 w-4 mr-1" /> Nova memória
             </Button>
           }
@@ -129,7 +164,10 @@ function TimelinePage() {
       )}
 
       <button
-        onClick={() => { setEditing(null); setOpen(true); }}
+        onClick={() => {
+          setEditing(null);
+          setOpen(true);
+        }}
         className="sm:hidden fixed bottom-20 right-4 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-soft flex items-center justify-center z-20 active:scale-95 transition"
         aria-label="Nova memória"
       >

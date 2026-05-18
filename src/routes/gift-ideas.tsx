@@ -7,7 +7,13 @@ import { Gift, Heart, RotateCcw } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { FadeIn } from "@/components/common/FadeIn";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/gift-ideas")({
@@ -22,7 +28,11 @@ export const Route = createFileRoute("/gift-ideas")({
 
 function GiftPage() {
   const { giftFavorites, toggleGiftFavorite } = useApp();
-  const [answers, setAnswers] = useState<GiftQuizAnswers>({ hobby: "", style: "classic", budget: "mid" });
+  const [answers, setAnswers] = useState<GiftQuizAnswers>({
+    hobby: "",
+    style: "classic",
+    budget: "mid",
+  });
   const [results, setResults] = useState<GiftIdea[] | null>(null);
 
   function generate() {
@@ -33,16 +43,29 @@ function GiftPage() {
 
   return (
     <div className="px-4 sm:px-8 py-8 max-w-4xl mx-auto space-y-8">
-      <PageHeader icon={Gift} title="Ideias de Presente" subtitle="Responda 3 perguntas e receba ideias personalizadas." />
+      <PageHeader
+        icon={Gift}
+        title="Ideias de Presente"
+        subtitle="Responda 3 perguntas e receba ideias personalizadas."
+      />
 
       {!results ? (
         <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-5">
           <div className="space-y-2">
             <Label>Hobby favorito do parceiro(a)</Label>
-            <Select value={answers.hobby} onValueChange={(v) => setAnswers((a) => ({ ...a, hobby: v }))}>
-              <SelectTrigger><SelectValue placeholder="Escolha um hobby" /></SelectTrigger>
+            <Select
+              value={answers.hobby}
+              onValueChange={(v) => setAnswers((a) => ({ ...a, hobby: v }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Escolha um hobby" />
+              </SelectTrigger>
               <SelectContent>
-                {HOBBIES.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                {HOBBIES.map((h) => (
+                  <SelectItem key={h} value={h}>
+                    {h}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -54,7 +77,9 @@ function GiftPage() {
                   key={s}
                   onClick={() => setAnswers((a) => ({ ...a, style: s }))}
                   className={`p-3 rounded-xl border text-sm transition ${
-                    answers.style === s ? "border-primary bg-primary/10" : "border-border hover:bg-muted"
+                    answers.style === s
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:bg-muted"
                   }`}
                 >
                   {s === "classic" ? "Clássico" : s === "modern" ? "Moderno" : "Aventureiro"}
@@ -70,7 +95,9 @@ function GiftPage() {
                   key={b}
                   onClick={() => setAnswers((a) => ({ ...a, budget: b }))}
                   className={`p-3 rounded-xl border text-sm transition ${
-                    answers.budget === b ? "border-primary bg-primary/10" : "border-border hover:bg-muted"
+                    answers.budget === b
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:bg-muted"
                   }`}
                 >
                   {b === "low" ? "Baixo $" : b === "mid" ? "Médio $$" : "Alto $$$"}
@@ -104,7 +131,9 @@ function GiftPage() {
                     className={`shrink-0 ${giftFavorites.includes(g.id) ? "text-primary" : "text-muted-foreground"}`}
                     aria-label="Favoritar"
                   >
-                    <Heart className={`h-5 w-5 ${giftFavorites.includes(g.id) ? "fill-current" : ""}`} />
+                    <Heart
+                      className={`h-5 w-5 ${giftFavorites.includes(g.id) ? "fill-current" : ""}`}
+                    />
                   </button>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">{g.why}</p>

@@ -31,7 +31,9 @@ function LettersPage() {
 
   function onClickEnvelope(l: Letter) {
     if (!isLetterUnlockable(l)) {
-      toast.message("Essa carta ainda está lacrada", { description: "Aguarde a data certa para abri-la 💌" });
+      toast.message("Essa carta ainda está lacrada", {
+        description: "Aguarde a data certa para abri-la 💌",
+      });
       return;
     }
     openLetter(l.id);
@@ -56,7 +58,11 @@ function LettersPage() {
         <EmptyState
           title="Sem cartas ainda"
           description="Escreva mensagens carinhosas para serem abertas em momentos especiais."
-          action={<Button onClick={() => setCreating(true)}><Plus className="h-4 w-4 mr-1" /> Escrever carta</Button>}
+          action={
+            <Button onClick={() => setCreating(true)}>
+              <Plus className="h-4 w-4 mr-1" /> Escrever carta
+            </Button>
+          }
         />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

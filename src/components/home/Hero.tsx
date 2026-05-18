@@ -5,7 +5,11 @@ import type { Couple } from "@/lib/types";
 import { daysTogether, formatDatePT } from "@/lib/dates";
 import { differenceInSeconds, parseISO } from "date-fns";
 
-const STATUS_LABEL: Record<string, string> = { dating: "Namorando", engaged: "Noivos", married: "Casados" };
+const STATUS_LABEL: Record<string, string> = {
+  dating: "Namorando",
+  engaged: "Noivos",
+  married: "Casados",
+};
 
 export function Hero({ couple }: { couple: Couple }) {
   const days = daysTogether(couple.startDate);
@@ -70,9 +74,14 @@ export function Hero({ couple }: { couple: Couple }) {
         transition={{ delay: 0.4, duration: 0.6 }}
         className="relative mt-10 text-center"
       >
-        <p className="text-xs uppercase tracking-[0.3em] text-foreground/60 mb-3">Estamos juntos há</p>
+        <p className="text-xs uppercase tracking-[0.3em] text-foreground/60 mb-3">
+          Estamos juntos há
+        </p>
         <div className="flex items-baseline justify-center gap-2 sm:gap-3 font-display">
-          <AnimatedNumber value={days} className="text-6xl sm:text-8xl text-gradient-romantic leading-none" />
+          <AnimatedNumber
+            value={days}
+            className="text-6xl sm:text-8xl text-gradient-romantic leading-none"
+          />
           <span className="text-2xl sm:text-3xl text-foreground/70">dias</span>
         </div>
         <div className="mt-4 flex justify-center gap-3 text-xs sm:text-sm text-foreground/60 font-mono">
@@ -123,7 +132,12 @@ function livedTime(startDate: string) {
 
 function FloatingHearts() {
   const positions = useMemo(
-    () => Array.from({ length: 6 }).map((_, i) => ({ left: `${10 + i * 14}%`, delay: i * 0.4, size: 12 + (i % 3) * 4 })),
+    () =>
+      Array.from({ length: 6 }).map((_, i) => ({
+        left: `${10 + i * 14}%`,
+        delay: i * 0.4,
+        size: 12 + (i % 3) * 4,
+      })),
     [],
   );
   return (

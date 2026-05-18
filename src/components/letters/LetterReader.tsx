@@ -4,13 +4,7 @@ import { Mail } from "lucide-react";
 import type { Letter } from "@/lib/types";
 import { formatDatePT } from "@/lib/dates";
 
-export function LetterReader({
-  letter,
-  onClose,
-}: {
-  letter: Letter | null;
-  onClose: () => void;
-}) {
+export function LetterReader({ letter, onClose }: { letter: Letter | null; onClose: () => void }) {
   return (
     <Dialog open={!!letter} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">

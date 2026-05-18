@@ -1,9 +1,21 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Heart, Camera, Calendar } from "lucide-react";
 import { useApp } from "@/hooks/useApp";
 import type { RelationshipStatus } from "@/lib/types";
@@ -41,7 +53,11 @@ export function OnboardingDialog({ open }: { open: boolean }) {
 
   return (
     <Dialog open={open}>
-      <DialogContent className="max-w-lg" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+      <DialogContent
+        className="max-w-lg"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <div className="flex items-center gap-2 mb-2">
             <Heart className="h-6 w-6 text-primary fill-primary/20" />
@@ -57,9 +73,17 @@ export function OnboardingDialog({ open }: { open: boolean }) {
             <div className="space-y-2">
               <Label>Como vocês se chamam?</Label>
               <div className="flex items-center gap-2">
-                <Input placeholder="Nome 1" value={name1} onChange={(e) => setName1(e.target.value)} />
+                <Input
+                  placeholder="Nome 1"
+                  value={name1}
+                  onChange={(e) => setName1(e.target.value)}
+                />
                 <Heart className="h-5 w-5 text-primary shrink-0" />
-                <Input placeholder="Nome 2" value={name2} onChange={(e) => setName2(e.target.value)} />
+                <Input
+                  placeholder="Nome 2"
+                  value={name2}
+                  onChange={(e) => setName2(e.target.value)}
+                />
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
@@ -85,7 +109,9 @@ export function OnboardingDialog({ open }: { open: boolean }) {
               <input type="file" accept="image/*" className="hidden" onChange={onPhotoChange} />
             </label>
             <div className="flex justify-between gap-2 pt-2">
-              <Button variant="ghost" onClick={() => setStep(0)}>Voltar</Button>
+              <Button variant="ghost" onClick={() => setStep(0)}>
+                Voltar
+              </Button>
               <Button onClick={() => setStep(2)}>Continuar</Button>
             </div>
           </div>
@@ -109,7 +135,9 @@ export function OnboardingDialog({ open }: { open: boolean }) {
             <div className="space-y-2">
               <Label>Status</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as RelationshipStatus)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="dating">Namorando</SelectItem>
                   <SelectItem value="engaged">Noivos</SelectItem>
@@ -118,7 +146,9 @@ export function OnboardingDialog({ open }: { open: boolean }) {
               </Select>
             </div>
             <div className="flex justify-between gap-2 pt-2">
-              <Button variant="ghost" onClick={() => setStep(1)}>Voltar</Button>
+              <Button variant="ghost" onClick={() => setStep(1)}>
+                Voltar
+              </Button>
               <Button onClick={finish}>
                 <Heart className="h-4 w-4 mr-1.5 fill-current" />
                 Começar

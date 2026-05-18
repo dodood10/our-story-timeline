@@ -31,9 +31,7 @@ function GalleryPage() {
     return memories
       .slice()
       .sort((a, b) => +parseISO(b.date) - +parseISO(a.date))
-      .flatMap((m) =>
-        m.photos.map((src) => ({ src, title: m.title, date: formatDatePT(m.date) })),
-      );
+      .flatMap((m) => m.photos.map((src) => ({ src, title: m.title, date: formatDatePT(m.date) })));
   }, [memories]);
 
   return (
@@ -43,11 +41,13 @@ function GalleryPage() {
         title="Galeria"
         subtitle={`${allPhotos.length} fotos guardadas`}
         className="mb-6"
-        action={allPhotos.length > 0 ? (
-          <Button onClick={() => setLightbox({ index: 0, slideshow: true })}>
-            <Play className="h-4 w-4 mr-1.5" /> Slideshow
-          </Button>
-        ) : undefined}
+        action={
+          allPhotos.length > 0 ? (
+            <Button onClick={() => setLightbox({ index: 0, slideshow: true })}>
+              <Play className="h-4 w-4 mr-1.5" /> Slideshow
+            </Button>
+          ) : undefined
+        }
       />
 
       {allPhotos.length === 0 ? (
@@ -57,29 +57,34 @@ function GalleryPage() {
         />
       ) : (
         <>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {allPhotos.slice(0, visible).map((p, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={p.title ? `Abrir ${p.title}` : `Abrir foto ${i + 1}`}
-              onClick={() => setLightbox({ index: i })}
-              className="relative aspect-square overflow-hidden rounded-xl bg-muted group"
-            >
-              <Photo src={p.src} alt={p.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-3">
-                <p className="text-white text-xs font-medium truncate">{p.title}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-        {visible < allPhotos.length && (
-          <div className="mt-6 flex justify-center">
-            <Button variant="outline" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
-              Carregar mais ({allPhotos.length - visible} restantes)
-            </Button>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {allPhotos.slice(0, visible).map((p, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={p.title ? `Abrir ${p.title}` : `Abrir foto ${i + 1}`}
+                onClick={() => setLightbox({ index: i })}
+                className="relative aspect-square overflow-hidden rounded-xl bg-muted group"
+              >
+                <Photo
+                  src={p.src}
+                  alt={p.title}
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-3">
+                  <p className="text-white text-xs font-medium truncate">{p.title}</p>
+                </div>
+              </button>
+            ))}
           </div>
-        )}
+          {visible < allPhotos.length && (
+            <div className="mt-6 flex justify-center">
+              <Button variant="outline" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
+                Carregar mais ({allPhotos.length - visible} restantes)
+              </Button>
+            </div>
+          )}
         </>
       )}
 

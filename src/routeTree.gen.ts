@@ -10,9 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TimelineRouteImport } from './routes/timeline'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SurpriseRouteImport } from './routes/surprise'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as MilestonesRouteImport } from './routes/milestones'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as LettersRouteImport } from './routes/letters'
@@ -32,6 +34,11 @@ const TimelineRoute = TimelineRouteImport.update({
   path: '/timeline',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SurpriseRoute = SurpriseRouteImport.update({
   id: '/surprise',
   path: '/surprise',
@@ -45,6 +52,11 @@ const StatsRoute = StatsRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MilestonesRoute = MilestonesRouteImport.update({
@@ -123,9 +135,11 @@ export interface FileRoutesByFullPath {
   '/letters': typeof LettersRoute
   '/map': typeof MapRoute
   '/milestones': typeof MilestonesRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/surprise': typeof SurpriseRouteWithChildren
+  '/termos': typeof TermosRoute
   '/timeline': typeof TimelineRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
@@ -142,8 +156,10 @@ export interface FileRoutesByTo {
   '/letters': typeof LettersRoute
   '/map': typeof MapRoute
   '/milestones': typeof MilestonesRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
+  '/termos': typeof TermosRoute
   '/timeline': typeof TimelineRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
@@ -161,9 +177,11 @@ export interface FileRoutesById {
   '/letters': typeof LettersRoute
   '/map': typeof MapRoute
   '/milestones': typeof MilestonesRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
   '/surprise': typeof SurpriseRouteWithChildren
+  '/termos': typeof TermosRoute
   '/timeline': typeof TimelineRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
@@ -182,9 +200,11 @@ export interface FileRouteTypes {
     | '/letters'
     | '/map'
     | '/milestones'
+    | '/privacidade'
     | '/settings'
     | '/stats'
     | '/surprise'
+    | '/termos'
     | '/timeline'
     | '/surprise/plan'
     | '/surprise/quiz'
@@ -201,8 +221,10 @@ export interface FileRouteTypes {
     | '/letters'
     | '/map'
     | '/milestones'
+    | '/privacidade'
     | '/settings'
     | '/stats'
+    | '/termos'
     | '/timeline'
     | '/surprise/plan'
     | '/surprise/quiz'
@@ -219,9 +241,11 @@ export interface FileRouteTypes {
     | '/letters'
     | '/map'
     | '/milestones'
+    | '/privacidade'
     | '/settings'
     | '/stats'
     | '/surprise'
+    | '/termos'
     | '/timeline'
     | '/surprise/plan'
     | '/surprise/quiz'
@@ -239,9 +263,11 @@ export interface RootRouteChildren {
   LettersRoute: typeof LettersRoute
   MapRoute: typeof MapRoute
   MilestonesRoute: typeof MilestonesRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
   SurpriseRoute: typeof SurpriseRouteWithChildren
+  TermosRoute: typeof TermosRoute
   TimelineRoute: typeof TimelineRoute
 }
 
@@ -252,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/timeline'
       fullPath: '/timeline'
       preLoaderRoute: typeof TimelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/surprise': {
@@ -273,6 +306,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/milestones': {
@@ -397,9 +437,11 @@ const rootRouteChildren: RootRouteChildren = {
   LettersRoute: LettersRoute,
   MapRoute: MapRoute,
   MilestonesRoute: MilestonesRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
   SurpriseRoute: SurpriseRouteWithChildren,
+  TermosRoute: TermosRoute,
   TimelineRoute: TimelineRoute,
 }
 export const routeTree = rootRouteImport

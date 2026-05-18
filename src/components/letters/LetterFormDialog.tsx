@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -41,7 +47,11 @@ export function LetterFormDialog({
 
   function saveDraft() {
     if (!title.trim() || !message.trim()) return toast.error("Preencha título e mensagem");
-    addLetter({ title: title.trim(), message: message.trim(), unlockDate: unlockDate || undefined });
+    addLetter({
+      title: title.trim(),
+      message: message.trim(),
+      unlockDate: unlockDate || undefined,
+    });
     toast.success("Carta salva como rascunho");
     onOpenChange(false);
   }
@@ -53,7 +63,12 @@ export function LetterFormDialog({
   }
 
   function doSeal() {
-    addLetter({ title: title.trim(), message: message.trim(), unlockDate: unlockDate || undefined, sealed: true });
+    addLetter({
+      title: title.trim(),
+      message: message.trim(),
+      unlockDate: unlockDate || undefined,
+      sealed: true,
+    });
     toast.success("Carta lacrada com carinho 💌");
     setConfirmSeal(false);
     onOpenChange(false);
@@ -71,20 +86,37 @@ export function LetterFormDialog({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Quando abrir / Título</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Abra quando estiver triste 💙" />
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Abra quando estiver triste 💙"
+              />
             </div>
             <div className="space-y-2">
               <Label>Data específica (opcional)</Label>
-              <Input type="date" value={unlockDate} onChange={(e) => setUnlockDate(e.target.value)} />
+              <Input
+                type="date"
+                value={unlockDate}
+                onChange={(e) => setUnlockDate(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>Mensagem</Label>
-              <Textarea rows={6} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Escreva uma mensagem carinhosa..." />
+              <Textarea
+                rows={6}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Escreva uma mensagem carinhosa..."
+              />
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button variant="outline" onClick={saveDraft}>Salvar rascunho</Button>
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button variant="outline" onClick={saveDraft}>
+              Salvar rascunho
+            </Button>
             <Button onClick={seal}>
               <Lock className="h-4 w-4 mr-1.5" /> Lacrar carta
             </Button>

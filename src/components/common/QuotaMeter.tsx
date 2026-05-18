@@ -9,7 +9,10 @@ export function QuotaMeter() {
   useEffect(() => {
     storageEstimate()
       .then((e) => {
-        if (e?.quota) { setInfo(e); return; }
+        if (e?.quota) {
+          setInfo(e);
+          return;
+        }
         const used = estimateStorageBytes();
         setInfo({ used, quota: Math.max(used * 2, 5 * 1024 * 1024) });
       })

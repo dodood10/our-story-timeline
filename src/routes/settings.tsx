@@ -6,8 +6,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings as SettingsIcon, Camera, Download, RotateCcw, Upload, Cloud, RefreshCw, Copy, Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Settings as SettingsIcon,
+  Camera,
+  Download,
+  RotateCcw,
+  Upload,
+  Cloud,
+  RefreshCw,
+  Copy,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useCouplePhoto } from "@/hooks/useCouplePhoto";
 import type { Couple, RelationshipStatus, Theme } from "@/lib/types";
@@ -52,7 +68,15 @@ function SettingsPage() {
 }
 
 function SettingsForm({ couple }: { couple: Couple }) {
-  const { setCouple, settings, setTheme, setNotifications, setSyncCode: persistSyncCode, memories, resetSeed } = useApp();
+  const {
+    setCouple,
+    settings,
+    setTheme,
+    setNotifications,
+    setSyncCode: persistSyncCode,
+    memories,
+    resetSeed,
+  } = useApp();
   const supabaseReady = isSupabaseConfigured();
   const syncCode = settings.syncCode ?? "";
   const [name1, setName1] = useState(couple.name1);
@@ -72,51 +96,61 @@ function SettingsForm({ couple }: { couple: Couple }) {
     if (!name1.trim() || !name2.trim()) return toast.error("Preencha os nomes");
     setSaving(true);
     setCouple({ ...couple, name1: name1.trim(), name2: name2.trim(), photo, startDate, status });
-    setTimeout(() => { setSaving(false); toast.success("Perfil atualizado 💕"); }, 200);
+    setTimeout(() => {
+      setSaving(false);
+      toast.success("Perfil atualizado 💕");
+    }, 200);
   }
 
   async function exportPdf() {
     try {
-    const doc = new jsPDF({ unit: "pt", format: "a4" });
-    const margin = 48;
-    let y = margin;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(28);
-    doc.text(`${couple.name1} & ${couple.name2}`, margin, y);
-    y += 28;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-    doc.text(`Juntos desde ${formatDatePT(couple.startDate)} — ${daysTogether(couple.startDate)} dias`, margin, y);
-    y += 28;
-    doc.setDrawColor(220);
-    doc.line(margin, y, 595 - margin, y);
-    y += 18;
-
-    const sorted = memories.slice().sort((a, b) => +new Date(b.date) - +new Date(a.date));
-    for (const m of sorted) {
-      if (y > 780) { doc.addPage(); y = margin; }
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      const margin = 48;
+      let y = margin;
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.text(m.title, margin, y);
-      y += 14;
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(10);
-      doc.setTextColor(120);
-      doc.text(`${formatDatePT(m.date)}${m.location ? " — " + m.location : ""}`, margin, y);
-      doc.setTextColor(0);
-      y += 14;
-      if (m.description) {
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(11);
-        const lines = doc.splitTextToSize(m.description, 595 - margin * 2);
-        doc.text(lines, margin, y);
-        y += lines.length * 14 + 10;
-      } else {
-        y += 6;
+      doc.setFontSize(28);
+      doc.text(`${couple.name1} & ${couple.name2}`, margin, y);
+      y += 28;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+      doc.text(
+        `Juntos desde ${formatDatePT(couple.startDate)} — ${daysTogether(couple.startDate)} dias`,
+        margin,
+        y,
+      );
+      y += 28;
+      doc.setDrawColor(220);
+      doc.line(margin, y, 595 - margin, y);
+      y += 18;
+
+      const sorted = memories.slice().sort((a, b) => +new Date(b.date) - +new Date(a.date));
+      for (const m of sorted) {
+        if (y > 780) {
+          doc.addPage();
+          y = margin;
+        }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text(m.title, margin, y);
+        y += 14;
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(10);
+        doc.setTextColor(120);
+        doc.text(`${formatDatePT(m.date)}${m.location ? " — " + m.location : ""}`, margin, y);
+        doc.setTextColor(0);
+        y += 14;
+        if (m.description) {
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(11);
+          const lines = doc.splitTextToSize(m.description, 595 - margin * 2);
+          doc.text(lines, margin, y);
+          y += lines.length * 14 + 10;
+        } else {
+          y += 6;
+        }
       }
-    }
-    doc.save(`memory-lane-${couple.name1}-${couple.name2}.pdf`);
-    toast.success("PDF gerado 💕");
+      doc.save(`memory-lane-${couple.name1}-${couple.name2}.pdf`);
+      toast.success("PDF gerado 💕");
     } catch (e) {
       console.error(e);
       toast.error("Falha ao gerar o PDF");
@@ -200,7 +234,9 @@ function SettingsForm({ couple }: { couple: Couple }) {
           <div className="space-y-1.5">
             <Label>Status</Label>
             <Select value={status} onValueChange={(v) => setStatus(v as RelationshipStatus)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="dating">Namorando</SelectItem>
                 <SelectItem value="engaged">Noivos</SelectItem>
@@ -209,21 +245,31 @@ function SettingsForm({ couple }: { couple: Couple }) {
             </Select>
           </div>
         </div>
-        <Button onClick={save} disabled={saving}>{saving ? "Salvando..." : "Salvar alterações"}</Button>
+        <Button onClick={save} disabled={saving}>
+          {saving ? "Salvando..." : "Salvar alterações"}
+        </Button>
       </section>
 
       <section className="space-y-4 rounded-2xl bg-card border border-border p-6 shadow-card">
         <h2 className="font-display text-xl">Tema visual</h2>
-        <RadioGroup value={settings.theme} onValueChange={(v) => setTheme(v as Theme)} className="grid sm:grid-cols-3 gap-3">
-          {([
-            { id: "minimal", name: "Minimalista", desc: "Branco e rosa claro" },
-            { id: "romantic", name: "Romântico", desc: "Rosa e dourado" },
-            { id: "modern", name: "Moderno", desc: "Roxo e azul" },
-          ] as const).map((t) => (
+        <RadioGroup
+          value={settings.theme}
+          onValueChange={(v) => setTheme(v as Theme)}
+          className="grid sm:grid-cols-3 gap-3"
+        >
+          {(
+            [
+              { id: "minimal", name: "Minimalista", desc: "Branco e rosa claro" },
+              { id: "romantic", name: "Romântico", desc: "Rosa e dourado" },
+              { id: "modern", name: "Moderno", desc: "Roxo e azul" },
+            ] as const
+          ).map((t) => (
             <label
               key={t.id}
               className={`rounded-xl border p-3 cursor-pointer transition ${
-                settings.theme === t.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted"
+                settings.theme === t.id
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:bg-muted"
               }`}
             >
               <RadioGroupItem value={t.id} id={t.id} className="sr-only" />
@@ -238,7 +284,9 @@ function SettingsForm({ couple }: { couple: Couple }) {
         <div className="flex items-center justify-between">
           <div>
             <p className="font-display text-lg">Lembretes de datas</p>
-            <p className="text-sm text-muted-foreground">Receba avisos sobre datas importantes (em breve)</p>
+            <p className="text-sm text-muted-foreground">
+              Receba avisos sobre datas importantes (em breve)
+            </p>
           </div>
           <Switch checked={settings.notifications} onCheckedChange={setNotifications} disabled />
         </div>
@@ -247,10 +295,18 @@ function SettingsForm({ couple }: { couple: Couple }) {
       <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-4">
         <h2 className="font-display text-xl">Backup &amp; restauração</h2>
         <p className="text-sm text-muted-foreground">
-          Baixe um arquivo com todas as memórias, fotos, bucket list e cartas — para guardar em segurança ou levar para outro navegador.
+          Baixe um arquivo com todas as memórias, fotos, bucket list e cartas — para guardar em
+          segurança ou levar para outro navegador.
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => downloadBackup().then(() => toast.success("Backup baixado")).catch(() => toast.error("Falha ao baixar o backup"))}>
+          <Button
+            variant="outline"
+            onClick={() =>
+              downloadBackup()
+                .then(() => toast.success("Backup baixado"))
+                .catch(() => toast.error("Falha ao baixar o backup"))
+            }
+          >
             <Download className="h-4 w-4 mr-1.5" /> Baixar backup (JSON)
           </Button>
           <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
@@ -259,55 +315,75 @@ function SettingsForm({ couple }: { couple: Couple }) {
           <Button variant="outline" onClick={exportPdf}>
             <Download className="h-4 w-4 mr-1.5" /> Exportar PDF
           </Button>
-          <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={onImportFile} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={onImportFile}
+          />
         </div>
       </section>
 
       <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-4">
-        <h2 className="font-display text-xl flex items-center gap-2"><Cloud className="h-5 w-5 text-primary" /> Sincronizar entre dispositivos</h2>
+        <h2 className="font-display text-xl flex items-center gap-2">
+          <Cloud className="h-5 w-5 text-primary" /> Sincronizar entre dispositivos
+        </h2>
         {!supabaseReady ? (
           <p className="text-sm text-muted-foreground">
             Sync indisponível: configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY.
           </p>
         ) : (
           <>
-        <p className="text-sm text-muted-foreground">
-          Opcional. Gere um código secreto e use-o no celular do(a) parceiro(a). Quem tem o código tem acesso. O último envio substitui o backup na nuvem.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Input
-            value={syncCode}
-            onChange={(e) => persistSyncCode(e.target.value.toUpperCase())}
-            placeholder="Seu código (gerado automaticamente)"
-            className="font-mono max-w-xs"
-          />
-          {syncCode && (
-            <Button
-              variant="outline"
-              onClick={() => { navigator.clipboard.writeText(syncCode); toast.success("Código copiado"); }}
-            >
-              <Copy className="h-4 w-4 mr-1.5" /> Copiar
-            </Button>
-          )}
-          <Button onClick={() => setConfirmPush(true)} disabled={syncBusy || !supabaseReady}>
-            {syncBusy ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Cloud className="h-4 w-4 mr-1.5" />}
-            {syncCode ? "Enviar para nuvem" : "Gerar código e enviar"}
-          </Button>
-        </div>
-        <div className="border-t border-border pt-4 space-y-2">
-          <p className="text-sm font-medium">Receber dados de outro dispositivo</p>
-          <div className="flex flex-wrap gap-2">
-            <Input
-              value={pullCode}
-              onChange={(e) => setPullCode(e.target.value.toUpperCase())}
-              placeholder="Cole o código aqui"
-              className="font-mono max-w-xs"
-            />
-            <Button variant="outline" onClick={() => setConfirmPull(true)} disabled={!pullCode.trim() || syncBusy}>
-              <RefreshCw className="h-4 w-4 mr-1.5" /> Baixar dados
-            </Button>
-          </div>
-        </div>
+            <p className="text-sm text-muted-foreground">
+              Opcional. Gere um código secreto e use-o no celular do(a) parceiro(a). Quem tem o
+              código tem acesso. O último envio substitui o backup na nuvem.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Input
+                value={syncCode}
+                onChange={(e) => persistSyncCode(e.target.value.toUpperCase())}
+                placeholder="Seu código (gerado automaticamente)"
+                className="font-mono max-w-xs"
+              />
+              {syncCode && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(syncCode);
+                    toast.success("Código copiado");
+                  }}
+                >
+                  <Copy className="h-4 w-4 mr-1.5" /> Copiar
+                </Button>
+              )}
+              <Button onClick={() => setConfirmPush(true)} disabled={syncBusy || !supabaseReady}>
+                {syncBusy ? (
+                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                ) : (
+                  <Cloud className="h-4 w-4 mr-1.5" />
+                )}
+                {syncCode ? "Enviar para nuvem" : "Gerar código e enviar"}
+              </Button>
+            </div>
+            <div className="border-t border-border pt-4 space-y-2">
+              <p className="text-sm font-medium">Receber dados de outro dispositivo</p>
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  value={pullCode}
+                  onChange={(e) => setPullCode(e.target.value.toUpperCase())}
+                  placeholder="Cole o código aqui"
+                  className="font-mono max-w-xs"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => setConfirmPull(true)}
+                  disabled={!pullCode.trim() || syncBusy}
+                >
+                  <RefreshCw className="h-4 w-4 mr-1.5" /> Baixar dados
+                </Button>
+              </div>
+            </div>
           </>
         )}
       </section>
@@ -330,7 +406,11 @@ function SettingsForm({ couple }: { couple: Couple }) {
         description="Isso vai substituir suas memórias, bucket list e cartas pelas de exemplo."
         confirmLabel="Restaurar"
         destructive
-        onConfirm={() => { resetSeed(); setConfirmReset(false); toast.success("Restaurado"); }}
+        onConfirm={() => {
+          resetSeed();
+          setConfirmReset(false);
+          toast.success("Restaurado");
+        }}
       />
       <ConfirmDialog
         open={confirmPush}

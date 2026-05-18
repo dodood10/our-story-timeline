@@ -29,31 +29,44 @@ function BucketListPage() {
   const total = bucket.length;
   const done = bucket.filter((b) => b.done).length;
 
-  const handleToggle = useCallback((id: string) => {
-    const item = bucket.find((b) => b.id === id);
-    toggleBucket(id);
-    if (item && !item.done) { celebrate(); hearts(); }
-  }, [bucket, toggleBucket]);
+  const handleToggle = useCallback(
+    (id: string) => {
+      const item = bucket.find((b) => b.id === id);
+      toggleBucket(id);
+      if (item && !item.done) {
+        celebrate();
+        hearts();
+      }
+    },
+    [bucket, toggleBucket],
+  );
 
   const handleDelete = useCallback((id: string) => openConfirm(id), [openConfirm]);
 
-  const handlePhoto = useCallback((id: string, photo: string) => {
-    const item = bucket.find((b) => b.id === id);
-    if (!item) return;
-    if (item.done) {
-      toggleBucket(id);
-      toggleBucket(id, photo);
-    } else {
-      toggleBucket(id, photo);
-    }
-  }, [bucket, toggleBucket]);
+  const handlePhoto = useCallback(
+    (id: string, photo: string) => {
+      const item = bucket.find((b) => b.id === id);
+      if (!item) return;
+      if (item.done) {
+        toggleBucket(id);
+        toggleBucket(id, photo);
+      } else {
+        toggleBucket(id, photo);
+      }
+    },
+    [bucket, toggleBucket],
+  );
 
   return (
     <div className="px-4 sm:px-8 py-8 max-w-3xl mx-auto">
       <PageHeader
         icon={Target}
         title="Bucket List"
-        subtitle={<>{done} de {total} sonhos realizados ✨</>}
+        subtitle={
+          <>
+            {done} de {total} sonhos realizados ✨
+          </>
+        }
         className="mb-6"
       />
 
@@ -103,5 +116,4 @@ function BucketListPage() {
       />
     </div>
   );
-
 }

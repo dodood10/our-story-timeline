@@ -24,7 +24,9 @@ export async function savePhotoDataUrl(dataUrl: string): Promise<string> {
   try {
     await set(key, dataUrl);
   } catch {
-    throw new Error("Não foi possível salvar a foto. O armazenamento do dispositivo pode estar cheio.");
+    throw new Error(
+      "Não foi possível salvar a foto. O armazenamento do dispositivo pode estar cheio.",
+    );
   }
   return PREFIX + id;
 }

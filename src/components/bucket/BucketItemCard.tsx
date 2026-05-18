@@ -50,15 +50,24 @@ export const BucketItemCard = memo(function BucketItemCard({
         >
           {item.done && <Check className="h-5 w-5" />}
         </button>
-        <p className={`flex-1 ${item.done ? "line-through text-muted-foreground" : ""}`}>{item.title}</p>
-        <button onClick={() => onDelete(item.id)} className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive p-1.5">
+        <p className={`flex-1 ${item.done ? "line-through text-muted-foreground" : ""}`}>
+          {item.title}
+        </p>
+        <button
+          onClick={() => onDelete(item.id)}
+          className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive p-1.5"
+        >
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
       {item.done && (
         <div className="mt-3 pl-13 ml-13 space-y-2">
           {item.photo ? (
-            <img src={item.photo} alt={item.title} className="rounded-lg max-h-48 w-full object-cover" />
+            <img
+              src={item.photo}
+              alt={item.title}
+              className="rounded-lg max-h-48 w-full object-cover"
+            />
           ) : (
             <label className="inline-flex items-center gap-2 text-xs text-primary hover:underline cursor-pointer">
               <Camera className="h-3.5 w-3.5" />

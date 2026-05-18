@@ -29,8 +29,8 @@ export function LetterEnvelope({
         opened
           ? "bg-card border-primary/40"
           : unlockable
-          ? "bg-gradient-romantic border-primary/30 hover:shadow-soft"
-          : "bg-muted border-border opacity-70 cursor-not-allowed"
+            ? "bg-gradient-romantic border-primary/30 hover:shadow-soft"
+            : "bg-muted border-border opacity-70 cursor-not-allowed"
       }`}
     >
       <div className="absolute top-3 right-3">

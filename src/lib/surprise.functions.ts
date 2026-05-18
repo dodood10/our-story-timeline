@@ -2,7 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway";
-import { SurpriseAnswersSchema, SurprisePlanSchema, LABELS, type SurpriseAnswers } from "./surprise-types";
+import {
+  SurpriseAnswersSchema,
+  SurprisePlanSchema,
+  LABELS,
+  type SurpriseAnswers,
+} from "./surprise-types";
 import { checkSurpriseRateLimit, clientKeyFromRequest } from "./surprise-rate-limit";
 
 function buildPrompt(a: SurpriseAnswers) {
@@ -31,7 +36,8 @@ function mapAiError(err: unknown): Error {
   const status = e?.statusCode ?? e?.status;
   if (status === 429) return new Error("Muitas requisições. Tente novamente em alguns segundos.");
   if (status === 402) return new Error("Créditos de IA esgotados. Adicione créditos no workspace.");
-  if (status === 401 || status === 403) return new Error("Serviço de IA indisponível. Tente mais tarde.");
+  if (status === 401 || status === 403)
+    return new Error("Serviço de IA indisponível. Tente mais tarde.");
   return new Error("Falha ao gerar o plano. Tente novamente.");
 }
 

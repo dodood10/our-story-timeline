@@ -90,7 +90,8 @@ function MapPage() {
   );
 
   const locationKey = useMemo(
-    () => withLocation.map((m) => `${m.id}:${m.location ?? ""}:${m.coords?.join(",") ?? ""}`).join("|"),
+    () =>
+      withLocation.map((m) => `${m.id}:${m.location ?? ""}:${m.coords?.join(",") ?? ""}`).join("|"),
     [withLocation],
   );
 
@@ -151,7 +152,12 @@ function MapPage() {
       <PageHeader
         icon={MapIcon}
         title="Mapa das memórias"
-        subtitle={<>{pins.length} {pins.length === 1 ? "lugar" : "lugares"} no mapa{loading && " · localizando..."}</>}
+        subtitle={
+          <>
+            {pins.length} {pins.length === 1 ? "lugar" : "lugares"} no mapa
+            {loading && " · localizando..."}
+          </>
+        }
         className="mb-6"
         action={
           <Button
@@ -174,24 +180,29 @@ function MapPage() {
       ) : (
         <div className="rounded-2xl overflow-hidden border border-border shadow-card h-[70vh]">
           {mounted && (
-          <MapContainer center={[-15.78, -47.92]} zoom={3} style={{ height: "100%", width: "100%" }} scrollWheelZoom>
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {pins.map((p) => (
-              <Marker key={p.id} position={[p.lat, p.lng]} icon={heartIcon}>
-                <Popup>
-                  <div className="space-y-0.5">
-                    <p className="font-display text-base">{p.title}</p>
-                    <p className="text-xs opacity-70">{p.date}</p>
-                    <p className="text-xs opacity-70">📍 {p.location}</p>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-            <FitBounds pins={pins} />
-          </MapContainer>
+            <MapContainer
+              center={[-15.78, -47.92]}
+              zoom={3}
+              style={{ height: "100%", width: "100%" }}
+              scrollWheelZoom
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {pins.map((p) => (
+                <Marker key={p.id} position={[p.lat, p.lng]} icon={heartIcon}>
+                  <Popup>
+                    <div className="space-y-0.5">
+                      <p className="font-display text-base">{p.title}</p>
+                      <p className="text-xs opacity-70">{p.date}</p>
+                      <p className="text-xs opacity-70">📍 {p.location}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+              <FitBounds pins={pins} />
+            </MapContainer>
           )}
         </div>
       )}

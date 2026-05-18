@@ -32,8 +32,12 @@ export function ShareCard({
       return;
     }
     (isPhotoRef(first) ? resolvePhoto(first) : Promise.resolve(first))
-      .then((u) => { if (alive) setPhotoUrl(u); })
-      .catch(() => { if (alive) setPhotoUrl(""); });
+      .then((u) => {
+        if (alive) setPhotoUrl(u);
+      })
+      .catch(() => {
+        if (alive) setPhotoUrl("");
+      });
     return () => {
       alive = false;
     };

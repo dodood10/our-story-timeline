@@ -6,9 +6,21 @@ export const SurpriseAnswersSchema = z.object({
   budget: z.enum(["50", "100", "200", "caprichar"]),
   style: z.enum(["fofo", "elegante", "sensual", "simples", "pinterest", "pedido"]),
   time: z.enum(["30min", "1h", "2h", "dia_todo", "antecedencia"]),
-  likes: z.array(
-    z.enum(["filme", "jantar", "musica", "fotos", "cartas", "vinho", "doces", "massagem", "surpresa_quarto"]),
-  ).min(1),
+  likes: z
+    .array(
+      z.enum([
+        "filme",
+        "jantar",
+        "musica",
+        "fotos",
+        "cartas",
+        "vinho",
+        "doces",
+        "massagem",
+        "surpresa_quarto",
+      ]),
+    )
+    .min(1),
   tier: z.enum(["basic", "premium"]).default("basic"),
 });
 
@@ -42,21 +54,51 @@ export type SurprisePlan = z.infer<typeof SurprisePlanSchema>;
 
 export const LABELS = {
   recipient: {
-    namorada: "Namorada", namorado: "Namorado", esposa: "Esposa", marido: "Marido", ficante: "Ficante", noivo_noiva: "Noivo(a)",
+    namorada: "Namorada",
+    namorado: "Namorado",
+    esposa: "Esposa",
+    marido: "Marido",
+    ficante: "Ficante",
+    noivo_noiva: "Noivo(a)",
   },
   place: {
-    quarto: "Quarto", sala: "Sala", mesa: "Mesa de jantar", varanda: "Varanda", hotel: "Hotel/Airbnb", casa_inteira: "Casa inteira",
+    quarto: "Quarto",
+    sala: "Sala",
+    mesa: "Mesa de jantar",
+    varanda: "Varanda",
+    hotel: "Hotel/Airbnb",
+    casa_inteira: "Casa inteira",
   },
   budget: {
-    "50": "Até R$50", "100": "Até R$100", "200": "Até R$200", caprichar: "Quero caprichar",
+    "50": "Até R$50",
+    "100": "Até R$100",
+    "200": "Até R$200",
+    caprichar: "Quero caprichar",
   },
   style: {
-    fofo: "Fofo e romântico", elegante: "Elegante", sensual: "Sensual/intimista", simples: "Simples e bonito", pinterest: "Estilo Pinterest", pedido: "Pedido especial",
+    fofo: "Fofo e romântico",
+    elegante: "Elegante",
+    sensual: "Sensual/intimista",
+    simples: "Simples e bonito",
+    pinterest: "Estilo Pinterest",
+    pedido: "Pedido especial",
   },
   time: {
-    "30min": "30 minutos", "1h": "1 hora", "2h": "2 horas", dia_todo: "Tenho o dia todo", antecedencia: "Vou preparar com antecedência",
+    "30min": "30 minutos",
+    "1h": "1 hora",
+    "2h": "2 horas",
+    dia_todo: "Tenho o dia todo",
+    antecedencia: "Vou preparar com antecedência",
   },
   likes: {
-    filme: "Filme", jantar: "Jantar", musica: "Música", fotos: "Fotos", cartas: "Cartas", vinho: "Vinho", doces: "Doces", massagem: "Massagem", surpresa_quarto: "Surpresa no quarto",
+    filme: "Filme",
+    jantar: "Jantar",
+    musica: "Música",
+    fotos: "Fotos",
+    cartas: "Cartas",
+    vinho: "Vinho",
+    doces: "Doces",
+    massagem: "Massagem",
+    surpresa_quarto: "Surpresa no quarto",
   },
 } as const;

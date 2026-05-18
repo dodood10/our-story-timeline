@@ -1,4 +1,10 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { EMOTIONS, type Emotion } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
@@ -39,24 +45,37 @@ export function TimelineFilters({
         />
       </div>
       <Select value={year} onValueChange={onYearChange}>
-        <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Ano" /></SelectTrigger>
+        <SelectTrigger className="w-[130px] h-9">
+          <SelectValue placeholder="Ano" />
+        </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todos os anos</SelectItem>
           {years.map((y) => (
-            <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+            <SelectItem key={y} value={String(y)}>
+              {y}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
       <Select value={emotion} onValueChange={(v) => onEmotionChange(v as EmotionFilter)}>
-        <SelectTrigger className="w-[170px] h-9"><SelectValue placeholder="Emoção" /></SelectTrigger>
+        <SelectTrigger className="w-[170px] h-9">
+          <SelectValue placeholder="Emoção" />
+        </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todas as emoções</SelectItem>
           {EMOTIONS.map((e) => (
-            <SelectItem key={e.id} value={e.id}>{e.emoji} {e.label}</SelectItem>
+            <SelectItem key={e.id} value={e.id}>
+              {e.emoji} {e.label}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      <Toggle pressed={favoritesOnly} onPressedChange={onFavoritesChange} aria-label="Apenas favoritos" className="h-9">
+      <Toggle
+        pressed={favoritesOnly}
+        onPressedChange={onFavoritesChange}
+        aria-label="Apenas favoritos"
+        className="h-9"
+      >
         <Heart className={`h-4 w-4 mr-1 ${favoritesOnly ? "fill-current" : ""}`} /> Favoritos
       </Toggle>
     </div>

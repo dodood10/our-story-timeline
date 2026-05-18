@@ -1,15 +1,17 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAccess } from "@/hooks/useAccess";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Heart } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { LABELS, type SurpriseAnswers } from "@/lib/surprise-types";
 import { ANSWERS_KEY, clearPlanCache } from "@/lib/surprise-cache";
 import { AccessGateDenied, AccessGateLoading } from "@/components/surprise/AccessGate";
+import { SurpriseShell } from "@/components/surprise/SurpriseShell";
+import { BRAND_NAME } from "@/lib/brand";
 
 export const Route = createFileRoute("/surprise/quiz")({
-  head: () => ({ meta: [{ title: "Quiz — Surpresa Romântica" }] }),
+  head: () => ({ meta: [{ title: `Quiz — ${BRAND_NAME}` }] }),
   component: QuizPage,
 });
 
@@ -33,7 +35,9 @@ function QuizPage() {
     try {
       const raw = localStorage.getItem(ANSWERS_KEY);
       if (raw) setAnswers(JSON.parse(raw));
-    } catch { /* */ }
+    } catch {
+      /* */
+    }
     setAnswersHydrated(true);
   }, []);
 
@@ -50,7 +54,12 @@ function QuizPage() {
     { key: "budget", q: "Qual seu orçamento?", options: Object.entries(LABELS.budget) },
     { key: "style", q: "Qual estilo você quer?", options: Object.entries(LABELS.style) },
     { key: "time", q: "Quanto tempo você tem para montar?", options: Object.entries(LABELS.time) },
-    { key: "likes", q: "O que o casal mais gosta?", options: Object.entries(LABELS.likes), multi: true },
+    {
+      key: "likes",
+      q: "O que o casal mais gosta?",
+      options: Object.entries(LABELS.likes),
+      multi: true,
+    },
   ];
 
   const current = steps[step];
@@ -65,7 +74,12 @@ function QuizPage() {
       setAnswers((a) => {
         const arr = (a.likes ?? []) as string[];
         const exists = arr.includes(value);
-        return { ...a, likes: (exists ? arr.filter((v) => v !== value) : [...arr, value]) as SurpriseAnswers["likes"] };
+        return {
+          ...a,
+          likes: (exists
+            ? arr.filter((v) => v !== value)
+            : [...arr, value]) as SurpriseAnswers["likes"],
+        };
       });
     } else {
       setAnswers((a) => ({ ...a, [current.key]: value }));
@@ -82,77 +96,77 @@ function QuizPage() {
   const progress = ((step + (canAdvance ? 1 : 0)) / steps.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-soft px-4 py-8">
-      <div className="max-w-2xl mx-auto">
-        <Link to="/surprise" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-          <Heart className="h-4 w-4 text-primary" /> Surpresa Romântica
-        </Link>
-
-        <div className="mt-6 mb-2 flex items-center justify-between text-xs text-muted-foreground">
-          <span>Pergunta {step + 1} de {steps.length}</span>
-          <span>{Math.round(progress)}%</span>
-        </div>
-        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-          <motion.div
-            className="h-full bg-primary"
-            initial={false}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={current.key}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.25 }}
-            className="mt-8"
-          >
-            <h1 className="font-display text-3xl sm:text-4xl">{current.q}</h1>
-            {current.multi && (
-              <p className="text-sm text-muted-foreground mt-1">Pode escolher mais de uma opção.</p>
-            )}
-
-            <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {current.options.map(([value, label]) => {
-                const selected = current.multi
-                  ? (answers.likes ?? []).includes(value as SurpriseAnswers["likes"][number])
-                  : (answers[current.key] as string | undefined) === value;
-                return (
-                  <button
-                    key={value}
-                    onClick={() => pick(value)}
-                    className={`p-4 rounded-2xl border text-sm text-left transition-all ${
-                      selected
-                        ? "border-primary bg-primary/10 text-foreground font-medium shadow-soft"
-                        : "border-border bg-card hover:border-primary/40 hover:bg-card"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mt-8 flex justify-between gap-3">
-              <Button variant="ghost" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>
-                <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
-              </Button>
-              {!isLast ? (
-                <Button onClick={() => setStep((s) => s + 1)} disabled={!canAdvance}>
-                  Próxima <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
-              ) : (
-                <Button onClick={finish} disabled={!canAdvance} size="lg">
-                  Gerar meu plano ✨
-                </Button>
-              )}
-            </div>
-          </motion.div>
-        </AnimatePresence>
+    <SurpriseShell footer={false} mainClassName="max-w-2xl mx-auto px-4 py-8 sm:py-10">
+      <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+        <span>
+          Pergunta {step + 1} de {steps.length}
+        </span>
+        <span>{Math.round(progress)}%</span>
       </div>
-    </div>
+      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+        <motion.div
+          className="h-full bg-primary"
+          initial={false}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.3 }}
+        />
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current.key}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.25 }}
+          className="mt-8"
+        >
+          <h1 className="font-display text-3xl sm:text-4xl">{current.q}</h1>
+          {current.multi && (
+            <p className="text-sm text-muted-foreground mt-1">Pode escolher mais de uma opção.</p>
+          )}
+
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            {current.options.map(([value, label]) => {
+              const selected = current.multi
+                ? (answers.likes ?? []).includes(value as SurpriseAnswers["likes"][number])
+                : (answers[current.key] as string | undefined) === value;
+              return (
+                <button
+                  key={value}
+                  onClick={() => pick(value)}
+                  className={`p-4 rounded-2xl border text-sm text-left transition-all ${
+                    selected
+                      ? "border-primary bg-primary/10 text-foreground font-medium shadow-soft"
+                      : "border-border bg-card hover:border-primary/40 hover:bg-card"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 flex justify-between gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => setStep((s) => Math.max(0, s - 1))}
+              disabled={step === 0}
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+            </Button>
+            {!isLast ? (
+              <Button onClick={() => setStep((s) => s + 1)} disabled={!canAdvance}>
+                Próxima <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            ) : (
+              <Button onClick={finish} disabled={!canAdvance} size="lg">
+                Gerar meu plano ✨
+              </Button>
+            )}
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </SurpriseShell>
   );
 }

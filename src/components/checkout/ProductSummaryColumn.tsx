@@ -1,5 +1,6 @@
 import { CheckCircle2, Heart, Sparkles, ShieldCheck, Lock, Zap } from "lucide-react";
 import type { CheckoutProduct } from "@/lib/checkout-products";
+import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/brand";
 
 export function ProductSummaryColumn({ product }: { product: CheckoutProduct }) {
   return (
@@ -10,7 +11,9 @@ export function ProductSummaryColumn({ product }: { product: CheckoutProduct }) 
             <Heart className="h-12 w-12 text-primary fill-primary/20" strokeWidth={1.5} />
             <Sparkles className="h-6 w-6 text-primary absolute top-4 right-4 opacity-80" />
             <p className="font-display text-center text-lg leading-tight">{product.title}</p>
-            <p className="text-xs text-center text-muted-foreground">Plano personalizado · Dia dos Namorados</p>
+            <p className="text-xs text-center text-muted-foreground">
+              {BRAND_NAME} · {BRAND_TAGLINE}
+            </p>
           </div>
         </div>
       </div>
@@ -33,15 +36,16 @@ export function ProductSummaryColumn({ product }: { product: CheckoutProduct }) 
         <p className="text-sm flex gap-2">
           <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           <span>
-            <strong className="font-medium text-foreground">Garantia de 7 dias:</strong> se o material não te
-            ajudar a montar uma surpresa mais bonita e organizada, você pode solicitar reembolso dentro do prazo.
+            <strong className="font-medium text-foreground">Garantia de 7 dias:</strong> se o
+            material não te ajudar a montar uma surpresa mais bonita e organizada, você pode
+            solicitar reembolso dentro do prazo.
           </span>
         </p>
         <p className="text-sm flex gap-2">
           <Lock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           <span>
-            <strong className="font-medium text-foreground">Compra segura.</strong> Seus dados são usados apenas para
-            liberar seu acesso e enviar as informações da compra.
+            <strong className="font-medium text-foreground">Compra segura.</strong> Seus dados são
+            usados apenas para liberar seu acesso e enviar as informações da compra.
           </span>
         </p>
       </div>

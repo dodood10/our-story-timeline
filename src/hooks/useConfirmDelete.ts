@@ -7,7 +7,9 @@ export function useConfirmDelete(deleteFn: (id: string) => void) {
 
   const dialogProps = {
     open: !!confirmId,
-    onOpenChange: (v: boolean) => { if (!v) setConfirmId(null); },
+    onOpenChange: (v: boolean) => {
+      if (!v) setConfirmId(null);
+    },
     onConfirm: () => {
       if (confirmId) {
         deleteFn(confirmId);

@@ -56,7 +56,8 @@ export const UPSELL_KIT = {
     "Ideias de presente barato",
     "Modelos de bilhete e carta",
   ],
-  headline: "Já que você vai montar a surpresa, desbloqueie o pacote completo para deixar sua noite ainda mais especial.",
+  headline:
+    "Já que você vai montar a surpresa, desbloqueie o pacote completo para deixar sua noite ainda mais especial.",
 } as const;
 
 const PRODUCTS: Record<CheckoutProductId, CheckoutProduct> = {

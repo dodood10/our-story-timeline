@@ -42,7 +42,11 @@ export function TagInput({
             className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs"
           >
             #{t}
-            <button type="button" onClick={() => onChange(value.filter((x) => x !== t))} aria-label={`Remover ${t}`}>
+            <button
+              type="button"
+              onClick={() => onChange(value.filter((x) => x !== t))}
+              aria-label={`Remover ${t}`}
+            >
               <X className="h-3 w-3" />
             </button>
           </span>

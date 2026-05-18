@@ -225,14 +225,23 @@
 }
 
 @keyframes float-heart {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 .animate-float-heart {
   animation: float-heart 2.4s ease-in-out infinite;
 }
 
 @keyframes envelope-open {
-  0% { transform: rotateX(0deg); }
-  100% { transform: rotateX(180deg); }
+  0% {
+    transform: rotateX(0deg);
+  }
+  100% {
+    transform: rotateX(180deg);
+  }
 }

@@ -87,7 +87,11 @@ function DashboardHome() {
                 className="rounded-xl bg-card p-3 border border-border flex items-center gap-3 transition hover:shadow-card hover:border-primary/30"
               >
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-xl overflow-hidden">
-                  {m.photos[0] ? <Photo src={m.photos[0]} alt={m.title} className="h-full w-full object-cover" /> : "💞"}
+                  {m.photos[0] ? (
+                    <Photo src={m.photos[0]} alt={m.title} className="h-full w-full object-cover" />
+                  ) : (
+                    "💞"
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{m.title}</p>

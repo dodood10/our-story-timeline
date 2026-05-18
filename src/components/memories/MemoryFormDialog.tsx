@@ -1,5 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -94,7 +100,11 @@ export function MemoryFormDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Título</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Primeira viagem juntos" />
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ex: Primeira viagem juntos"
+            />
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -105,7 +115,12 @@ export function MemoryFormDialog({
               <Label>Localização (opcional)</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input className="pl-9" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Lugar especial" />
+                <Input
+                  className="pl-9"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Lugar especial"
+                />
               </div>
             </div>
           </div>
@@ -115,7 +130,12 @@ export function MemoryFormDialog({
           </div>
           <div className="space-y-2">
             <Label>Conte essa história</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="Descreva esse momento..." />
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              placeholder="Descreva esse momento..."
+            />
           </div>
           <div className="space-y-2">
             <Label>Tags</Label>
@@ -127,7 +147,9 @@ export function MemoryFormDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
           <Button onClick={save}>
             <Heart className="h-4 w-4 mr-1.5 fill-current" />
             {editing ? "Salvar" : "Salvar memória"}

@@ -26,7 +26,9 @@ interface AppState {
   deleteBucket: (id: string) => void;
   // letters
   letters: Letter[];
-  addLetter: (l: Omit<Letter, "id" | "createdAt" | "sealed" | "openedAt"> & { sealed?: boolean }) => Letter;
+  addLetter: (
+    l: Omit<Letter, "id" | "createdAt" | "sealed" | "openedAt"> & { sealed?: boolean },
+  ) => Letter;
   sealLetter: (id: string) => void;
   openLetter: (id: string) => void;
   deleteLetter: (id: string) => void;
@@ -50,7 +52,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [memories, setMemories, h3] = useLocalStorage<Memory[]>(STORAGE_KEYS.memories, []);
   const [bucket, setBucket, h4] = useLocalStorage<BucketItem[]>(STORAGE_KEYS.bucket, []);
   const [letters, setLetters, h5] = useLocalStorage<Letter[]>(STORAGE_KEYS.letters, []);
-  const [giftFavorites, setGiftFavorites, h6] = useLocalStorage<string[]>(STORAGE_KEYS.giftFavorites, []);
+  const [giftFavorites, setGiftFavorites, h6] = useLocalStorage<string[]>(
+    STORAGE_KEYS.giftFavorites,
+    [],
+  );
   const [settings, setSettings, h7] = useLocalStorage<Settings>(STORAGE_KEYS.settings, {
     theme: "romantic",
     notifications: false,
@@ -66,79 +71,146 @@ export function AppProvider({ children }: { children: ReactNode }) {
     cls.add(`theme-${settings.theme}`);
   }, [settings.theme]);
 
-  const addMemory = useCallback<AppState["addMemory"]>((m) => {
-    const created: Memory = { ...m, id: uid(), createdAt: new Date().toISOString() };
-    setMemories((prev) => [created, ...prev]);
-    return created;
-  }, [setMemories]);
+  const addMemory = useCallback<AppState["addMemory"]>(
+    (m) => {
+      const created: Memory = { ...m, id: uid(), createdAt: new Date().toISOString() };
+      setMemories((prev) => [created, ...prev]);
+      return created;
+    },
+    [setMemories],
+  );
 
-  const updateMemory = useCallback<AppState["updateMemory"]>((id, patch) => {
-    setMemories((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
-  }, [setMemories]);
+  const updateMemory = useCallback<AppState["updateMemory"]>(
+    (id, patch) => {
+      setMemories((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+    },
+    [setMemories],
+  );
 
-  const deleteMemory = useCallback((id: string) => {
-    setMemories((prev) => {
-      const target = prev.find((m) => m.id === id);
-      if (target) {
-        for (const ref of target.photos) {
-          if (isPhotoRef(ref)) deletePhoto(ref).catch(() => { /* orphan photo, not critical */ });
+  const deleteMemory = useCallback(
+    (id: string) => {
+      setMemories((prev) => {
+        const target = prev.find((m) => m.id === id);
+        if (target) {
+          for (const ref of target.photos) {
+            if (isPhotoRef(ref))
+              deletePhoto(ref).catch(() => {
+                /* orphan photo, not critical */
+              });
+          }
         }
-      }
-      return prev.filter((m) => m.id !== id);
-    });
-  }, [setMemories]);
+        return prev.filter((m) => m.id !== id);
+      });
+    },
+    [setMemories],
+  );
 
-  const toggleFavoriteMemory = useCallback((id: string) => {
-    setMemories((prev) => prev.map((m) => (m.id === id ? { ...m, favorite: !m.favorite } : m)));
-  }, [setMemories]);
+  const toggleFavoriteMemory = useCallback(
+    (id: string) => {
+      setMemories((prev) => prev.map((m) => (m.id === id ? { ...m, favorite: !m.favorite } : m)));
+    },
+    [setMemories],
+  );
 
-  const addBucket = useCallback<AppState["addBucket"]>((b) => {
-    const created: BucketItem = { ...b, id: uid(), createdAt: new Date().toISOString(), done: false };
-    setBucket((prev) => [created, ...prev]);
-    return created;
-  }, [setBucket]);
+  const addBucket = useCallback<AppState["addBucket"]>(
+    (b) => {
+      const created: BucketItem = {
+        ...b,
+        id: uid(),
+        createdAt: new Date().toISOString(),
+        done: false,
+      };
+      setBucket((prev) => [created, ...prev]);
+      return created;
+    },
+    [setBucket],
+  );
 
-  const toggleBucket = useCallback<AppState["toggleBucket"]>((id, photo) => {
-    setBucket((prev) =>
-      prev.map((b) =>
-        b.id === id
-          ? { ...b, done: !b.done, doneAt: !b.done ? new Date().toISOString() : undefined, photo: !b.done ? photo ?? b.photo : b.photo }
-          : b,
-      ),
-    );
-  }, [setBucket]);
+  const toggleBucket = useCallback<AppState["toggleBucket"]>(
+    (id, photo) => {
+      setBucket((prev) =>
+        prev.map((b) =>
+          b.id === id
+            ? {
+                ...b,
+                done: !b.done,
+                doneAt: !b.done ? new Date().toISOString() : undefined,
+                photo: !b.done ? (photo ?? b.photo) : b.photo,
+              }
+            : b,
+        ),
+      );
+    },
+    [setBucket],
+  );
 
-  const deleteBucket = useCallback((id: string) => {
-    setBucket((prev) => prev.filter((b) => b.id !== id));
-  }, [setBucket]);
+  const deleteBucket = useCallback(
+    (id: string) => {
+      setBucket((prev) => prev.filter((b) => b.id !== id));
+    },
+    [setBucket],
+  );
 
-  const addLetter = useCallback<AppState["addLetter"]>((l) => {
-    const created: Letter = { ...l, id: uid(), createdAt: new Date().toISOString(), sealed: l.sealed ?? false };
-    setLetters((prev) => [created, ...prev]);
-    return created;
-  }, [setLetters]);
+  const addLetter = useCallback<AppState["addLetter"]>(
+    (l) => {
+      const created: Letter = {
+        ...l,
+        id: uid(),
+        createdAt: new Date().toISOString(),
+        sealed: l.sealed ?? false,
+      };
+      setLetters((prev) => [created, ...prev]);
+      return created;
+    },
+    [setLetters],
+  );
 
-  const sealLetter = useCallback((id: string) => {
-    setLetters((prev) => prev.map((l) => (l.id === id ? { ...l, sealed: true } : l)));
-  }, [setLetters]);
+  const sealLetter = useCallback(
+    (id: string) => {
+      setLetters((prev) => prev.map((l) => (l.id === id ? { ...l, sealed: true } : l)));
+    },
+    [setLetters],
+  );
 
-  const openLetter = useCallback((id: string) => {
-    setLetters((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, openedAt: l.openedAt ?? new Date().toISOString() } : l)),
-    );
-  }, [setLetters]);
+  const openLetter = useCallback(
+    (id: string) => {
+      setLetters((prev) =>
+        prev.map((l) =>
+          l.id === id ? { ...l, openedAt: l.openedAt ?? new Date().toISOString() } : l,
+        ),
+      );
+    },
+    [setLetters],
+  );
 
-  const deleteLetter = useCallback((id: string) => {
-    setLetters((prev) => prev.filter((l) => l.id !== id));
-  }, [setLetters]);
+  const deleteLetter = useCallback(
+    (id: string) => {
+      setLetters((prev) => prev.filter((l) => l.id !== id));
+    },
+    [setLetters],
+  );
 
-  const toggleGiftFavorite = useCallback((id: string) => {
-    setGiftFavorites((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  }, [setGiftFavorites]);
+  const toggleGiftFavorite = useCallback(
+    (id: string) => {
+      setGiftFavorites((prev) =>
+        prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+      );
+    },
+    [setGiftFavorites],
+  );
 
-  const setTheme = useCallback((t: Theme) => setSettings((s) => ({ ...s, theme: t })), [setSettings]);
-  const setNotifications = useCallback((v: boolean) => setSettings((s) => ({ ...s, notifications: v })), [setSettings]);
-  const setSyncCode = useCallback((code: string) => setSettings((s) => ({ ...s, syncCode: code })), [setSettings]);
+  const setTheme = useCallback(
+    (t: Theme) => setSettings((s) => ({ ...s, theme: t })),
+    [setSettings],
+  );
+  const setNotifications = useCallback(
+    (v: boolean) => setSettings((s) => ({ ...s, notifications: v })),
+    [setSettings],
+  );
+  const setSyncCode = useCallback(
+    (code: string) => setSettings((s) => ({ ...s, syncCode: code })),
+    [setSettings],
+  );
 
   const resetSeed = useCallback(() => {
     setMemories(seedMemories());
@@ -175,7 +247,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSyncCode,
       resetSeed,
     }),
-    [hydrated, couple, setCouple, onboarded, setOnboarded, memories, addMemory, updateMemory, deleteMemory, toggleFavoriteMemory, bucket, addBucket, toggleBucket, deleteBucket, letters, addLetter, sealLetter, openLetter, deleteLetter, giftFavorites, toggleGiftFavorite, settings, setTheme, setNotifications, setSyncCode, resetSeed],
+    [
+      hydrated,
+      couple,
+      setCouple,
+      onboarded,
+      setOnboarded,
+      memories,
+      addMemory,
+      updateMemory,
+      deleteMemory,
+      toggleFavoriteMemory,
+      bucket,
+      addBucket,
+      toggleBucket,
+      deleteBucket,
+      letters,
+      addLetter,
+      sealLetter,
+      openLetter,
+      deleteLetter,
+      giftFavorites,
+      toggleGiftFavorite,
+      settings,
+      setTheme,
+      setNotifications,
+      setSyncCode,
+      resetSeed,
+    ],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -13,8 +13,12 @@ export function Photo({ src, fallback, ...rest }: Props) {
     let alive = true;
     if (isPhotoRef(src)) {
       resolvePhoto(src)
-        .then((url) => { if (alive) setResolved(url); })
-        .catch(() => { if (alive) setResolved(""); });
+        .then((url) => {
+          if (alive) setResolved(url);
+        })
+        .catch(() => {
+          if (alive) setResolved("");
+        });
     } else {
       setResolved(src);
     }
