@@ -61,6 +61,17 @@ function SurpriseCheckout() {
   const totalCents = calcTotalCents(product, bumps);
   const defaultLead = readCheckoutLead();
 
+  useEffect(() => {
+    if (hydrated && surprise !== "basic" && surprise !== "premium") {
+      trackEvent("InitiateCheckout", {
+        value: totalCents / 100,
+        currency: "BRL",
+        content_ids: [product.id],
+        content_type: "product",
+      });
+    }
+  }, [hydrated, surprise, totalCents, product.id]);
+
   if (!hydrated) {
     return (
       <SurpriseShell footer={false} mainClassName="flex items-center justify-center py-16">
