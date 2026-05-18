@@ -35,13 +35,26 @@ Regras importantes:
 }
 
 function mapAiError(err: unknown): Error {
-  const e = err as { statusCode?: number; status?: number; message?: string };
+  const e = err as {
+    statusCode?: number;
+    status?: number;
+    message?: string;
+    name?: string;
+    cause?: unknown;
+  };
+  console.error("[generateSurprisePlan] AI error:", {
+    name: e?.name,
+    status: e?.statusCode ?? e?.status,
+    message: e?.message,
+    cause: e?.cause,
+  });
   const status = e?.statusCode ?? e?.status;
   if (status === 429) return new Error("Muitas requisições. Tente novamente em alguns segundos.");
   if (status === 402) return new Error("Créditos de IA esgotados. Adicione créditos no workspace.");
   if (status === 401 || status === 403)
     return new Error("Serviço de IA indisponível. Tente mais tarde.");
-  return new Error("Falha ao gerar o plano. Tente novamente.");
+  const msg = e?.message ? `Falha ao gerar o plano: ${e.message}` : "Falha ao gerar o plano. Tente novamente.";
+  return new Error(msg);
 }
 
 export const generateSurprisePlan = createServerFn({ method: "POST" })
