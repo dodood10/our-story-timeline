@@ -128,6 +128,17 @@ function PlanPage() {
   }, [showReveal]);
 
   useEffect(() => {
+    if (plan && !loading) {
+      trackEvent("ViewContent", {
+        content_name: "Plano Surpresa Romantica",
+        content_category: tier,
+        value: isPremium ? 19.9 : 10.0,
+        currency: "BRL",
+      });
+    }
+  }, [plan, loading, tier, isPremium]);
+
+  useEffect(() => {
     if (!hydrated) return;
     if (!hasSurprise) {
       navigate({ to: "/surprise" });
