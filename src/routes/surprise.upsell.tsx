@@ -42,8 +42,7 @@ function UpsellPage() {
     );
   }
 
-  const { plan } = Route.useSearch();
-  const productId = plan ?? "premium";
+  const productId = readLastProductId();
   const product = getCheckoutProduct(productId);
   const bumps = readCheckoutBumps();
   const baseTotal = calcTotalCents(product, bumps);
