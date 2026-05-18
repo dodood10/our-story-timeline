@@ -21,7 +21,6 @@ import { MemoryFormDialog } from "@/components/memories/MemoryFormDialog";
 import { Toaster } from "@/components/ui/sonner";
 import { Heart, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 function NotFoundComponent() {
   return (
@@ -64,12 +63,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Memory Lane — História do casal" },
-      { name: "description", content: "Guarde memórias, cartas e momentos especiais. Surpresa romântica com plano personalizado por IA." },
-      { property: "og:title", content: "Surpresa Romântica em Minutos" },
-      { property: "og:description", content: "Monte uma surpresa inesquecível em casa, mesmo sem criatividade e gastando pouco." },
+      { title: "Surpresa Romântica — Plano personalizado para o Dia dos Namorados" },
+      { name: "description", content: "Quiz rápido monta um plano completo de surpresa romântica em minutos: decoração, lista de compras, roteiro e frases." },
+      { property: "og:title", content: "Surpresa Romântica — Plano personalizado para o Dia dos Namorados" },
+      { property: "og:description", content: "Quiz rápido monta um plano completo de surpresa romântica em minutos: decoração, lista de compras, roteiro e frases." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Surpresa Romântica — Plano personalizado para o Dia dos Namorados" },
+      { name: "twitter:description", content: "Quiz rápido monta um plano completo de surpresa romântica em minutos: decoração, lista de compras, roteiro e frases." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7794435d-7f69-4a31-a1cf-faa1159dc1c1/id-preview-54b887b2--0245b738-ed74-4eb8-a4d4-f0b4532ba2bf.lovable.app-1779072730436.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7794435d-7f69-4a31-a1cf-faa1159dc1c1/id-preview-54b887b2--0245b738-ed74-4eb8-a4d4-f0b4532ba2bf.lovable.app-1779072730436.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -127,19 +130,21 @@ const MARKETING_PREFIXES = ["/", "/surprise", "/dev-unlock"];
 function LayoutSwitch() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isMarketing =
-    MARKETING_PREFIXES.some((p) => (p === "/" ? pathname === "/" : pathname.startsWith(p)));
+    pathname === "/" ||
+    pathname.startsWith("/surprise") ||
+    pathname.startsWith("/dev-unlock");
 
   if (isMarketing) {
     return (
       <div className="min-h-screen bg-background">
-        <ErrorBoundary section="surprise">
-          <Outlet />
-        </ErrorBoundary>
+        <Outlet />
       </div>
     );
   }
   return <AppShell />;
 }
+
+void MARKETING_PREFIXES;
 
 function AppShell() {
   const { hydrated, onboarded } = useApp();
@@ -162,17 +167,9 @@ function AppShell() {
 
   return (
     <div className="min-h-screen flex bg-background">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
-      >
-        Pular para o conteúdo
-      </a>
       <AppSidebar />
-      <main id="main-content" className="flex-1 min-w-0 pb-20 lg:pb-0">
-        <ErrorBoundary section="app">
-          <Outlet />
-        </ErrorBoundary>
+      <main className="flex-1 min-w-0 pb-20 lg:pb-0">
+        <Outlet />
       </main>
       <BottomBar />
       {!onboarded && <OnboardingDialog open />}
@@ -194,7 +191,7 @@ function FullAppPaywall() {
           Linha do tempo, galeria, cartas seladas, mapa e muito mais — o app inteiro para guardar a história de vocês.
         </p>
         <p className="text-sm text-muted-foreground mt-4">
-          O diário completo está em preview fechado. Por enquanto, monte sua surpresa romântica com o gerador — ou use o desbloqueio de desenvolvimento no ambiente local.
+          Em breve disponível como plano. Por enquanto, comece pela surpresa do Dia dos Namorados.
         </p>
         <div className="mt-6 flex flex-col gap-2">
           <Button asChild className="w-full">
