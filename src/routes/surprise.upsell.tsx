@@ -42,13 +42,31 @@ function UpsellPage() {
     );
   }
 
+  const { plan } = Route.useSearch();
+  const productId = plan ?? "premium";
+  const product = getCheckoutProduct(productId);
+  const bumps = readCheckoutBumps();
+  const baseTotal = calcTotalCents(product, bumps);
+
   function accept() {
     writeUpsellKit(true);
+    trackEvent("Purchase", {
+      value: (baseTotal + UPSELL_KIT.priceCents) / 100,
+      currency: "BRL",
+      content_ids: [product.id, "upsell-kit"],
+      content_type: "product",
+    });
     toast.success("Kit Surpresa Premium adicionado ao seu acesso!");
     navigate({ to: "/surprise/quiz" });
   }
 
   function decline() {
+    trackEvent("Purchase", {
+      value: baseTotal / 100,
+      currency: "BRL",
+      content_ids: [product.id],
+      content_type: "product",
+    });
     navigate({ to: "/surprise/quiz" });
   }
 
