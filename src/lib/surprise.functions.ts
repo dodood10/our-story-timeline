@@ -74,7 +74,6 @@ export const generateSurprisePlan = createServerFn({ method: "POST" })
         model,
         schema: SurprisePlanSchema,
         prompt: buildPrompt(data),
-        prompt: buildPrompt(data),
       });
       return object;
     } catch (err: unknown) {
