@@ -12,30 +12,51 @@ import {
 import { checkSurpriseRateLimit, clientKeyFromRequest } from "./surprise-rate-limit";
 
 const PLAN_SCHEMA_DESCRIPTION =
-  "Plano de surpresa romântica em português brasileiro. Retorne somente campos do schema, com arrays preenchidos conforme o tier.";
+  "Plano de surpresa romântica em português brasileiro (schema v2). Retorne JSON válido conforme tier.";
 
 function buildPrompt(a: SurpriseAnswers) {
   const likes = a.likes.map((k) => LABELS.likes[k]).join(", ");
   const nameCtx = a.partnerName
-    ? `\n- Nome de quem vai receber: ${a.partnerName} (use o nome no título e em pelo menos 2 frases românticas)`
+    ? `\n- Nome de quem vai receber: ${a.partnerName} (use no título, no mapa da noite e nas frases)`
     : "";
-  return `Crie um plano completo de surpresa romântica para o Dia dos Namorados em português brasileiro, com tom acolhedor, criativo e realista (sem clichês). Considere:
+  const isPremium = a.tier === "premium";
 
+  const tierRules = isPremium
+    ? `TIER PREMIUM — preencha TUDO:
+- budgetPlans: 4–6 itens em cada faixa (upTo50, upTo100, upTo200), adaptados ao local e estilo
+- phrasesByMoment: frase autoral específica para cada momento (entrada, mesa, bilhete, whatsapp, encerramento)
+- checklist: 14–18 itens práticos para checagem final
+- premiumExtras: exatamente 10 decorationThemes; 4 playlists; 3 giftsByBudget; 3 cardTemplates; 3 extraScripts; 4 dinnerIdeas; 5 emergencyPlan`
+    : `TIER BÁSICO — preencha resumo, nightMap (5 fases), decoration, shopping (essential+optional, sem tier premium), timeline (6 slots), avoidMistakes (5 itens).
+Deixe VAZIOS: budgetPlans (arrays vazios), phrasesByMoment (strings vazias), checklist ([]), premiumExtras (todos arrays vazios).`;
+
+  return `Crie um plano completo de surpresa romântica para o Dia dos Namorados em português brasileiro.
+Tom: acolhedor, específico, realista — NUNCA genérico ("velas e flores" sem detalhe).
+
+Contexto do quiz:
 - Para quem: ${LABELS.recipient[a.recipient]}${nameCtx}
 - Local: ${LABELS.place[a.place]}
-- Orçamento: ${LABELS.budget[a.budget]}
-- Estilo desejado: ${LABELS.style[a.style]}
-- Tempo disponível: ${LABELS.time[a.time]}
+- Orçamento escolhido: ${LABELS.budget[a.budget]}
+- Estilo: ${LABELS.style[a.style]}
+- Tempo de montagem: ${LABELS.time[a.time]}
 - O casal gosta de: ${likes}
-- Tier do plano: ${a.tier === "premium" ? "PREMIUM (preencher todas as seções extras)" : "BÁSICO (deixar romanticPhrases, dinnerIdeas, emergencyPlan e checklist como arrays vazios)"}
 
-Regras importantes:
-- A lista de compras essential deve caber no orçamento informado (preços do Brasil em 2026). Para cada item da lista essential e optional, adicione uma estimativa de preço entre parênteses — ex: "Velas aromáticas (R$20–30)".
-- O passo a passo (timeline) deve ter entre 4 e 7 itens com horários relativos ("60 min antes", "30 min antes", etc).
-- Frases românticas: 6 frases curtas, autorais, sem clichê. Não cite "te amo" mais de uma vez.
-- Plano emergência: como montar uma surpresa decente em até 1 hora.
-- Tudo escrito direto para o usuário, na 2ª pessoa do singular ("você").
-- O título deve ser cativante (5-8 palavras).`;
+${tierRules}
+
+Estrutura obrigatória:
+1. title: 5–8 palavras, cativante, com nome se informado
+2. concept: 2–3 frases emocionais na 2ª pessoa ("você")
+3. summary: difficulty (facil|medio|caprichado), nightMood (ex: "Íntimo e elegante"), estimatedBudget (faixa em R$)
+4. nightMap: EXATAMENTE 5 itens, phases nesta ordem: entrada, ambiente, emocional, jantar, encerramento — cada um com title, description, microTip
+5. decoration: byEnvironment (2–3 zonas ligadas ao local), lighting, tableOrBed, photosAndNotes, scentAndMusic, sensoryDetails (4–6 itens sensoriais específicos)
+6. shopping.items: 8–14 itens com name, quantity (ex: "6 un"), priceEstimate (ex: "R$12–18"), whereToBuy (mercado|papelaria|festa|variedades|online), tier (essential|optional|premium)
+7. timeline: EXATAMENTE 6 itens, slots nesta ordem: 2h, 1h30, 1h, 30min, 10min, chegada — tasks concretas
+8. avoidMistakes: 5–8 erros comuns específicos ao local e estilo escolhidos
+
+Regras anti-genérico:
+- Cite o local (${LABELS.place[a.place]}) e pelo menos 2 gostos (${likes}) no mapa da noite e na decoração
+- Preços realistas Brasil 2026; essential deve caber no orçamento ${LABELS.budget[a.budget]}
+- Proibido clichê vazio; cada item de compra deve ser acionável`;
 }
 
 function extractJsonObject(text: string): string | null {
@@ -63,7 +84,7 @@ async function repairPlanJson({ text }: { text: string }): Promise<string | null
       name: "surprise_plan",
       description: PLAN_SCHEMA_DESCRIPTION,
     }),
-    prompt: `Converta a resposta abaixo em um JSON válido que siga exatamente o schema do plano de surpresa. Não invente chaves extras.\n\n${text}`,
+    prompt: `Converta a resposta abaixo em JSON válido que siga exatamente o schema v2 do plano. Não invente chaves extras.\n\n${text}`,
   });
 
   return JSON.stringify(result.output satisfies SurprisePlan);
@@ -88,7 +109,9 @@ function mapAiError(err: unknown): Error {
   if (status === 402) return new Error("Créditos de IA esgotados. Adicione créditos no workspace.");
   if (status === 401 || status === 403)
     return new Error("Serviço de IA indisponível. Tente mais tarde.");
-  const msg = e?.message ? `Falha ao gerar o plano: ${e.message}` : "Falha ao gerar o plano. Tente novamente.";
+  const msg = e?.message
+    ? `Falha ao gerar o plano: ${e.message}`
+    : "Falha ao gerar o plano. Tente novamente.";
   return new Error(msg);
 }
 

@@ -26,32 +26,172 @@ export const SurpriseAnswersSchema = z.object({
 });
 
 export type SurpriseAnswers = z.infer<typeof SurpriseAnswersSchema>;
-
-/** Plan generation tier — subset of SurpriseTier that excludes "none". */
 export type PlanTier = SurpriseAnswers["tier"];
+
+export const NightPhaseSchema = z.enum([
+  "entrada",
+  "ambiente",
+  "emocional",
+  "jantar",
+  "encerramento",
+]);
+export type NightPhase = z.infer<typeof NightPhaseSchema>;
+
+export const TimelineSlotSchema = z.enum(["2h", "1h30", "1h", "30min", "10min", "chegada"]);
+export type TimelineSlot = z.infer<typeof TimelineSlotSchema>;
+
+export const ShoppingTierSchema = z.enum(["essential", "optional", "premium"]);
+export type ShoppingTier = z.infer<typeof ShoppingTierSchema>;
+
+export const WhereToBuySchema = z.enum(["mercado", "papelaria", "festa", "variedades", "online"]);
+export type WhereToBuy = z.infer<typeof WhereToBuySchema>;
+
+export const DifficultySchema = z.enum(["facil", "medio", "caprichado"]);
+export type Difficulty = z.infer<typeof DifficultySchema>;
+
+const emptyPhrasesByMoment = {
+  entrada: "",
+  mesa: "",
+  bilhete: "",
+  whatsapp: "",
+  encerramento: "",
+};
+
+const emptyBudgetPlans = {
+  upTo50: [] as string[],
+  upTo100: [] as string[],
+  upTo200: [] as string[],
+};
+
+const emptyPremiumExtras = {
+  decorationThemes: [] as { name: string; items: string }[],
+  playlists: [] as { mood: string; tip: string }[],
+  giftsByBudget: [] as { range: string; ideas: string }[],
+  cardTemplates: [] as string[],
+  extraScripts: [] as string[],
+  dinnerIdeas: [] as string[],
+  emergencyPlan: [] as string[],
+};
 
 export const SurprisePlanSchema = z.object({
   title: z.string(),
   concept: z.string(),
+  summary: z.object({
+    difficulty: DifficultySchema,
+    nightMood: z.string(),
+    estimatedBudget: z.string(),
+  }),
+  nightMap: z
+    .array(
+      z.object({
+        phase: NightPhaseSchema,
+        title: z.string(),
+        description: z.string(),
+        microTip: z.string().optional(),
+      }),
+    )
+    .length(5),
   decoration: z.object({
-    setup: z.array(z.string()),
+    byEnvironment: z.array(
+      z.object({
+        zone: z.string(),
+        items: z.array(z.string()),
+      }),
+    ),
     lighting: z.string(),
-    photos: z.string(),
-    avoid: z.array(z.string()),
+    tableOrBed: z.string(),
+    photosAndNotes: z.string(),
+    scentAndMusic: z.string(),
+    sensoryDetails: z.array(z.string()),
   }),
   shopping: z.object({
-    essential: z.array(z.string()),
-    optional: z.array(z.string()),
+    items: z.array(
+      z.object({
+        name: z.string(),
+        quantity: z.string(),
+        priceEstimate: z.string(),
+        whereToBuy: WhereToBuySchema,
+        tier: ShoppingTierSchema,
+      }),
+    ),
   }),
-  timeline: z.array(z.object({ time: z.string(), task: z.string() })),
-  nightScript: z.array(z.string()),
-  romanticPhrases: z.array(z.string()).default([]),
-  dinnerIdeas: z.array(z.string()).default([]),
-  emergencyPlan: z.array(z.string()).default([]),
+  timeline: z
+    .array(
+      z.object({
+        slot: TimelineSlotSchema,
+        task: z.string(),
+      }),
+    )
+    .length(6),
+  budgetPlans: z
+    .object({
+      upTo50: z.array(z.string()),
+      upTo100: z.array(z.string()),
+      upTo200: z.array(z.string()),
+    })
+    .default(emptyBudgetPlans),
+  phrasesByMoment: z
+    .object({
+      entrada: z.string(),
+      mesa: z.string(),
+      bilhete: z.string(),
+      whatsapp: z.string(),
+      encerramento: z.string(),
+    })
+    .default(emptyPhrasesByMoment),
+  avoidMistakes: z.array(z.string()),
   checklist: z.array(z.string()).default([]),
+  premiumExtras: z
+    .object({
+      decorationThemes: z.array(z.object({ name: z.string(), items: z.string() })),
+      playlists: z.array(z.object({ mood: z.string(), tip: z.string() })),
+      giftsByBudget: z.array(z.object({ range: z.string(), ideas: z.string() })),
+      cardTemplates: z.array(z.string()),
+      extraScripts: z.array(z.string()),
+      dinnerIdeas: z.array(z.string()),
+      emergencyPlan: z.array(z.string()),
+    })
+    .default(emptyPremiumExtras),
 });
 
 export type SurprisePlan = z.infer<typeof SurprisePlanSchema>;
+
+export const NIGHT_PHASE_LABELS: Record<NightPhase, string> = {
+  entrada: "Entrada",
+  ambiente: "Ambiente principal",
+  emocional: "Momento emocional",
+  jantar: "Jantar / sobremesa",
+  encerramento: "Encerramento especial",
+};
+
+export const TIMELINE_SLOT_LABELS: Record<TimelineSlot, string> = {
+  "2h": "2 horas antes",
+  "1h30": "1h30 antes",
+  "1h": "1 hora antes",
+  "30min": "30 minutos antes",
+  "10min": "10 minutos antes",
+  chegada: "Hora da chegada",
+};
+
+export const WHERE_TO_BUY_LABELS: Record<WhereToBuy, string> = {
+  mercado: "Mercado",
+  papelaria: "Papelaria",
+  festa: "Loja de festa",
+  variedades: "Variedades",
+  online: "Online",
+};
+
+export const SHOPPING_TIER_LABELS: Record<ShoppingTier, string> = {
+  essential: "Essencial",
+  optional: "Opcional",
+  premium: "Premium",
+};
+
+export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
+  facil: "Fácil",
+  medio: "Médio",
+  caprichado: "Caprichado",
+};
 
 export const LABELS = {
   recipient: {
@@ -103,3 +243,12 @@ export const LABELS = {
     surpresa_quarto: "Surpresa no quarto",
   },
 } as const;
+
+export const PLAN_STYLE_THEMES: Record<string, string> = {
+  fofo: "plan-theme-fofo",
+  elegante: "plan-theme-elegant",
+  sensual: "plan-theme-sensual",
+  simples: "plan-theme-simples",
+  pinterest: "plan-theme-pinterest",
+  pedido: "plan-theme-pedido",
+};

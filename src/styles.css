@@ -249,6 +249,30 @@
   --secondary-foreground: oklch(0.35 0.07 35);
 }
 
+.plan-theme-fofo {
+  --primary: oklch(0.62 0.16 350);
+  --primary-foreground: oklch(0.99 0.005 350);
+  --ring: oklch(0.67 0.14 350);
+  --secondary: oklch(0.97 0.04 350);
+  --secondary-foreground: oklch(0.38 0.08 350);
+}
+
+.plan-theme-simples {
+  --primary: oklch(0.55 0.06 250);
+  --primary-foreground: oklch(0.99 0.005 250);
+  --ring: oklch(0.6 0.05 250);
+  --secondary: oklch(0.96 0.02 250);
+  --secondary-foreground: oklch(0.35 0.04 250);
+}
+
+.plan-theme-pedido {
+  --primary: oklch(0.52 0.14 300);
+  --primary-foreground: oklch(0.99 0.005 300);
+  --ring: oklch(0.57 0.12 300);
+  --secondary: oklch(0.96 0.04 300);
+  --secondary-foreground: oklch(0.35 0.07 300);
+}
+
 @keyframes float-heart {
   0%,
   100% {
