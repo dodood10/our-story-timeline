@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useAccess } from "@/hooks/useAccess";
 import { Button } from "@/components/ui/button";
 import { UPSELL_KIT, formatBRL, calcTotalCents, getCheckoutProduct } from "@/lib/checkout-products";
-import { readCheckoutBumps, writeUpsellKit } from "@/lib/checkout-storage";
+import { readCheckoutBumps, readLastProductId, writeUpsellKit } from "@/lib/checkout-storage";
 import { trackEvent } from "@/lib/meta-pixel";
 import { SurpriseShell } from "@/components/surprise/SurpriseShell";
 import { BRAND_NAME } from "@/lib/brand";
