@@ -28,6 +28,7 @@ import {
 } from "@/lib/surprise-types";
 import { ANSWERS_KEY, readCachedPlan, writeCachedPlan, clearPlanCache } from "@/lib/surprise-cache";
 import { readUpsellKit } from "@/lib/checkout-storage";
+import { trackEvent } from "@/lib/meta-pixel";
 import { AccessGateDenied, AccessGateLoading } from "@/components/surprise/AccessGate";
 import { SurpriseShell } from "@/components/surprise/SurpriseShell";
 import { BRAND_NAME } from "@/lib/brand";
