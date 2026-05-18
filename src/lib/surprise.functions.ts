@@ -1,14 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { generateObject } from "ai";
+import { generateObject, generateText, Output } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway";
 import {
   SurpriseAnswersSchema,
   SurprisePlanSchema,
   LABELS,
   type SurpriseAnswers,
+  type SurprisePlan,
 } from "./surprise-types";
 import { checkSurpriseRateLimit, clientKeyFromRequest } from "./surprise-rate-limit";
+
+const PLAN_SCHEMA_DESCRIPTION =
+  "Plano de surpresa romântica em português brasileiro. Retorne somente campos do schema, com arrays preenchidos conforme o tier.";
 
 function buildPrompt(a: SurpriseAnswers) {
   const likes = a.likes.map((k) => LABELS.likes[k]).join(", ");
@@ -32,6 +36,37 @@ Regras importantes:
 - Plano emergência: como montar uma surpresa decente em até 1 hora.
 - Tudo escrito direto para o usuário, na 2ª pessoa do singular ("você").
 - O título deve ser cativante (5-8 palavras).`;
+}
+
+function extractJsonObject(text: string): string | null {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)?.[1];
+  const source = fenced ?? text;
+  const start = source.indexOf("{");
+  const end = source.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) return null;
+  return source.slice(start, end + 1);
+}
+
+async function repairPlanJson({ text }: { text: string }): Promise<string | null> {
+  const extracted = extractJsonObject(text);
+  if (extracted) return extracted;
+
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) return null;
+
+  const gateway = createLovableAiGatewayProvider(key);
+  const model = gateway("google/gemini-3-flash-preview");
+  const result = await generateText({
+    model,
+    output: Output.object({
+      schema: SurprisePlanSchema,
+      name: "surprise_plan",
+      description: PLAN_SCHEMA_DESCRIPTION,
+    }),
+    prompt: `Converta a resposta abaixo em um JSON válido que siga exatamente o schema do plano de surpresa. Não invente chaves extras.\n\n${text}`,
+  });
+
+  return JSON.stringify(result.output satisfies SurprisePlan);
 }
 
 function mapAiError(err: unknown): Error {
@@ -73,6 +108,9 @@ export const generateSurprisePlan = createServerFn({ method: "POST" })
       const { object } = await generateObject({
         model,
         schema: SurprisePlanSchema,
+        schemaName: "surprise_plan",
+        schemaDescription: PLAN_SCHEMA_DESCRIPTION,
+        experimental_repairText: repairPlanJson,
         prompt: buildPrompt(data),
       });
       return object;
