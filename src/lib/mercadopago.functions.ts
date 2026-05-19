@@ -9,10 +9,12 @@ import {
   isPaidStatus,
   translateCardStatusDetail,
 } from "@/lib/mercadopago.server";
+import { resolveCheckoutAmountCents } from "@/lib/checkout-products";
 
 function splitName(full: string): { firstName: string; lastName: string } {
-  const parts = full.trim().split(/\s+/);
-  if (parts.length === 1) return { firstName: parts[0], lastName: "." };
+  const parts = full.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { firstName: "Cliente", lastName: "MP" };
+  if (parts.length === 1) return { firstName: parts[0], lastName: parts[0] };
   return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
 }
 
@@ -22,9 +24,14 @@ const PayerInput = z.object({
   document: z.string().regex(/^\d{11}$/, "CPF inválido"),
 });
 
+const ProductKey = z.enum(["surprise:premium", "surprise:basic", "memory_lane"]);
+const BumpsInput = z
+  .object({ cards: z.boolean().optional(), phrases: z.boolean().optional() })
+  .default({});
+
 const CreatePixInput = z.object({
-  amountCents: z.number().int().min(100).max(10_000_00),
-  productLabel: z.string().min(1).max(120),
+  productKey: ProductKey,
+  bumps: BumpsInput.optional(),
   externalReference: z.string().min(1).max(80),
   payer: PayerInput,
 });
@@ -41,12 +48,14 @@ export type MpPixResponse = {
 export const createMpPixCharge = createServerFn({ method: "POST" })
   .inputValidator((i) => CreatePixInput.parse(i))
   .handler(async ({ data }): Promise<MpPixResponse> => {
-    const amount = Number((data.amountCents / 100).toFixed(2));
+    const { amountCents, label } = resolveCheckoutAmountCents(data.productKey, data.bumps ?? {});
+    const amount = Number((amountCents / 100).toFixed(2));
     const { firstName, lastName } = splitName(data.payer.name);
     const charge = await createMpPix({
       amount,
-      description: data.productLabel,
+      description: label,
       externalReference: data.externalReference,
+      idempotencyKey: `pix:${data.externalReference}`,
       payer: {
         email: data.payer.email,
         firstName,
@@ -63,13 +72,13 @@ export const createMpPixCharge = createServerFn({ method: "POST" })
       qrCode: charge.qrCode,
       qrCodeBase64: charge.qrCodeBase64,
       ticketUrl: charge.ticketUrl,
-      amountCents: data.amountCents,
+      amountCents,
     };
   });
 
 const CreateCardInput = z.object({
-  amountCents: z.number().int().min(100).max(10_000_00),
-  productLabel: z.string().min(1).max(120),
+  productKey: ProductKey,
+  bumps: BumpsInput.optional(),
   externalReference: z.string().min(1).max(80),
   token: z.string().min(8).max(200),
   paymentMethodId: z.string().min(2).max(40),
@@ -85,17 +94,20 @@ export type MpCardResponse = {
   message: string;
   paid: boolean;
   failed: boolean;
+  amountCents: number;
 };
 
 export const createMpCardCharge = createServerFn({ method: "POST" })
   .inputValidator((i) => CreateCardInput.parse(i))
   .handler(async ({ data }): Promise<MpCardResponse> => {
-    const amount = Number((data.amountCents / 100).toFixed(2));
+    const { amountCents, label } = resolveCheckoutAmountCents(data.productKey, data.bumps ?? {});
+    const amount = Number((amountCents / 100).toFixed(2));
     const { firstName, lastName } = splitName(data.payer.name);
     const charge = await createMpCard({
       amount,
-      description: data.productLabel,
+      description: label,
       externalReference: data.externalReference,
+      idempotencyKey: `card:${data.externalReference}:${data.token}`,
       token: data.token,
       paymentMethodId: data.paymentMethodId,
       installments: data.installments,
@@ -114,6 +126,7 @@ export const createMpCardCharge = createServerFn({ method: "POST" })
       message: translateCardStatusDetail(charge.statusDetail),
       paid: isPaidStatus(charge.status),
       failed: isFailedStatus(charge.status),
+      amountCents,
     };
   });
 
