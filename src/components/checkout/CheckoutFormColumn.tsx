@@ -43,6 +43,8 @@ export function CheckoutFormColumn({
   onPixDialogOpenChange,
   onSubmit,
   submitting,
+  hideBumps,
+  submitLabel,
 }: {
   bumps: CheckoutBumps;
   onBumpChange: (id: keyof CheckoutBumps, value: boolean) => void;
@@ -53,6 +55,8 @@ export function CheckoutFormColumn({
   onPixDialogOpenChange: (open: boolean) => void;
   onSubmit: (lead: CheckoutLead) => void;
   submitting: boolean;
+  hideBumps?: boolean;
+  submitLabel?: string;
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(checkoutSchema(paymentMethod)),
