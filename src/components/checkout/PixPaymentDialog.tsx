@@ -96,6 +96,31 @@ export function PixPaymentDialog({
       });
   }, [open, amountCents, productLabel, externalReference, lead, createFn]);
 
+  // Gera o QR no cliente quando a SyncPay devolve só o copia-e-cola.
+  useEffect(() => {
+    if (!charge?.paymentCode) return;
+    if (charge.paymentCodeBase64) {
+      setQrDataUrl(`data:image/png;base64,${charge.paymentCodeBase64}`);
+      return;
+    }
+    let cancelled = false;
+    QRCode.toDataURL(charge.paymentCode, {
+      width: 256,
+      margin: 1,
+      errorCorrectionLevel: "M",
+    })
+      .then((url) => {
+        if (!cancelled) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrDataUrl(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [charge?.paymentCode, charge?.paymentCodeBase64]);
+
+
   // Polling de status enquanto aguardando.
   useEffect(() => {
     if (stage !== "awaiting" || !charge?.id) return;
