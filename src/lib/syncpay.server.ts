@@ -141,6 +141,8 @@ export async function createSyncPayPix(input: SyncPayPixInput): Promise<SyncPayP
   };
 
   const paymentCode = pick(
+    "pix_code",
+    "pixCode",
     "paymentCode",
     "paymentcode",
     "payment_code",
@@ -171,7 +173,8 @@ export async function createSyncPayPix(input: SyncPayPixInput): Promise<SyncPayP
   }
 
   return {
-    id: pick("id", "idtransaction", "transactionId", "transaction_id", "uuid"),
+    id: pick("identifier", "id", "idtransaction", "transactionId", "transaction_id", "uuid"),
+
     status: pick("status", "transactionStatus") || "pending",
     amount: Number(
       (candidates.find((c) => c.amount != null)?.amount as number | undefined) ?? input.amount,
