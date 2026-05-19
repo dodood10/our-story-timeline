@@ -151,7 +151,8 @@ function SurpriseCheckout() {
           <CheckoutFormColumn
             amountCents={totalCents}
             productLabel={product.title}
-            externalReference={`surprise-${product.id}-${Date.now()}`}
+            productKey={productKey}
+            externalReference={externalReference}
             bumps={bumps}
             onBumpChange={handleBumpChange}
             paymentMethod={paymentMethod}
