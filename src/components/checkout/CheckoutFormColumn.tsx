@@ -206,25 +206,18 @@ export function CheckoutFormColumn({
         </div>
       </form>
 
-      <Dialog open={pixDialogOpen} onOpenChange={onPixDialogOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Pagamento de teste (Pix)</DialogTitle>
-            <DialogDescription>
-              Em produção, aqui aparecerá o QR Code do Mercado Pago. Por agora, confirme para
-              simular o pagamento e liberar seu acesso.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" onClick={() => onPixDialogOpenChange(false)}>
-              Voltar
-            </Button>
-            <Button type="button" onClick={confirmPix} disabled={submitting}>
-              Confirmar pagamento
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PixPaymentDialog
+        open={pixDialogOpen}
+        onOpenChange={onPixDialogOpenChange}
+        amountCents={amountCents}
+        productLabel={productLabel}
+        lead={currentLead}
+        externalReference={externalReference}
+        onPaid={() => {
+          onPixDialogOpenChange(false);
+          onSubmit(currentLead);
+        }}
+      />
     </div>
   );
 }
