@@ -219,6 +219,8 @@ export function CheckoutFormColumn({
             <MpCardForm
               amountCents={amountCents}
               productLabel={productLabel}
+              productKey={productKey}
+              bumps={bumps}
               externalReference={externalReference}
               lead={currentLead}
               onPaid={() => onSubmit(currentLead)}
@@ -232,6 +234,8 @@ export function CheckoutFormColumn({
         onOpenChange={onPixDialogOpenChange}
         amountCents={amountCents}
         productLabel={productLabel}
+        productKey={productKey}
+        bumps={bumps}
         lead={currentLead}
         externalReference={externalReference}
         onPaid={() => {
