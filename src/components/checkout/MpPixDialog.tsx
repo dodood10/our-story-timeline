@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Copy, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Copy, Loader2, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,16 +15,21 @@ import {
   getMpPaymentStatus,
   type MpPixResponse,
 } from "@/lib/mercadopago.functions";
-import { formatBRL } from "@/lib/checkout-products";
-import type { CheckoutLead } from "@/lib/checkout-storage";
+import {
+  formatBRL,
+  type CheckoutProductKey,
+} from "@/lib/checkout-products";
+import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
 
-type Stage = "loading" | "awaiting" | "paid" | "error";
+type Stage = "loading" | "awaiting" | "paid" | "expired" | "error";
 
 export function MpPixDialog({
   open,
   onOpenChange,
   amountCents,
   productLabel,
+  productKey,
+  bumps,
   lead,
   externalReference,
   onPaid,
@@ -33,6 +38,8 @@ export function MpPixDialog({
   onOpenChange: (open: boolean) => void;
   amountCents: number;
   productLabel: string;
+  productKey: CheckoutProductKey;
+  bumps: CheckoutBumps;
   lead: CheckoutLead | null;
   externalReference: string;
   onPaid: () => void;
@@ -44,6 +51,7 @@ export function MpPixDialog({
   const [error, setError] = useState<string | null>(null);
   const [charge, setCharge] = useState<MpPixResponse | null>(null);
   const startedRef = useRef(false);
+  const [regenToken, setRegenToken] = useState(0);
 
   useEffect(() => {
     if (!open) {
@@ -61,8 +69,8 @@ export function MpPixDialog({
       setError("Preencha seus dados antes de gerar o Pix.");
       return;
     }
-    const document = (lead.cpf ?? "").replace(/\D/g, "");
-    if (document.length !== 11) {
+    const doc = (lead.cpf ?? "").replace(/\D/g, "");
+    if (doc.length !== 11) {
       setStage("error");
       setError("Informe um CPF válido para gerar o Pix.");
       return;
@@ -70,10 +78,10 @@ export function MpPixDialog({
 
     createFn({
       data: {
-        amountCents,
-        productLabel,
-        externalReference,
-        payer: { name: lead.fullName, email: lead.email, document },
+        productKey,
+        bumps,
+        externalReference: regenToken === 0 ? externalReference : `${externalReference}-r${regenToken}`,
+        payer: { name: lead.fullName, email: lead.email, document: doc },
       },
     })
       .then((res) => {
@@ -84,13 +92,13 @@ export function MpPixDialog({
         setError(err instanceof Error ? err.message : "Falha ao gerar o Pix.");
         setStage("error");
       });
-  }, [open, amountCents, productLabel, externalReference, lead, createFn]);
+  }, [open, productKey, bumps, externalReference, lead, createFn, regenToken]);
 
   useEffect(() => {
     if (stage !== "awaiting" || !charge?.id) return;
     let cancelled = false;
     let attempts = 0;
-    const maxAttempts = 200;
+    const maxAttempts = 200; // ~10 min
 
     async function tick() {
       if (cancelled) return;
@@ -111,7 +119,10 @@ export function MpPixDialog({
       } catch {
         /* tenta de novo */
       }
-      if (attempts >= maxAttempts) return;
+      if (attempts >= maxAttempts) {
+        if (!cancelled) setStage("expired");
+        return;
+      }
       setTimeout(tick, 3000);
     }
     const t = setTimeout(tick, 3000);
@@ -127,6 +138,14 @@ export function MpPixDialog({
       .writeText(charge.qrCode)
       .then(() => toast.success("Código Pix copiado!"))
       .catch(() => toast.error("Não foi possível copiar."));
+  }
+
+  function regenerate() {
+    startedRef.current = false;
+    setCharge(null);
+    setError(null);
+    setStage("loading");
+    setRegenToken((t) => t + 1);
   }
 
   return (
@@ -194,13 +213,33 @@ export function MpPixDialog({
           </div>
         )}
 
+        {stage === "expired" && (
+          <div className="py-6 flex flex-col items-center gap-3 text-center">
+            <AlertCircle className="h-10 w-10 text-amber-500" />
+            <p className="text-sm">
+              O tempo de espera expirou e ainda não recebemos seu pagamento. Você pode gerar um novo
+              Pix abaixo.
+            </p>
+            <Button onClick={regenerate}>
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Gerar novo Pix
+            </Button>
+          </div>
+        )}
+
         {stage === "error" && (
           <div className="py-6 flex flex-col items-center gap-3 text-center">
             <AlertCircle className="h-10 w-10 text-destructive" />
             <p className="text-sm">{error ?? "Não foi possível gerar o Pix."}</p>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Fechar
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Fechar
+              </Button>
+              <Button onClick={regenerate}>
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Tentar de novo
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>
