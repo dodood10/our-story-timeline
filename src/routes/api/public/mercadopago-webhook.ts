@@ -76,8 +76,7 @@ export const Route = createFileRoute("/api/public/mercadopago-webhook")({
         try {
           const p = await getMpPayment(id);
           console.log("[mp-webhook]", { id: p.id, status: p.status, statusDetail: p.statusDetail });
-          // TODO(persistência): gravar status em tabela `payments` (id, external_reference, status, amount)
-          // e reconciliar acesso por external_reference quando o usuário voltar.
+          await updatePaymentStatus({ id: p.id, status: p.status, raw: p });
         } catch (e) {
           console.error("[mp-webhook] lookup falhou", e);
         }
