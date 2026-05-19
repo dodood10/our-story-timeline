@@ -39,6 +39,9 @@ export function CheckoutFormColumn({
   submitting,
   hideBumps,
   submitLabel,
+  amountCents,
+  productLabel,
+  externalReference,
 }: {
   bumps: CheckoutBumps;
   onBumpChange: (id: keyof CheckoutBumps, value: boolean) => void;
@@ -47,13 +50,17 @@ export function CheckoutFormColumn({
   defaultLead: CheckoutLead | null;
   pixDialogOpen: boolean;
   onPixDialogOpenChange: (open: boolean) => void;
+  /** Chamado quando o SyncPay confirma o pagamento. */
   onSubmit: (lead: CheckoutLead) => void;
   submitting: boolean;
   hideBumps?: boolean;
   submitLabel?: string;
+  amountCents: number;
+  productLabel: string;
+  externalReference: string;
 }) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(checkoutSchema(paymentMethod)),
+    resolver: zodResolver(checkoutSchema()),
     defaultValues: {
       fullName: defaultLead?.fullName ?? "",
       email: defaultLead?.email ?? "",
@@ -61,11 +68,6 @@ export function CheckoutFormColumn({
       cpf: defaultLead?.cpf ?? "",
     },
   });
-
-  useEffect(() => {
-    form.clearErrors("cpf");
-    void form.trigger();
-  }, [paymentMethod, form]);
 
   const values = form.watch();
   useEffect(() => {
@@ -84,32 +86,21 @@ export function CheckoutFormColumn({
       fullName: data.fullName,
       email: data.email,
       whatsapp: data.whatsapp,
-      cpf: data.cpf || undefined,
+      cpf: data.cpf,
     };
-    if (paymentMethod === "pix") {
-      onPixDialogOpenChange(true);
-      writeCheckoutLead(lead);
-      return;
-    }
-    onSubmit(lead);
+    writeCheckoutLead(lead);
+    onPixDialogOpenChange(true);
   }
 
-  function confirmPix() {
-    const data = form.getValues();
-    onPixDialogOpenChange(false);
-    onSubmit({
-      fullName: data.fullName,
-      email: data.email,
-      whatsapp: data.whatsapp,
-      cpf: data.cpf || undefined,
-    });
-  }
+  const currentLead: CheckoutLead = {
+    fullName: values.fullName ?? "",
+    email: values.email ?? "",
+    whatsapp: values.whatsapp ?? "",
+    cpf: values.cpf,
+  };
 
-  const ctaLabel =
-    submitLabel ??
-    (paymentMethod === "pix"
-      ? "Gerar Pix e criar minha surpresa"
-      : "Finalizar compra e acessar agora");
+  const ctaLabel = submitLabel ?? "Gerar Pix e liberar meu acesso";
+
 
   return (
     <div className="space-y-6">
