@@ -10,6 +10,11 @@ import {
   translateCardStatusDetail,
 } from "@/lib/mercadopago.server";
 import { resolveCheckoutAmountCents } from "@/lib/checkout-products";
+import {
+  findPaymentByExternalReference,
+  recordPaymentCreated,
+  updatePaymentStatus,
+} from "@/lib/payments.server";
 
 function splitName(full: string): { firstName: string; lastName: string } {
   const parts = full.trim().split(/\s+/).filter(Boolean);
