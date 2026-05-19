@@ -30,6 +30,7 @@ import { Route as SurpriseUpsellRouteImport } from './routes/surprise.upsell'
 import { Route as SurpriseQuizRouteImport } from './routes/surprise.quiz'
 import { Route as SurprisePlanRouteImport } from './routes/surprise.plan'
 import { Route as ApiPublicSyncpayWebhookRouteImport } from './routes/api/public/syncpay-webhook'
+import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/public/mercadopago-webhook'
 
 const TimelineRoute = TimelineRouteImport.update({
   id: '/timeline',
@@ -136,6 +137,12 @@ const ApiPublicSyncpayWebhookRoute = ApiPublicSyncpayWebhookRouteImport.update({
   path: '/api/public/syncpay-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMercadopagoWebhookRoute =
+  ApiPublicMercadopagoWebhookRouteImport.update({
+    id: '/api/public/mercadopago-webhook',
+    path: '/api/public/mercadopago-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/surprise/upsell': typeof SurpriseUpsellRoute
   '/memory-lane/': typeof MemoryLaneIndexRoute
   '/surprise/': typeof SurpriseIndexRoute
+  '/api/public/mercadopago-webhook': typeof ApiPublicMercadopagoWebhookRoute
   '/api/public/syncpay-webhook': typeof ApiPublicSyncpayWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -180,6 +188,7 @@ export interface FileRoutesByTo {
   '/surprise/upsell': typeof SurpriseUpsellRoute
   '/memory-lane': typeof MemoryLaneIndexRoute
   '/surprise': typeof SurpriseIndexRoute
+  '/api/public/mercadopago-webhook': typeof ApiPublicMercadopagoWebhookRoute
   '/api/public/syncpay-webhook': typeof ApiPublicSyncpayWebhookRoute
 }
 export interface FileRoutesById {
@@ -204,6 +213,7 @@ export interface FileRoutesById {
   '/surprise/upsell': typeof SurpriseUpsellRoute
   '/memory-lane/': typeof MemoryLaneIndexRoute
   '/surprise/': typeof SurpriseIndexRoute
+  '/api/public/mercadopago-webhook': typeof ApiPublicMercadopagoWebhookRoute
   '/api/public/syncpay-webhook': typeof ApiPublicSyncpayWebhookRoute
 }
 export interface FileRouteTypes {
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/surprise/upsell'
     | '/memory-lane/'
     | '/surprise/'
+    | '/api/public/mercadopago-webhook'
     | '/api/public/syncpay-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/surprise/upsell'
     | '/memory-lane'
     | '/surprise'
+    | '/api/public/mercadopago-webhook'
     | '/api/public/syncpay-webhook'
   id:
     | '__root__'
@@ -274,6 +286,7 @@ export interface FileRouteTypes {
     | '/surprise/upsell'
     | '/memory-lane/'
     | '/surprise/'
+    | '/api/public/mercadopago-webhook'
     | '/api/public/syncpay-webhook'
   fileRoutesById: FileRoutesById
 }
@@ -294,6 +307,7 @@ export interface RootRouteChildren {
   TermosRoute: typeof TermosRoute
   TimelineRoute: typeof TimelineRoute
   MemoryLaneIndexRoute: typeof MemoryLaneIndexRoute
+  ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
   ApiPublicSyncpayWebhookRoute: typeof ApiPublicSyncpayWebhookRoute
 }
 
@@ -446,6 +460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mercadopago-webhook': {
+      id: '/api/public/mercadopago-webhook'
+      path: '/api/public/mercadopago-webhook'
+      fullPath: '/api/public/mercadopago-webhook'
+      preLoaderRoute: typeof ApiPublicMercadopagoWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -484,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   TimelineRoute: TimelineRoute,
   MemoryLaneIndexRoute: MemoryLaneIndexRoute,
+  ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
   ApiPublicSyncpayWebhookRoute: ApiPublicSyncpayWebhookRoute,
 }
 export const routeTree = rootRouteImport
