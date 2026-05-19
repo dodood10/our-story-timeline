@@ -52,8 +52,10 @@ export function PixPaymentDialog({
       setStage("loading");
       setError(null);
       setCharge(null);
+      setQrDataUrl(null);
       return;
     }
+
     if (startedRef.current) return;
     startedRef.current = true;
 
