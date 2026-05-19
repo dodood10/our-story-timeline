@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,12 @@ import { MpPixDialog } from "@/components/checkout/MpPixDialog";
 import { MpCardForm } from "@/components/checkout/MpCardForm";
 import { ORDER_BUMPS, type PaymentMethod, type CheckoutProductKey } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
-import { writeCheckoutLead } from "@/lib/checkout-storage";
+import {
+  clearPendingMpPayment,
+  readPendingMpPayment,
+  writeCheckoutLead,
+} from "@/lib/checkout-storage";
+import { reconcileMpPayment } from "@/lib/mercadopago.functions";
 
 function checkoutSchema() {
   return z.object({
