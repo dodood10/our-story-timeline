@@ -20,6 +20,7 @@ import {
   type CheckoutProductKey,
 } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
+import { clearPendingMpPayment, writePendingMpPayment } from "@/lib/checkout-storage";
 
 type Stage = "loading" | "awaiting" | "paid" | "expired" | "error";
 
