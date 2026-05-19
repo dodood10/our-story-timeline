@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getMpPayment } from "@/lib/mercadopago.server";
+import { updatePaymentStatus } from "@/lib/payments.server";
 
 /**
  * Webhook do Mercado Pago — eventos "payment".
