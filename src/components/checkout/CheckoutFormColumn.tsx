@@ -43,6 +43,8 @@ export function CheckoutFormColumn({
   onPixDialogOpenChange,
   onSubmit,
   submitting,
+  hideBumps,
+  submitLabel,
 }: {
   bumps: CheckoutBumps;
   onBumpChange: (id: keyof CheckoutBumps, value: boolean) => void;
@@ -53,6 +55,8 @@ export function CheckoutFormColumn({
   onPixDialogOpenChange: (open: boolean) => void;
   onSubmit: (lead: CheckoutLead) => void;
   submitting: boolean;
+  hideBumps?: boolean;
+  submitLabel?: string;
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(checkoutSchema(paymentMethod)),
@@ -108,9 +112,10 @@ export function CheckoutFormColumn({
   }
 
   const ctaLabel =
-    paymentMethod === "pix"
+    submitLabel ??
+    (paymentMethod === "pix"
       ? "Gerar Pix e criar minha surpresa"
-      : "Finalizar compra e acessar agora";
+      : "Finalizar compra e acessar agora");
 
   return (
     <div className="space-y-6">
@@ -160,17 +165,19 @@ export function CheckoutFormColumn({
           </div>
         </div>
 
-        <div className="space-y-3">
-          <h3 className="font-medium text-sm">Ofertas especiais (opcional)</h3>
-          {ORDER_BUMPS.map((bump) => (
-            <OrderBumpCard
-              key={bump.id}
-              bump={bump}
-              checked={bumps[bump.id]}
-              onCheckedChange={(v) => onBumpChange(bump.id, v)}
-            />
-          ))}
-        </div>
+        {!hideBumps && (
+          <div className="space-y-3">
+            <h3 className="font-medium text-sm">Ofertas especiais (opcional)</h3>
+            {ORDER_BUMPS.map((bump) => (
+              <OrderBumpCard
+                key={bump.id}
+                bump={bump}
+                checked={bumps[bump.id]}
+                onCheckedChange={(v) => onBumpChange(bump.id, v)}
+              />
+            ))}
+          </div>
+        )}
 
         <div className="space-y-3">
           <h3 className="font-medium text-sm">Pagamento</h3>

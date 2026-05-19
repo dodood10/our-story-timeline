@@ -186,7 +186,7 @@ function LayoutSwitch() {
 
 function AppShell() {
   const { hydrated, onboarded } = useApp();
-  const { full } = useAccess();
+  const { canUseMemoryLane: full } = useAccess();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [newMemoryOpen, setNewMemoryOpen] = useState(false);
   useCmdK(setPaletteOpen);
