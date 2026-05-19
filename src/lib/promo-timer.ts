@@ -1,7 +1,9 @@
-export const PROMO_TIMER_STORAGE_KEY = "ml.promo.timer";
+// v2 = janela principal 48h + extensao "ultima chance" 24h.
+// Bump na chave invalida visitantes cujo timer v1 (8h+1h) ja expirou.
+export const PROMO_TIMER_STORAGE_KEY = "ml.promo.timer.v2";
 
-const MAIN_DURATION_MS = 8 * 60 * 60 * 1000;
-const EXTENSION_MS = 1 * 60 * 60 * 1000;
+const MAIN_DURATION_MS = 48 * 60 * 60 * 1000;
+const EXTENSION_MS = 24 * 60 * 60 * 1000;
 
 export type PromoTimerPhase = "active" | "lastChance" | "expired";
 

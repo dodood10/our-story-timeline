@@ -4,10 +4,10 @@ import { getPromoTimerSnapshot, type PromoTimerSnapshot } from "@/lib/promo-time
 const EMPTY: PromoTimerSnapshot = {
   phase: "active",
   deadline: 0,
-  hours: 8,
+  hours: 48,
   minutes: 0,
   seconds: 0,
-  display: "08:00:00",
+  display: "48:00:00",
 };
 
 function readInitialSnapshot(): PromoTimerSnapshot {
