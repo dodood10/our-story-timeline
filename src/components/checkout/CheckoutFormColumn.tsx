@@ -41,6 +41,7 @@ export function CheckoutFormColumn({
   submitLabel,
   amountCents,
   productLabel,
+  productKey,
   externalReference,
 }: {
   bumps: CheckoutBumps;
@@ -57,6 +58,7 @@ export function CheckoutFormColumn({
   submitLabel?: string;
   amountCents: number;
   productLabel: string;
+  productKey: CheckoutProductKey;
   externalReference: string;
 }) {
   const form = useForm<FormValues>({
