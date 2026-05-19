@@ -113,6 +113,7 @@ export function MpPixDialog({
         if (cancelled) return;
         if (res.paid) {
           setStage("paid");
+          clearPendingMpPayment();
           onPaid();
           return;
         }
