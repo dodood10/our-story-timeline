@@ -121,16 +121,65 @@ export async function createSyncPayPix(input: SyncPayPixInput): Promise<SyncPayP
   }
 
   const data = (await res.json()) as Record<string, unknown>;
-  // Resposta pode vir aninhada em { data: {...} } ou flat — normalizamos.
-  const payload = (data.data ?? data) as Record<string, unknown>;
+  // Resposta pode vir aninhada em { data: {...} }, { transaction: {...} },
+  // { pix: {...} } ou flat — normalizamos buscando em todos os níveis.
+  const candidates: Record<string, unknown>[] = [data];
+  for (const key of ["data", "transaction", "pix", "result", "response"]) {
+    const nested = data[key];
+    if (nested && typeof nested === "object") candidates.push(nested as Record<string, unknown>);
+  }
+
+  const pick = (...keys: string[]): string => {
+    for (const c of candidates) {
+      for (const k of keys) {
+        const v = c[k];
+        if (typeof v === "string" && v.length > 0) return v;
+        if (typeof v === "number") return String(v);
+      }
+    }
+    return "";
+  };
+
+  const paymentCode = pick(
+    "paymentCode",
+    "paymentcode",
+    "payment_code",
+    "pixCopiaECola",
+    "pix_copia_e_cola",
+    "qrCode",
+    "qr_code",
+    "qrcode",
+    "emv",
+    "brcode",
+    "br_code",
+    "copiaECola",
+  );
+  const paymentCodeBase64 = pick(
+    "paymentCodeBase64",
+    "payment_code_base64",
+    "qrCodeBase64",
+    "qr_code_base64",
+    "qrcode_base64",
+    "qrcodeImage",
+    "qr_code_image",
+    "imageBase64",
+    "image_base64",
+  );
+
+  if (!paymentCode) {
+    console.error("[syncpay] resposta sem código Pix:", JSON.stringify(data).slice(0, 800));
+  }
 
   return {
-    id: String(payload.id ?? payload.idtransaction ?? ""),
-    status: String(payload.status ?? "pending"),
-    amount: Number(payload.amount ?? input.amount),
-    paymentCode: String(payload.paymentcode ?? payload.payment_code ?? ""),
-    paymentCodeBase64: String(payload.paymentCodeBase64 ?? payload.qr_code_base64 ?? ""),
-    externalReference: String(payload.externalreference ?? input.externalReference),
+    id: pick("id", "idtransaction", "transactionId", "transaction_id", "uuid"),
+    status: pick("status", "transactionStatus") || "pending",
+    amount: Number(
+      (candidates.find((c) => c.amount != null)?.amount as number | undefined) ?? input.amount,
+    ),
+    paymentCode,
+    paymentCodeBase64,
+    externalReference: pick("externalreference", "external_reference", "externalReference") ||
+      input.externalReference,
   };
 }
 
