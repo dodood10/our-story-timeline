@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getMpPayment } from "@/lib/mercadopago.server";
+import { updatePaymentStatus } from "@/lib/payments.server";
 
 /**
  * Webhook do Mercado Pago — eventos "payment".
@@ -75,8 +76,7 @@ export const Route = createFileRoute("/api/public/mercadopago-webhook")({
         try {
           const p = await getMpPayment(id);
           console.log("[mp-webhook]", { id: p.id, status: p.status, statusDetail: p.statusDetail });
-          // TODO(persistência): gravar status em tabela `payments` (id, external_reference, status, amount)
-          // e reconciliar acesso por external_reference quando o usuário voltar.
+          await updatePaymentStatus({ id: p.id, status: p.status, raw: p });
         } catch (e) {
           console.error("[mp-webhook] lookup falhou", e);
         }

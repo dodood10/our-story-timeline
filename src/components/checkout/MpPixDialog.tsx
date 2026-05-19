@@ -20,6 +20,7 @@ import {
   type CheckoutProductKey,
 } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
+import { clearPendingMpPayment, writePendingMpPayment } from "@/lib/checkout-storage";
 
 type Stage = "loading" | "awaiting" | "paid" | "expired" | "error";
 
@@ -76,17 +77,21 @@ export function MpPixDialog({
       return;
     }
 
+    const ref =
+      regenToken === 0 ? externalReference : `${externalReference}-r${regenToken}`;
     createFn({
       data: {
         productKey,
         bumps,
-        externalReference: regenToken === 0 ? externalReference : `${externalReference}-r${regenToken}`,
+        externalReference: ref,
         payer: { name: lead.fullName, email: lead.email, document: doc },
       },
     })
       .then((res) => {
         setCharge(res);
         setStage("awaiting");
+        // Persiste para reconciliação caso o usuário feche a aba.
+        writePendingMpPayment({ externalReference: ref, productKey });
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : "Falha ao gerar o Pix.");
@@ -108,6 +113,7 @@ export function MpPixDialog({
         if (cancelled) return;
         if (res.paid) {
           setStage("paid");
+          clearPendingMpPayment();
           onPaid();
           return;
         }

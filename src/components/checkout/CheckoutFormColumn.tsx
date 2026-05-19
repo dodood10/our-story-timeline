@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,12 @@ import { MpPixDialog } from "@/components/checkout/MpPixDialog";
 import { MpCardForm } from "@/components/checkout/MpCardForm";
 import { ORDER_BUMPS, type PaymentMethod, type CheckoutProductKey } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
-import { writeCheckoutLead } from "@/lib/checkout-storage";
+import {
+  clearPendingMpPayment,
+  readPendingMpPayment,
+  writeCheckoutLead,
+} from "@/lib/checkout-storage";
+import { reconcileMpPayment } from "@/lib/mercadopago.functions";
 
 function checkoutSchema() {
   return z.object({
@@ -82,6 +88,33 @@ export function CheckoutFormColumn({
       cpf: cpf || undefined,
     });
   }, [values.fullName, values.email, values.whatsapp, values.cpf]);
+
+  // Reconciliação: se há um Pix pendente para este produto, consulta status e libera se aprovado.
+  const reconcileFn = useServerFn(reconcileMpPayment);
+  const reconciledRef = useRef(false);
+  useEffect(() => {
+    if (reconciledRef.current) return;
+    const pending = readPendingMpPayment(productKey);
+    if (!pending) return;
+    reconciledRef.current = true;
+    reconcileFn({ data: { externalReference: pending.externalReference } })
+      .then((res) => {
+        if (res.paid) {
+          clearPendingMpPayment();
+          onSubmit({
+            fullName: values.fullName ?? defaultLead?.fullName ?? "",
+            email: values.email ?? defaultLead?.email ?? "",
+            whatsapp: values.whatsapp ?? defaultLead?.whatsapp ?? "",
+            cpf: values.cpf ?? defaultLead?.cpf,
+          });
+        }
+      })
+      .catch(() => {
+        /* silencioso — usuário pode pagar de novo */
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productKey]);
+
 
   function handleValidPix(data: FormValues) {
     const lead: CheckoutLead = {
