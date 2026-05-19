@@ -1,7 +1,7 @@
 {
   "name": "Memory Lane",
   "short_name": "Memory Lane",
-  "description": "A linha do tempo romântica do casal — guarde memórias, fotos, sonhos e cartas. Tudo no seu navegador, sem cadastro.",
+  "description": "A linha do tempo romântica do casal — guarde memórias, fotos, sonhos e cartas. Acesse de qualquer dispositivo com sua conta.",
   "lang": "pt-BR",
   "start_url": "/",
   "scope": "/",

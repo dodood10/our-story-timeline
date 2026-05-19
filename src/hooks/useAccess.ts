@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalStorage } from "./useLocalStorage";
+import { useAuth } from "./useAuth";
 import {
   KEY_FULL,
   KEY_SURPRISE,
   applyPurchaseToStorage,
   deriveProductMode,
   hasActiveMemoryLane,
+  readStoredSubscription,
   type ApplyPurchaseOptions,
   type ProductMode,
   type StoredSubscription,
@@ -22,6 +25,12 @@ import {
   type MemoryLaneSubscription,
   type SubscriptionUiState,
 } from "@/lib/memory-lane-subscription";
+import {
+  getEntitlements,
+  migrateLocalEntitlements,
+  syncEntitlementsAfterAuth,
+  type EntitlementsPayload,
+} from "@/lib/entitlements.functions";
 
 export type {
   SurpriseTier,
@@ -31,98 +40,173 @@ export type {
   SubscriptionUiState,
 };
 
-/** Mocked access control. Replace with real auth/checkout later. */
+const ENTITLEMENTS_QUERY_KEY = ["entitlements"] as const;
+
+function emptyEntitlements(): EntitlementsPayload {
+  return {
+    surpriseTier: "none",
+    subscription: null,
+    subscriptionState: "none",
+    productMode: "none",
+    hasSurprise: false,
+    canUseMemoryLane: false,
+    canUseSurprise: false,
+    hasAnyProduct: false,
+  };
+}
+
+/** Acesso ao produto: servidor quando autenticado; localStorage só em DEV sem Supabase. */
 export function useAccess() {
-  const [surprise, setSurprise, hSurprise] = useLocalStorage<SurpriseTier>(KEY_SURPRISE, "none");
-  const [rawSub, setRawSub, hFull] = useLocalStorage<unknown>(KEY_FULL, null);
-  const hydrated = hSurprise && hFull;
+  const { isAuthenticated, user, configured, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
 
-  const subscription = useMemo<StoredSubscription>(() => parseSubscription(rawSub), [rawSub]);
+  const [surpriseLocal, setSurpriseLocal, hSurprise] = useLocalStorage<SurpriseTier>(
+    KEY_SURPRISE,
+    "none",
+  );
+  const [rawSubLocal, setRawSubLocal, hFull] = useLocalStorage<unknown>(KEY_FULL, null);
+  const localHydrated = hSurprise && hFull;
 
-  // Tick na hidratação: simula o gateway renovando/expirando assinaturas.
+  const useServer = configured && isAuthenticated;
+
+  const entitlementsQuery = useQuery({
+    queryKey: ENTITLEMENTS_QUERY_KEY,
+    queryFn: () => getEntitlements(),
+    enabled: useServer && !authLoading,
+    staleTime: 30_000,
+  });
+
+  const serverPayload = entitlementsQuery.data;
+  const serverLoading = useServer && (authLoading || entitlementsQuery.isLoading);
+
+  const subscriptionLocal = useMemo<StoredSubscription>(
+    () => parseSubscription(rawSubLocal),
+    [rawSubLocal],
+  );
+
   useEffect(() => {
-    if (!hydrated) return;
-    const [next, changed] = tickSubscription(subscription);
-    if (changed) setRawSub(next);
-  }, [hydrated, subscription, setRawSub]);
+    if (!localHydrated || useServer) return;
+    const [next, changed] = tickSubscription(subscriptionLocal);
+    if (changed) setRawSubLocal(next);
+  }, [localHydrated, useServer, subscriptionLocal, setRawSubLocal]);
 
-  const setSubscription = useCallback((sub: StoredSubscription) => setRawSub(sub), [setRawSub]);
+  const surprise = useServer ? (serverPayload?.surpriseTier ?? "none") : surpriseLocal;
+  const subscription = useServer ? (serverPayload?.subscription ?? null) : subscriptionLocal;
 
-  const hasSurprise = surprise === "basic" || surprise === "premium";
-  const canUseMemoryLane = hasActiveMemoryLane(subscription);
-  const productMode = deriveProductMode(surprise, subscription);
-  const subscriptionState = deriveSubscriptionUiState(subscription);
-  /**
-   * Inclui `lapsed` (assinatura vencida) para que o usuário consiga acessar `/app`
-   * e ver o banner de renovação, em vez de ser redirecionado para a landing.
-   */
-  const hasAnyProduct = hasSurprise || canUseMemoryLane || subscriptionState === "lapsed";
-  const canUseSurprise = hasSurprise;
+  const hydrated = useServer ? !serverLoading && !authLoading : localHydrated;
+
+  const hasSurprise = useServer
+    ? (serverPayload?.hasSurprise ?? false)
+    : surprise === "basic" || surprise === "premium";
+  const canUseMemoryLane = useServer
+    ? (serverPayload?.canUseMemoryLane ?? false)
+    : hasActiveMemoryLane(subscription);
+  const productMode = useServer
+    ? (serverPayload?.productMode ?? "none")
+    : deriveProductMode(surpriseLocal, subscriptionLocal);
+  const subscriptionState = useServer
+    ? (serverPayload?.subscriptionState ?? "none")
+    : deriveSubscriptionUiState(subscription);
+  const hasAnyProduct = useServer
+    ? (serverPayload?.hasAnyProduct ?? false)
+    : hasSurprise || canUseMemoryLane || subscriptionState === "lapsed";
+  const canUseSurprise = useServer ? (serverPayload?.canUseSurprise ?? false) : hasSurprise;
+
+  const invalidate = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ENTITLEMENTS_QUERY_KEY });
+  }, [queryClient]);
 
   const applyPurchase = useCallback(
-    (opts: ApplyPurchaseOptions) => {
-      if (opts.memoryLaneOnly) {
-        setSurprise("none");
-        setSubscription(startSubscription());
+    async (opts: ApplyPurchaseOptions) => {
+      if (useServer && user) {
+        // Entitlements são concedidos pelo servidor via webhook ou getMpPaymentStatus.
+        // Aqui apenas invalidamos o cache para a UI refletir o novo estado.
+        invalidate();
         return;
       }
-      if (opts.surpriseTier) {
-        setSurprise(opts.surpriseTier);
+      applyPurchaseToStorage(opts);
+      if (opts.memoryLaneOnly) {
+        setSurpriseLocal("none");
+        setRawSubLocal(startSubscription());
+      } else if (opts.surpriseTier) {
+        setSurpriseLocal(opts.surpriseTier);
       }
     },
-    [setSurprise, setSubscription],
+    [useServer, user, invalidate, setSurpriseLocal, setRawSubLocal],
+  );
+
+  const patchSubscription = useCallback(
+    async (next: StoredSubscription) => {
+      if (useServer) {
+        await migrateLocalEntitlements({ data: { subscription: next } });
+        invalidate();
+        return;
+      }
+      setRawSubLocal(next);
+    },
+    [useServer, invalidate, setRawSubLocal],
   );
 
   const cancelMemoryLane = useCallback(() => {
     if (!subscription) return;
-    setSubscription(cancelSubscription(subscription));
-  }, [subscription, setSubscription]);
+    void patchSubscription(cancelSubscription(subscription));
+  }, [subscription, patchSubscription]);
 
   const reactivateMemoryLane = useCallback(() => {
     if (!subscription) return;
-    setSubscription(reactivateSubscription(subscription));
-  }, [subscription, setSubscription]);
+    void patchSubscription(reactivateSubscription(subscription));
+  }, [subscription, patchSubscription]);
 
   const renewMemoryLaneNow = useCallback(() => {
-    setSubscription(subscription ? renewSubscription(subscription) : startSubscription());
-  }, [subscription, setSubscription]);
+    void patchSubscription(subscription ? renewSubscription(subscription) : startSubscription());
+  }, [subscription, patchSubscription]);
 
-  const setProductMode = useCallback(
-    (mode: ProductMode) => {
-      switch (mode) {
-        case "none":
-          setSurprise("none");
-          setSubscription(null);
-          break;
-        case "surprise_only":
-          setSurprise("premium");
-          setSubscription(null);
-          break;
-        case "memory_lane_only":
-          setSurprise("none");
-          setSubscription(startSubscription());
-          break;
-        case "both":
-          setSurprise("premium");
-          setSubscription(startSubscription());
-          break;
-      }
-    },
-    [setSurprise, setSubscription],
-  );
-
-  /** Dev helper: empurra a assinatura para vencida sem renovar. */
   const expireMemoryLaneNow = useCallback(() => {
     if (!subscription) return;
     const past = new Date(Date.now() - 60_000).toISOString();
-    setSubscription({ ...subscription, currentPeriodEnd: past, autoRenew: false });
-  }, [subscription, setSubscription]);
+    void patchSubscription({ ...subscription, currentPeriodEnd: past, autoRenew: false });
+  }, [subscription, patchSubscription]);
+
+  const setProductMode = useCallback(
+    (mode: ProductMode) => {
+      // Operação exclusiva de desenvolvimento — em produção só afeta localStorage.
+      const run = async () => {
+        switch (mode) {
+          case "none":
+            setSurpriseLocal("none");
+            setRawSubLocal(null);
+            break;
+          case "surprise_only":
+            setSurpriseLocal("premium");
+            setRawSubLocal(null);
+            break;
+          case "memory_lane_only":
+            setSurpriseLocal("none");
+            setRawSubLocal(startSubscription());
+            break;
+          case "both":
+            setSurpriseLocal("premium");
+            setRawSubLocal(startSubscription());
+            break;
+        }
+        if (useServer) invalidate();
+      };
+      void run();
+    },
+    [useServer, invalidate, setSurpriseLocal, setRawSubLocal],
+  );
+
+  const refreshFromServer = useCallback(async () => {
+    if (!user?.email) return;
+    await syncEntitlementsAfterAuth({ data: { email: user.email } });
+    invalidate();
+  }, [user?.email, invalidate]);
 
   return {
     surprise,
-    setSurprise,
+    setSurprise: setSurpriseLocal,
     subscription,
-    setSubscription,
+    setSubscription: (sub: StoredSubscription) => void patchSubscription(sub),
     hydrated,
     hasSurprise,
     isPremium: surprise === "premium",
@@ -137,11 +221,16 @@ export function useAccess() {
     renewMemoryLaneNow,
     expireMemoryLaneNow,
     setProductMode,
+    refreshFromServer,
+    invalidateEntitlements: invalidate,
+    useServerEntitlements: useServer,
+    entitlementsError: entitlementsQuery.error,
     reset: () => {
-      setSurprise("none");
-      setSubscription(null);
+      setSurpriseLocal("none");
+      setRawSubLocal(null);
+      if (useServer) invalidate();
     },
   };
 }
 
-export { applyPurchaseToStorage, deriveProductMode };
+export { applyPurchaseToStorage, deriveProductMode, readStoredSubscription, emptyEntitlements };

@@ -19,15 +19,33 @@ import {
 } from "@/lib/checkout-storage";
 import { reconcileMpPayment } from "@/lib/mercadopago.functions";
 
+function validateCpf(raw: string): boolean {
+  const d = raw.replace(/\D/g, "");
+  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += parseInt(d[i]) * (10 - i);
+  let check = (sum * 10) % 11;
+  if (check >= 10) check = 0;
+  if (check !== parseInt(d[9])) return false;
+  sum = 0;
+  for (let i = 0; i < 10; i++) sum += parseInt(d[i]) * (11 - i);
+  check = (sum * 10) % 11;
+  if (check >= 10) check = 0;
+  return check === parseInt(d[10]);
+}
+
 function checkoutSchema() {
   return z.object({
     fullName: z.string().min(3, "Informe seu nome completo"),
     email: z.string().email("Informe um e-mail válido"),
-    whatsapp: z.string().min(10, "Informe um WhatsApp válido"),
+    whatsapp: z.string().refine((v) => {
+      const digits = v.replace(/\D/g, "");
+      return digits.length >= 10 && digits.length <= 11;
+    }, "Informe um WhatsApp válido com DDD (ex: 11 99999-9999)"),
     cpf: z
       .string()
       .min(11, "CPF obrigatório")
-      .refine((v) => v.replace(/\D/g, "").length === 11, "CPF inválido"),
+      .refine(validateCpf, "CPF inválido"),
   });
 }
 
@@ -49,6 +67,7 @@ export function CheckoutFormColumn({
   productLabel,
   productKey,
   externalReference,
+  userId,
 }: {
   bumps: CheckoutBumps;
   onBumpChange: (id: keyof CheckoutBumps, value: boolean) => void;
@@ -66,6 +85,7 @@ export function CheckoutFormColumn({
   productLabel: string;
   productKey: CheckoutProductKey;
   externalReference: string;
+  userId?: string | null;
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(checkoutSchema()),
@@ -115,7 +135,6 @@ export function CheckoutFormColumn({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productKey]);
 
-
   function handleValidPix(data: FormValues) {
     const lead: CheckoutLead = {
       fullName: data.fullName,
@@ -151,7 +170,7 @@ export function CheckoutFormColumn({
         <div>
           <h2 className="font-display text-xl">Seus dados</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Usamos apenas para liberar seu acesso e enviar a confirmação.
+            Use o mesmo e-mail da sua conta — assim você recupera o acesso em qualquer dispositivo.
           </p>
         </div>
 
@@ -255,6 +274,7 @@ export function CheckoutFormColumn({
               productKey={productKey}
               bumps={bumps}
               externalReference={externalReference}
+              userId={userId}
               lead={currentLead}
               onPaid={() => onSubmit(currentLead)}
             />
@@ -271,6 +291,7 @@ export function CheckoutFormColumn({
         bumps={bumps}
         lead={currentLead}
         externalReference={externalReference}
+        userId={userId}
         onPaid={() => {
           onPixDialogOpenChange(false);
           onSubmit(currentLead);

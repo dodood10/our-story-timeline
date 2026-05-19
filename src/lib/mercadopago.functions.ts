@@ -10,7 +10,9 @@ import {
   translateCardStatusDetail,
 } from "@/lib/mercadopago.server";
 import { resolveCheckoutAmountCents } from "@/lib/checkout-products";
+import { grantEntitlementsFromPayment } from "@/lib/entitlements.server";
 import {
+  findPaymentById,
   findPaymentByExternalReference,
   recordPaymentCreated,
   updatePaymentStatus,
@@ -37,8 +39,9 @@ const BumpsInput = z
 const CreatePixInput = z.object({
   productKey: ProductKey,
   bumps: BumpsInput.optional(),
-  externalReference: z.string().min(1).max(80),
+  externalReference: z.string().min(1).max(120),
   payer: PayerInput,
+  userId: z.string().uuid().optional(),
 });
 
 export type MpPixResponse = {
@@ -79,6 +82,7 @@ export const createMpPixCharge = createServerFn({ method: "POST" })
       productKey: data.productKey,
       payerEmail: data.payer.email,
       paymentMethod: "pix",
+      userId: data.userId,
     });
     return {
       id: charge.id,
@@ -93,7 +97,8 @@ export const createMpPixCharge = createServerFn({ method: "POST" })
 const CreateCardInput = z.object({
   productKey: ProductKey,
   bumps: BumpsInput.optional(),
-  externalReference: z.string().min(1).max(80),
+  externalReference: z.string().min(1).max(120),
+  userId: z.string().uuid().optional(),
   token: z.string().min(8).max(200),
   paymentMethodId: z.string().min(2).max(40),
   installments: z.number().int().min(1).max(12),
@@ -141,7 +146,16 @@ export const createMpCardCharge = createServerFn({ method: "POST" })
       productKey: data.productKey,
       payerEmail: data.payer.email,
       paymentMethod: "card",
+      userId: data.userId,
     });
+    if (isPaidStatus(charge.status)) {
+      await grantEntitlementsFromPayment({
+        userId: data.userId ?? null,
+        payerEmail: data.payer.email,
+        productKey: data.productKey,
+        externalReference: data.externalReference,
+      });
+    }
     return {
       id: charge.id,
       status: charge.status,
@@ -166,8 +180,20 @@ export const getMpPaymentStatus = createServerFn({ method: "POST" })
   .inputValidator((i) => StatusInput.parse(i))
   .handler(async ({ data }): Promise<MpStatusResponse> => {
     const p = await getMpPayment(data.id);
-    // Mantém a tabela atualizada quando o frontend faz polling antes do webhook.
     await updatePaymentStatus({ id: p.id, status: p.status });
+    // Garante entitlements imediatamente quando o polling detecta pagamento aprovado,
+    // sem depender exclusivamente do webhook (que pode chegar com atraso).
+    if (isPaidStatus(p.status)) {
+      const row = await findPaymentById(p.id);
+      if (row) {
+        await grantEntitlementsFromPayment({
+          userId: row.user_id,
+          payerEmail: row.payer_email,
+          productKey: row.product_key,
+          externalReference: row.external_reference,
+        });
+      }
+    }
     return {
       id: p.id,
       status: p.status,
@@ -205,9 +231,18 @@ export const reconcileMpPayment = createServerFn({ method: "POST" })
         /* mantém status antigo */
       }
     }
+    const paid = isPaidStatus(status);
+    if (paid) {
+      await grantEntitlementsFromPayment({
+        userId: row.user_id,
+        payerEmail: row.payer_email,
+        productKey: row.product_key,
+        externalReference: row.external_reference,
+      });
+    }
     return {
       found: true,
-      paid: isPaidStatus(status),
+      paid,
       status,
       productKey: row.product_key,
       amountCents: row.amount_cents,

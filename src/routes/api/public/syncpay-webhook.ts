@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { grantEntitlementsFromPayment } from "@/lib/entitlements.server";
+import { findPaymentByExternalReference, updatePaymentStatus } from "@/lib/payments.server";
+import { isPaidStatus } from "@/lib/syncpay.server";
 
 /**
  * Webhook do SyncPay (cashin).
@@ -73,12 +76,25 @@ export const Route = createFileRoute("/api/public/syncpay-webhook")({
           });
         }
 
-        console.info("[syncpay-webhook]", {
-          id: parsed.data.data.id,
-          status: parsed.data.data.status,
-          amount: parsed.data.data.amount,
-          ref: parsed.data.data.externalreference,
-        });
+        const { id, status, amount, externalreference: ref } = parsed.data.data;
+        console.info("[syncpay-webhook]", { id, status, amount, ref });
+
+        if (status && ref && isPaidStatus(status)) {
+          try {
+            const row = await findPaymentByExternalReference(ref);
+            if (row) {
+              await updatePaymentStatus({ id: row.id, status: "approved" });
+              await grantEntitlementsFromPayment({
+                userId: row.user_id,
+                payerEmail: row.payer_email,
+                productKey: row.product_key,
+                externalReference: row.external_reference,
+              });
+            }
+          } catch (e) {
+            console.error("[syncpay-webhook] grant falhou", e);
+          }
+        }
 
         return new Response(JSON.stringify({ ok: true }), {
           status: 200,

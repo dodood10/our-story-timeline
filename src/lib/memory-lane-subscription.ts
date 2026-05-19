@@ -1,18 +1,8 @@
 /**
- * Memory Lane subscription (mensal mockado).
+ * Memory Lane — acesso pré-pago por período de 30 dias (pagamento único via Mercado Pago).
  *
- * Persistido em `localStorage` sob a chave `KEY_FULL` ("ml.access.full") para
- * manter a chave histórica. O formato antigo era `boolean` ("comprado vitalício").
- * O parser `parseSubscription` migra o valor legado para uma assinatura ativa
- * com período corrente de 30 dias.
- *
- * Em produção esse estado virá de webhooks do gateway. Aqui simulamos:
- *  - auto-renovação: ao abrir o app, se `autoRenew` e `currentPeriodEnd < now`,
- *    estende +30 dias e incrementa `renewals`.
- *  - cancelamento: zera `autoRenew` e marca `status="canceled"`, preservando
- *    o acesso até `currentPeriodEnd`.
- *  - expiração natural: quando `currentPeriodEnd < now` e `!autoRenew`,
- *    a assinatura é descartada (volta a `null` → exige nova compra).
+ * Persistido em `user_entitlements.subscription` (servidor) ou `KEY_FULL` (dev local).
+ * Não há renovação automática sem novo pagamento: `tickSubscription` apenas expira o período.
  */
 
 export const SUBSCRIPTION_PERIOD_DAYS = 30;
@@ -97,7 +87,7 @@ export type SubscriptionUiState = "none" | "active" | "canceling" | "lapsed";
 export function deriveSubscriptionUiState(sub: StoredSubscription): SubscriptionUiState {
   if (!sub) return "none";
   if (!isIsoInFuture(sub.currentPeriodEnd)) return "lapsed";
-  if (sub.status === "canceled" || !sub.autoRenew) return "canceling";
+  if (sub.status === "canceled") return "canceling";
   return "active";
 }
 
@@ -108,7 +98,7 @@ export function startSubscription(): MemoryLaneSubscription {
     status: "active",
     startedAt,
     currentPeriodEnd: addDaysIso(startedAt, SUBSCRIPTION_PERIOD_DAYS),
-    autoRenew: true,
+    autoRenew: false,
     renewals: 1,
   };
 }
@@ -120,7 +110,7 @@ export function renewSubscription(sub: MemoryLaneSubscription): MemoryLaneSubscr
     ...sub,
     status: "active",
     currentPeriodEnd: addDaysIso(base, SUBSCRIPTION_PERIOD_DAYS),
-    autoRenew: true,
+    autoRenew: false,
     renewals: sub.renewals + 1,
   };
 }
@@ -144,7 +134,6 @@ export function reactivateSubscription(sub: MemoryLaneSubscription): MemoryLaneS
 export function tickSubscription(sub: StoredSubscription): [StoredSubscription, boolean] {
   if (!sub) return [null, false];
   if (isIsoInFuture(sub.currentPeriodEnd)) return [sub, false];
-  if (sub.autoRenew) return [renewSubscription(sub), true];
   return [null, true];
 }
 
