@@ -89,6 +89,33 @@ export function CheckoutFormColumn({
     });
   }, [values.fullName, values.email, values.whatsapp, values.cpf]);
 
+  // Reconciliação: se há um Pix pendente para este produto, consulta status e libera se aprovado.
+  const reconcileFn = useServerFn(reconcileMpPayment);
+  const reconciledRef = useRef(false);
+  useEffect(() => {
+    if (reconciledRef.current) return;
+    const pending = readPendingMpPayment(productKey);
+    if (!pending) return;
+    reconciledRef.current = true;
+    reconcileFn({ data: { externalReference: pending.externalReference } })
+      .then((res) => {
+        if (res.paid) {
+          clearPendingMpPayment();
+          onSubmit({
+            fullName: values.fullName ?? defaultLead?.fullName ?? "",
+            email: values.email ?? defaultLead?.email ?? "",
+            whatsapp: values.whatsapp ?? defaultLead?.whatsapp ?? "",
+            cpf: values.cpf ?? defaultLead?.cpf,
+          });
+        }
+      })
+      .catch(() => {
+        /* silencioso — usuário pode pagar de novo */
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productKey]);
+
+
   function handleValidPix(data: FormValues) {
     const lead: CheckoutLead = {
       fullName: data.fullName,
