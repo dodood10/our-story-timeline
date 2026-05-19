@@ -133,6 +133,15 @@ export const createMpCardCharge = createServerFn({ method: "POST" })
         document: data.payer.document,
       },
     });
+    await recordPaymentCreated({
+      id: charge.id,
+      externalReference: data.externalReference,
+      status: charge.status,
+      amountCents,
+      productKey: data.productKey,
+      payerEmail: data.payer.email,
+      paymentMethod: "card",
+    });
     return {
       id: charge.id,
       status: charge.status,
@@ -157,11 +166,51 @@ export const getMpPaymentStatus = createServerFn({ method: "POST" })
   .inputValidator((i) => StatusInput.parse(i))
   .handler(async ({ data }): Promise<MpStatusResponse> => {
     const p = await getMpPayment(data.id);
+    // Mantém a tabela atualizada quando o frontend faz polling antes do webhook.
+    await updatePaymentStatus({ id: p.id, status: p.status });
     return {
       id: p.id,
       status: p.status,
       paid: isPaidStatus(p.status),
       failed: isFailedStatus(p.status),
+    };
+  });
+
+const ReconcileInput = z.object({ externalReference: z.string().min(1).max(120) });
+
+export type MpReconcileResponse = {
+  found: boolean;
+  paid: boolean;
+  status: string | null;
+  productKey: string | null;
+  amountCents: number | null;
+};
+
+/** Reconciliação por external_reference — usado quando o usuário volta após fechar a aba. */
+export const reconcileMpPayment = createServerFn({ method: "POST" })
+  .inputValidator((i) => ReconcileInput.parse(i))
+  .handler(async ({ data }): Promise<MpReconcileResponse> => {
+    const row = await findPaymentByExternalReference(data.externalReference);
+    if (!row) {
+      return { found: false, paid: false, status: null, productKey: null, amountCents: null };
+    }
+    // Se ainda não está aprovado, consulta o MP para pegar o status mais novo.
+    let status = row.status;
+    if (!isPaidStatus(status) && !isFailedStatus(status)) {
+      try {
+        const fresh = await getMpPayment(row.id);
+        status = fresh.status;
+        await updatePaymentStatus({ id: row.id, status });
+      } catch {
+        /* mantém status antigo */
+      }
+    }
+    return {
+      found: true,
+      paid: isPaidStatus(status),
+      status,
+      productKey: row.product_key,
+      amountCents: row.amount_cents,
     };
   });
 
