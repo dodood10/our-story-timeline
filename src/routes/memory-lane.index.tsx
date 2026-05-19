@@ -45,6 +45,10 @@ function MemoryLaneCheckout() {
   const [pixOpen, setPixOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const defaultLead = readCheckoutLead();
+  const memoryLaneExternalRef = useMemo(
+    () => `memory-lane-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    [],
+  );
 
   const isUpgrade = upgrade === true && productMode === "surprise_only";
   const subState = deriveSubscriptionUiState(subscription);
