@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import QRCode from "qrcode";
 import { Copy, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import {
   Dialog,
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { createPixCharge, getPixStatus, type CreatePixResponse } from "@/lib/syncpay.functions";
 import { formatBRL } from "@/lib/checkout-products";
 import type { CheckoutLead } from "@/lib/checkout-storage";
+
 
 type Stage = "loading" | "awaiting" | "paid" | "error";
 
@@ -39,7 +41,9 @@ export function PixPaymentDialog({
   const [stage, setStage] = useState<Stage>("loading");
   const [error, setError] = useState<string | null>(null);
   const [charge, setCharge] = useState<CreatePixResponse | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const startedRef = useRef(false);
+
 
   // Cria a cobrança ao abrir.
   useEffect(() => {
@@ -48,8 +52,10 @@ export function PixPaymentDialog({
       setStage("loading");
       setError(null);
       setCharge(null);
+      setQrDataUrl(null);
       return;
     }
+
     if (startedRef.current) return;
     startedRef.current = true;
 
@@ -89,6 +95,31 @@ export function PixPaymentDialog({
         setStage("error");
       });
   }, [open, amountCents, productLabel, externalReference, lead, createFn]);
+
+  // Gera o QR no cliente quando a SyncPay devolve só o copia-e-cola.
+  useEffect(() => {
+    if (!charge?.paymentCode) return;
+    if (charge.paymentCodeBase64) {
+      setQrDataUrl(`data:image/png;base64,${charge.paymentCodeBase64}`);
+      return;
+    }
+    let cancelled = false;
+    QRCode.toDataURL(charge.paymentCode, {
+      width: 256,
+      margin: 1,
+      errorCorrectionLevel: "M",
+    })
+      .then((url) => {
+        if (!cancelled) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrDataUrl(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [charge?.paymentCode, charge?.paymentCodeBase64]);
+
 
   // Polling de status enquanto aguardando.
   useEffect(() => {
@@ -153,15 +184,16 @@ export function PixPaymentDialog({
 
         {stage === "awaiting" && charge && (
           <div className="space-y-4">
-            {charge.paymentCodeBase64 && (
+            {qrDataUrl && (
               <div className="flex justify-center">
                 <img
-                  src={`data:image/png;base64,${charge.paymentCodeBase64}`}
+                  src={qrDataUrl}
                   alt="QR Code Pix"
                   className="h-56 w-56 rounded-lg border border-border bg-white p-2"
                 />
               </div>
             )}
+
 
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground">

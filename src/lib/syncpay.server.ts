@@ -141,6 +141,8 @@ export async function createSyncPayPix(input: SyncPayPixInput): Promise<SyncPayP
   };
 
   const paymentCode = pick(
+    "pix_code",
+    "pixCode",
     "paymentCode",
     "paymentcode",
     "payment_code",
@@ -171,7 +173,8 @@ export async function createSyncPayPix(input: SyncPayPixInput): Promise<SyncPayP
   }
 
   return {
-    id: pick("id", "idtransaction", "transactionId", "transaction_id", "uuid"),
+    id: pick("identifier", "id", "idtransaction", "transactionId", "transaction_id", "uuid"),
+
     status: pick("status", "transactionStatus") || "pending",
     amount: Number(
       (candidates.find((c) => c.amount != null)?.amount as number | undefined) ?? input.amount,
@@ -198,13 +201,31 @@ export async function getSyncPayStatus(id: string): Promise<SyncPayStatus> {
     throw new Error(`SyncPay status falhou (${res.status}): ${text.slice(0, 200)}`);
   }
   const data = (await res.json()) as Record<string, unknown>;
-  const payload = (data.data ?? data) as Record<string, unknown>;
+  const candidates: Record<string, unknown>[] = [data];
+  for (const key of ["data", "transaction", "result", "response"]) {
+    const nested = data[key];
+    if (nested && typeof nested === "object") candidates.push(nested as Record<string, unknown>);
+  }
+  const pick = (...keys: string[]): string => {
+    for (const c of candidates) {
+      for (const k of keys) {
+        const v = c[k];
+        if (typeof v === "string" && v.length > 0) return v;
+        if (typeof v === "number") return String(v);
+      }
+    }
+    return "";
+  };
+  console.info("[syncpay] status response:", JSON.stringify(data).slice(0, 400));
   return {
-    id: String(payload.id ?? id),
-    status: String(payload.status ?? "pending"),
-    amount: Number(payload.amount ?? 0),
+    id: pick("identifier", "id", "transactionId") || id,
+    status: pick("status", "transactionStatus") || "pending",
+    amount: Number(
+      (candidates.find((c) => c.amount != null)?.amount as number | undefined) ?? 0,
+    ),
   };
 }
+
 
 /** Normaliza diferentes nomes retornados pelo SyncPay para "paid" / "pending" / "failed". */
 export function isPaidStatus(status: string): boolean {
