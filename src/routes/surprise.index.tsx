@@ -60,6 +60,11 @@ function SurpriseCheckout() {
 
   const totalCents = calcTotalCents(product, bumps);
   const defaultLead = readCheckoutLead();
+  const externalReference = useMemo(
+    () => `surprise-${productId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    [productId],
+  );
+  const productKey = productId === "premium" ? ("surprise:premium" as const) : ("surprise:basic" as const);
 
   useEffect(() => {
     if (hydrated && surprise !== "basic" && surprise !== "premium") {
