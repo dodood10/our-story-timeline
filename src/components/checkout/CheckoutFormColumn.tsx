@@ -9,7 +9,7 @@ import { OrderBumpCard } from "@/components/checkout/OrderBumpCard";
 import { PaymentMethodTabs } from "@/components/checkout/PaymentMethodTabs";
 import { MpPixDialog } from "@/components/checkout/MpPixDialog";
 import { MpCardForm } from "@/components/checkout/MpCardForm";
-import { ORDER_BUMPS, type PaymentMethod } from "@/lib/checkout-products";
+import { ORDER_BUMPS, type PaymentMethod, type CheckoutProductKey } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
 import { writeCheckoutLead } from "@/lib/checkout-storage";
 
