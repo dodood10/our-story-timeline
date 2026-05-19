@@ -41,7 +41,9 @@ export function PixPaymentDialog({
   const [stage, setStage] = useState<Stage>("loading");
   const [error, setError] = useState<string | null>(null);
   const [charge, setCharge] = useState<CreatePixResponse | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const startedRef = useRef(false);
+
 
   // Cria a cobrança ao abrir.
   useEffect(() => {
