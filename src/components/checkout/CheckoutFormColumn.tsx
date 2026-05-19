@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OrderBumpCard } from "@/components/checkout/OrderBumpCard";
 import { PaymentMethodTabs } from "@/components/checkout/PaymentMethodTabs";
-import { PixPaymentDialog } from "@/components/checkout/PixPaymentDialog";
+import { MpPixDialog } from "@/components/checkout/MpPixDialog";
+import { MpCardForm } from "@/components/checkout/MpCardForm";
 import { ORDER_BUMPS, type PaymentMethod } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
 import { writeCheckoutLead } from "@/lib/checkout-storage";
@@ -19,13 +20,12 @@ function checkoutSchema() {
     whatsapp: z.string().min(10, "Informe um WhatsApp válido"),
     cpf: z
       .string()
-      .min(11, "CPF obrigatório para emitir o Pix")
+      .min(11, "CPF obrigatório")
       .refine((v) => v.replace(/\D/g, "").length === 11, "CPF inválido"),
   });
 }
 
 type FormValues = z.infer<ReturnType<typeof checkoutSchema>>;
-
 
 export function CheckoutFormColumn({
   bumps,
@@ -50,7 +50,7 @@ export function CheckoutFormColumn({
   defaultLead: CheckoutLead | null;
   pixDialogOpen: boolean;
   onPixDialogOpenChange: (open: boolean) => void;
-  /** Chamado quando o SyncPay confirma o pagamento. */
+  /** Chamado quando o Mercado Pago confirma o pagamento (Pix ou cartão). */
   onSubmit: (lead: CheckoutLead) => void;
   submitting: boolean;
   hideBumps?: boolean;
@@ -81,7 +81,7 @@ export function CheckoutFormColumn({
     });
   }, [values.fullName, values.email, values.whatsapp, values.cpf]);
 
-  function handleValid(data: FormValues) {
+  function handleValidPix(data: FormValues) {
     const lead: CheckoutLead = {
       fullName: data.fullName,
       email: data.email,
@@ -99,13 +99,13 @@ export function CheckoutFormColumn({
     cpf: values.cpf,
   };
 
+  const formValid = form.formState.isValid;
   const ctaLabel = submitLabel ?? "Gerar Pix e liberar meu acesso";
-
 
   return (
     <div className="space-y-6">
       <form
-        onSubmit={form.handleSubmit(handleValid, () => {
+        onSubmit={form.handleSubmit(handleValidPix, () => {
           import("sonner").then(({ toast }) =>
             toast.error("Revise os campos destacados antes de continuar."),
           );
@@ -175,7 +175,7 @@ export function CheckoutFormColumn({
               {...form.register("cpf")}
             />
             <p id="cpf-hint" className="text-xs text-muted-foreground">
-              Obrigatório para emitir a cobrança Pix no seu nome.
+              Obrigatório para emitir a cobrança no seu nome.
             </p>
             {form.formState.errors.cpf && (
               <p className="text-xs text-destructive">{form.formState.errors.cpf.message}</p>
@@ -185,26 +185,47 @@ export function CheckoutFormColumn({
           <PaymentMethodTabs value={paymentMethod} onChange={onPaymentMethodChange} />
         </div>
 
-        <div className="space-y-3 pt-2">
-          <p className="text-sm text-muted-foreground text-center" id="checkout-microcopy">
-            Em poucos minutos, você terá um plano pronto para surpreender quem você ama.
-          </p>
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full"
-            disabled={submitting}
-            aria-describedby="checkout-microcopy checkout-access-note"
-          >
-            {submitting ? "Processando…" : ctaLabel}
-          </Button>
-          <p id="checkout-access-note" className="text-xs text-center text-muted-foreground">
-            Seu acesso será liberado após a confirmação do pagamento.
-          </p>
-        </div>
+        {paymentMethod === "pix" ? (
+          <div className="space-y-3 pt-2">
+            <p className="text-sm text-muted-foreground text-center" id="checkout-microcopy">
+              Em poucos minutos, você terá seu acesso liberado.
+            </p>
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              disabled={submitting}
+              aria-describedby="checkout-microcopy checkout-access-note"
+            >
+              {submitting ? "Processando…" : ctaLabel}
+            </Button>
+            <p id="checkout-access-note" className="text-xs text-center text-muted-foreground">
+              Seu acesso será liberado após a confirmação do Pix.
+            </p>
+          </div>
+        ) : null}
       </form>
 
-      <PixPaymentDialog
+      {paymentMethod === "card" && (
+        <div className="space-y-2">
+          {!formValid && (
+            <p className="text-xs text-muted-foreground">
+              Preencha seus dados acima para liberar o pagamento no cartão.
+            </p>
+          )}
+          <div className={formValid ? "" : "opacity-60 pointer-events-none"}>
+            <MpCardForm
+              amountCents={amountCents}
+              productLabel={productLabel}
+              externalReference={externalReference}
+              lead={currentLead}
+              onPaid={() => onSubmit(currentLead)}
+            />
+          </div>
+        </div>
+      )}
+
+      <MpPixDialog
         open={pixDialogOpen}
         onOpenChange={onPixDialogOpenChange}
         amountCents={amountCents}
