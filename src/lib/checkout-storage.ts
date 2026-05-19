@@ -1,9 +1,44 @@
-import type { CheckoutProductId, OrderBumpId } from "./checkout-products";
+import type { CheckoutProductId, CheckoutProductKey, OrderBumpId } from "./checkout-products";
 
 const KEY_LEAD = "ml.checkout.lead";
 const KEY_BUMPS = "ml.checkout.bumps";
 const KEY_UPSELL = "ml.checkout.upsellKit";
 const KEY_PRODUCT = "ml.checkout.lastProductId";
+const KEY_PENDING = "ml.checkout.pendingMp";
+
+export interface PendingMpPayment {
+  externalReference: string;
+  productKey: CheckoutProductKey;
+  createdAt: number;
+}
+
+export function readPendingMpPayment(productKey: CheckoutProductKey): PendingMpPayment | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(KEY_PENDING);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PendingMpPayment;
+    if (parsed.productKey !== productKey) return null;
+    // Descarta entradas com mais de 24h.
+    if (Date.now() - parsed.createdAt > 24 * 60 * 60 * 1000) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function writePendingMpPayment(p: Omit<PendingMpPayment, "createdAt">): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(
+    KEY_PENDING,
+    JSON.stringify({ ...p, createdAt: Date.now() } satisfies PendingMpPayment),
+  );
+}
+
+export function clearPendingMpPayment(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(KEY_PENDING);
+}
 
 export interface CheckoutLead {
   fullName: string;
