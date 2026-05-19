@@ -71,6 +71,15 @@ export const createMpPixCharge = createServerFn({ method: "POST" })
     if (!charge.qrCode) {
       throw new Error("Mercado Pago não retornou o código Pix.");
     }
+    await recordPaymentCreated({
+      id: charge.id,
+      externalReference: data.externalReference,
+      status: charge.status,
+      amountCents,
+      productKey: data.productKey,
+      payerEmail: data.payer.email,
+      paymentMethod: "pix",
+    });
     return {
       id: charge.id,
       status: charge.status,
