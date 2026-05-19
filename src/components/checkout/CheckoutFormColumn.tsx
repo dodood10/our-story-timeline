@@ -9,7 +9,7 @@ import { OrderBumpCard } from "@/components/checkout/OrderBumpCard";
 import { PaymentMethodTabs } from "@/components/checkout/PaymentMethodTabs";
 import { MpPixDialog } from "@/components/checkout/MpPixDialog";
 import { MpCardForm } from "@/components/checkout/MpCardForm";
-import { ORDER_BUMPS, type PaymentMethod } from "@/lib/checkout-products";
+import { ORDER_BUMPS, type PaymentMethod, type CheckoutProductKey } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
 import { writeCheckoutLead } from "@/lib/checkout-storage";
 
@@ -41,6 +41,7 @@ export function CheckoutFormColumn({
   submitLabel,
   amountCents,
   productLabel,
+  productKey,
   externalReference,
 }: {
   bumps: CheckoutBumps;
@@ -57,6 +58,7 @@ export function CheckoutFormColumn({
   submitLabel?: string;
   amountCents: number;
   productLabel: string;
+  productKey: CheckoutProductKey;
   externalReference: string;
 }) {
   const form = useForm<FormValues>({
@@ -217,6 +219,8 @@ export function CheckoutFormColumn({
             <MpCardForm
               amountCents={amountCents}
               productLabel={productLabel}
+              productKey={productKey}
+              bumps={bumps}
               externalReference={externalReference}
               lead={currentLead}
               onPaid={() => onSubmit(currentLead)}
@@ -230,6 +234,8 @@ export function CheckoutFormColumn({
         onOpenChange={onPixDialogOpenChange}
         amountCents={amountCents}
         productLabel={productLabel}
+        productKey={productKey}
+        bumps={bumps}
         lead={currentLead}
         externalReference={externalReference}
         onPaid={() => {

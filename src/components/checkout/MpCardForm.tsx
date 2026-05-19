@@ -9,8 +9,15 @@ import {
   createMpCardCharge,
   getMpPublicKey,
 } from "@/lib/mercadopago.functions";
-import { formatBRL } from "@/lib/checkout-products";
-import type { CheckoutLead } from "@/lib/checkout-storage";
+import { formatBRL, type CheckoutProductKey } from "@/lib/checkout-products";
+import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
+
+type InstallmentOption = {
+  installments: number;
+  installment_amount: number;
+  total_amount: number;
+  recommended_message: string;
+};
 
 type MpInstance = {
   createCardToken: (data: {
@@ -25,6 +32,15 @@ type MpInstance = {
   getPaymentMethods: (q: { bin: string }) => Promise<{
     results: Array<{ id: string; payment_type_id: string; issuer?: { id?: string | number } }>;
   }>;
+  getInstallments: (q: {
+    amount: string;
+    bin: string;
+    paymentTypeId?: string;
+  }) => Promise<
+    Array<{
+      payer_costs: InstallmentOption[];
+    }>
+  >;
 };
 
 declare global {
@@ -64,12 +80,16 @@ function formatExpiry(v: string) {
 export function MpCardForm({
   amountCents,
   productLabel,
+  productKey,
+  bumps,
   externalReference,
   lead,
   onPaid,
 }: {
   amountCents: number;
   productLabel: string;
+  productKey: CheckoutProductKey;
+  bumps: CheckoutBumps;
   externalReference: string;
   lead: CheckoutLead | null;
   onPaid: () => void;
@@ -86,10 +106,15 @@ export function MpCardForm({
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   const [installments, setInstallments] = useState(1);
+  const [installmentOptions, setInstallmentOptions] = useState<InstallmentOption[] | null>(null);
+  const [paymentMethodId, setPaymentMethodId] = useState<string>("");
+  const [issuerId, setIssuerId] = useState<string | undefined>(undefined);
 
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  // Used for productLabel-only display; charge value comes from server.
+  void productLabel;
 
   useEffect(() => {
     let cancelled = false;
@@ -110,6 +135,53 @@ export function MpCardForm({
     };
   }, [getKey]);
 
+  // Busca bandeira/issuer e parcelamento reais quando o BIN é completo.
+  useEffect(() => {
+    if (!ready || !mpRef.current) return;
+    const bin = onlyDigits(cardNumber).slice(0, 8);
+    if (bin.length < 6) {
+      setInstallmentOptions(null);
+      setPaymentMethodId("");
+      setIssuerId(undefined);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const pm = await mpRef.current!.getPaymentMethods({ bin });
+        const card = pm.results.find((r) => r.payment_type_id === "credit_card");
+        if (cancelled) return;
+        if (!card) {
+          setPaymentMethodId("");
+          setIssuerId(undefined);
+          setInstallmentOptions(null);
+          return;
+        }
+        setPaymentMethodId(card.id);
+        const issuer = card.issuer?.id != null ? String(card.issuer.id) : undefined;
+        setIssuerId(issuer);
+
+        const amount = (amountCents / 100).toFixed(2);
+        const inst = await mpRef.current!.getInstallments({
+          amount,
+          bin,
+          paymentTypeId: "credit_card",
+        });
+        if (cancelled) return;
+        const opts = inst[0]?.payer_costs ?? null;
+        setInstallmentOptions(opts);
+        if (opts && !opts.find((o) => o.installments === installments)) {
+          setInstallments(opts[0]?.installments ?? 1);
+        }
+      } catch {
+        if (!cancelled) setInstallmentOptions(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, cardNumber, amountCents, installments]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!ready || !mpRef.current) {
@@ -120,8 +192,8 @@ export function MpCardForm({
       toast.error("Preencha seus dados acima primeiro.");
       return;
     }
-    const document = onlyDigits(lead.cpf ?? "");
-    if (document.length !== 11) {
+    const doc = onlyDigits(lead.cpf ?? "");
+    if (doc.length !== 11) {
       toast.error("Informe um CPF válido.");
       return;
     }
@@ -143,28 +215,14 @@ export function MpCardForm({
       toast.error("Informe o nome impresso no cartão.");
       return;
     }
+    if (!paymentMethodId) {
+      toast.error("Bandeira do cartão não reconhecida.");
+      return;
+    }
 
     setSubmitting(true);
     setStatusMsg(null);
     try {
-      // Descobre payment_method_id e issuer pelo BIN
-      const bin = number.slice(0, 8);
-      let paymentMethodId = "";
-      let issuerId: string | undefined;
-      try {
-        const pm = await mpRef.current.getPaymentMethods({ bin });
-        const card = pm.results.find((r) => r.payment_type_id?.includes("card")) ?? pm.results[0];
-        if (card) {
-          paymentMethodId = card.id;
-          if (card.issuer?.id != null) issuerId = String(card.issuer.id);
-        }
-      } catch {
-        /* segue sem; MP rejeitará se inválido */
-      }
-      if (!paymentMethodId) {
-        throw new Error("Bandeira do cartão não reconhecida.");
-      }
-
       const token = await mpRef.current.createCardToken({
         cardNumber: number,
         cardholderName: cardholder.trim(),
@@ -172,19 +230,19 @@ export function MpCardForm({
         cardExpirationYear: `20${yy}`,
         securityCode: cvv,
         identificationType: "CPF",
-        identificationNumber: document,
+        identificationNumber: doc,
       });
 
       const res = await chargeFn({
         data: {
-          amountCents,
-          productLabel,
+          productKey,
+          bumps,
           externalReference,
           token: token.id,
           paymentMethodId,
           installments,
           issuerId,
-          payer: { name: lead.fullName, email: lead.email, document },
+          payer: { name: lead.fullName, email: lead.email, document: doc },
         },
       });
 
@@ -280,13 +338,23 @@ export function MpCardForm({
           value={installments}
           onChange={(e) => setInstallments(Number(e.target.value))}
           className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          disabled={!installmentOptions}
         >
-          {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-            <option key={n} value={n}>
-              {n}x de {formatBRL(Math.round(amountCents / n))} sem juros
-            </option>
-          ))}
+          {installmentOptions
+            ? installmentOptions.map((opt) => (
+                <option key={opt.installments} value={opt.installments}>
+                  {opt.recommended_message ||
+                    `${opt.installments}x de ${formatBRL(Math.round(opt.installment_amount * 100))}`}
+                </option>
+              ))
+            : [<option key={1} value={1}>1x de {formatBRL(amountCents)}</option>]}
         </select>
+        {!installmentOptions && cardNumber.length > 0 && (
+          <p className="text-[11px] text-muted-foreground">
+            Digite o número completo do cartão para carregar as opções de parcelamento reais (com ou
+            sem juros conforme o emissor).
+          </p>
+        )}
       </div>
 
       {statusMsg && !done && (

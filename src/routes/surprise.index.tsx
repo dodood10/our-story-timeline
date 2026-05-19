@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useAccess } from "@/hooks/useAccess";
@@ -60,6 +60,11 @@ function SurpriseCheckout() {
 
   const totalCents = calcTotalCents(product, bumps);
   const defaultLead = readCheckoutLead();
+  const externalReference = useMemo(
+    () => `surprise-${productId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    [productId],
+  );
+  const productKey = productId === "premium" ? ("surprise:premium" as const) : ("surprise:basic" as const);
 
   useEffect(() => {
     if (hydrated && surprise !== "basic" && surprise !== "premium") {
@@ -146,7 +151,8 @@ function SurpriseCheckout() {
           <CheckoutFormColumn
             amountCents={totalCents}
             productLabel={product.title}
-            externalReference={`surprise-${product.id}-${Date.now()}`}
+            productKey={productKey}
+            externalReference={externalReference}
             bumps={bumps}
             onBumpChange={handleBumpChange}
             paymentMethod={paymentMethod}

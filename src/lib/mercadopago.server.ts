@@ -75,6 +75,7 @@ export async function createMpPix(input: {
   amount: number;
   description: string;
   externalReference: string;
+  idempotencyKey?: string;
   payer: MpPayer;
 }): Promise<MpPixCharge> {
   const body = {
@@ -103,7 +104,7 @@ export async function createMpPix(input: {
   }>("/v1/payments", {
     method: "POST",
     body: JSON.stringify(body),
-    idempotencyKey: crypto.randomUUID(),
+    idempotencyKey: input.idempotencyKey ?? crypto.randomUUID(),
   });
 
   const tx = data.point_of_interaction?.transaction_data ?? {};
@@ -121,6 +122,7 @@ export async function createMpCard(input: {
   amount: number;
   description: string;
   externalReference: string;
+  idempotencyKey?: string;
   token: string;
   paymentMethodId: string;
   installments: number;
@@ -134,6 +136,8 @@ export async function createMpCard(input: {
     installments: input.installments,
     payment_method_id: input.paymentMethodId,
     external_reference: input.externalReference,
+    // binary_mode evita estados "in_process" — banco aprova ou recusa de imediato.
+    binary_mode: true,
     payer: {
       email: input.payer.email,
       first_name: input.payer.firstName,
@@ -150,7 +154,7 @@ export async function createMpCard(input: {
   }>("/v1/payments", {
     method: "POST",
     body: JSON.stringify(body),
-    idempotencyKey: crypto.randomUUID(),
+    idempotencyKey: input.idempotencyKey ?? crypto.randomUUID(),
   });
 
   return {
@@ -159,6 +163,7 @@ export async function createMpCard(input: {
     statusDetail: data.status_detail ?? "",
   };
 }
+
 
 export async function getMpPayment(id: string): Promise<{ id: string; status: string; statusDetail: string }> {
   const data = await mpFetch<{ id: number | string; status: string; status_detail: string }>(

@@ -181,3 +181,37 @@ export interface CheckoutSubmitPayload {
   totalCents: number;
   paymentMethod: PaymentMethod;
 }
+
+/**
+ * Chave canônica para o servidor calcular o preço autoritativo.
+ * NUNCA confie em valores enviados pelo cliente — passe somente esta chave + bumps.
+ */
+export type CheckoutProductKey =
+  | "surprise:premium"
+  | "surprise:basic"
+  | "memory_lane";
+
+export interface CheckoutBumpsInput {
+  cards?: boolean;
+  phrases?: boolean;
+}
+
+/**
+ * Calcula o valor cobrado em centavos a partir de identificadores estáveis.
+ * Roda em qualquer ambiente (client p/ exibir, server p/ cobrar de fato).
+ */
+export function resolveCheckoutAmountCents(
+  productKey: CheckoutProductKey,
+  bumps: CheckoutBumpsInput = {},
+): { amountCents: number; label: string } {
+  if (productKey === "memory_lane") {
+    return { amountCents: MEMORY_LANE_PRODUCT.priceCents, label: MEMORY_LANE_PRODUCT.title };
+  }
+  const id: CheckoutProductId = productKey === "surprise:basic" ? "basic" : "premium";
+  const product = PRODUCTS[id];
+  let total = product.priceCents;
+  for (const bump of ORDER_BUMPS) {
+    if (bumps[bump.id]) total += bump.priceCents;
+  }
+  return { amountCents: total, label: product.title };
+}

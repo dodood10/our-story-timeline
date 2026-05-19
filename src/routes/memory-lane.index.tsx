@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useAccess } from "@/hooks/useAccess";
@@ -45,6 +45,10 @@ function MemoryLaneCheckout() {
   const [pixOpen, setPixOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const defaultLead = readCheckoutLead();
+  const memoryLaneExternalRef = useMemo(
+    () => `memory-lane-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    [],
+  );
 
   const isUpgrade = upgrade === true && productMode === "surprise_only";
   const subState = deriveSubscriptionUiState(subscription);
@@ -177,7 +181,8 @@ function MemoryLaneCheckout() {
         <CheckoutFormColumn
           amountCents={product.priceCents}
           productLabel={product.title}
-          externalReference={`memory-lane-${Date.now()}`}
+          productKey="memory_lane"
+          externalReference={memoryLaneExternalRef}
           bumps={emptyBumps}
           onBumpChange={() => {}}
           paymentMethod={paymentMethod}
