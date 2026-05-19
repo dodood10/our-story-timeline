@@ -50,6 +50,7 @@ function LandingPage() {
         <LandingHeader />
         <HeroSection />
         <CuriositySection />
+        <PlanPreviewSection />
         <SceneSection />
         <ProblemSection />
         <DeliverablesSection />
