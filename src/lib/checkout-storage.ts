@@ -37,7 +37,12 @@ export function readCheckoutBumps(): CheckoutBumps {
   if (typeof window === "undefined") return { ...DEFAULT_BUMPS };
   try {
     const raw = localStorage.getItem(KEY_BUMPS);
-    return raw ? { ...DEFAULT_BUMPS, ...(JSON.parse(raw) as CheckoutBumps) } : { ...DEFAULT_BUMPS };
+    if (!raw) return { ...DEFAULT_BUMPS };
+    const parsed = JSON.parse(raw) as Partial<CheckoutBumps>;
+    return {
+      cards: parsed.cards === true,
+      phrases: parsed.phrases === true,
+    };
   } catch {
     return { ...DEFAULT_BUMPS };
   }

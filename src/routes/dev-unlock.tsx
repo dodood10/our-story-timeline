@@ -1,6 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useAccess } from "@/hooks/useAccess";
+import { useAccess, type ProductMode } from "@/hooks/useAccess";
 import { Button } from "@/components/ui/button";
+
+const MODES: { mode: ProductMode; label: string }[] = [
+  { mode: "none", label: "Nenhum" },
+  { mode: "surprise_only", label: "Só Surpresa" },
+  { mode: "memory_lane_only", label: "Só Memory Lane" },
+  { mode: "both", label: "Ambos" },
+];
 
 export const Route = createFileRoute("/dev-unlock")({
   head: () => ({ meta: [{ title: "Dev Unlock" }] }),
@@ -8,7 +15,18 @@ export const Route = createFileRoute("/dev-unlock")({
 });
 
 function DevUnlock() {
-  const { surprise, setSurprise, full, setFull, reset } = useAccess();
+  const {
+    surprise,
+    subscription,
+    subscriptionState,
+    productMode,
+    setProductMode,
+    cancelMemoryLane,
+    reactivateMemoryLane,
+    renewMemoryLaneNow,
+    expireMemoryLaneNow,
+    reset,
+  } = useAccess();
 
   if (!import.meta.env.DEV) {
     return (
@@ -24,60 +42,65 @@ function DevUnlock() {
     );
   }
 
+  const periodEnd = subscription
+    ? new Date(subscription.currentPeriodEnd).toLocaleString("pt-BR")
+    : "—";
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-muted/30">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-muted/30">
       <div className="max-w-md w-full bg-card border border-border rounded-3xl p-8 shadow-card space-y-6">
         <div>
           <h1 className="font-display text-2xl">Acesso de teste</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Simula compras enquanto não temos checkout real. Estado salvo em localStorage.
+            Simula compras. Modo atual: <strong className="text-primary">{productMode}</strong>
           </p>
         </div>
 
         <div>
           <p className="text-sm font-medium mb-2">
-            Surpresa: <span className="text-primary">{surprise}</span>
+            Surpresa: <span className="text-primary">{surprise}</span> · ML:{" "}
+            <span className="text-primary">{subscriptionState}</span>
           </p>
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              size="sm"
-              variant={surprise === "none" ? "default" : "outline"}
-              onClick={() => setSurprise("none")}
-            >
-              Nenhum
-            </Button>
-            <Button
-              size="sm"
-              variant={surprise === "basic" ? "default" : "outline"}
-              onClick={() => setSurprise("basic")}
-            >
-              Básico
-            </Button>
-            <Button
-              size="sm"
-              variant={surprise === "premium" ? "default" : "outline"}
-              onClick={() => setSurprise("premium")}
-            >
-              Premium
-            </Button>
+          <div className="grid grid-cols-2 gap-2">
+            {MODES.map(({ mode, label }) => (
+              <Button
+                key={mode}
+                size="sm"
+                variant={productMode === mode ? "default" : "outline"}
+                onClick={() => setProductMode(mode)}
+              >
+                {label}
+              </Button>
+            ))}
           </div>
         </div>
 
-        <div>
-          <p className="text-sm font-medium mb-2">
-            App Memory Lane:{" "}
-            <span className="text-primary">{full ? "desbloqueado" : "bloqueado"}</span>
+        <div className="space-y-2 rounded-xl border border-border p-3 bg-background/50">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">
+            Assinatura Memory Lane
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Período corrente termina em <strong className="text-foreground">{periodEnd}</strong>
+            {subscription && (
+              <>
+                {" "}
+                · renovações: {subscription.renewals} · autoRenew:{" "}
+                {subscription.autoRenew ? "sim" : "não"}
+              </>
+            )}
           </p>
           <div className="grid grid-cols-2 gap-2">
-            <Button
-              size="sm"
-              variant={!full ? "default" : "outline"}
-              onClick={() => setFull(false)}
-            >
-              Bloquear
+            <Button size="sm" variant="outline" onClick={renewMemoryLaneNow}>
+              Renovar +30d
             </Button>
-            <Button size="sm" variant={full ? "default" : "outline"} onClick={() => setFull(true)}>
-              Desbloquear
+            <Button size="sm" variant="outline" onClick={expireMemoryLaneNow}>
+              Expirar agora
+            </Button>
+            <Button size="sm" variant="outline" onClick={cancelMemoryLane}>
+              Cancelar
+            </Button>
+            <Button size="sm" variant="outline" onClick={reactivateMemoryLane}>
+              Reativar
             </Button>
           </div>
         </div>
@@ -86,15 +109,21 @@ function DevUnlock() {
           Resetar tudo
         </Button>
 
-        <div className="flex gap-2 pt-2 border-t border-border">
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
           <Button asChild variant="link" size="sm">
             <Link to="/">/</Link>
+          </Button>
+          <Button asChild variant="link" size="sm">
+            <Link to="/app">/app</Link>
           </Button>
           <Button asChild variant="link" size="sm">
             <Link to="/surprise">/surprise</Link>
           </Button>
           <Button asChild variant="link" size="sm">
-            <Link to="/app">/app</Link>
+            <Link to="/memory-lane">/memory-lane</Link>
+          </Button>
+          <Button asChild variant="link" size="sm">
+            <Link to="/settings">/settings</Link>
           </Button>
         </div>
       </div>

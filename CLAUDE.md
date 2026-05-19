@@ -36,12 +36,20 @@ File-based routes live in `src/routes/`. The router plugin auto-generates `src/r
 
 ### Access control (mocked)
 
-`src/hooks/useAccess.ts` manages two localStorage flags:
+`src/hooks/useAccess.ts` manages two localStorage keys:
 
 - `ml.access.surprise` — `"none" | "basic" | "premium"` — controls which surprise features are available
-- `ml.access.full` — boolean — gates the entire Memory Lane app
+- `ml.access.full` — `MemoryLaneSubscription | null` (historicamente um boolean; o parser em `src/lib/memory-lane-subscription.ts` migra `true` para uma assinatura ativa).
 
-Checkout is simulated. Use `/dev-unlock` during development to toggle access states. Real payment (Stripe / Mercado Pago) is not yet implemented.
+Memory Lane é uma **assinatura mensal mockada** de R$ 29,90/mês (`SUBSCRIPTION_PRICE_CENTS`, período de 30 dias). O ciclo de vida vive em `src/lib/memory-lane-subscription.ts`:
+
+- `startSubscription()` cria uma nova com período de 30 dias.
+- `cancelSubscription()` mantém acesso até `currentPeriodEnd` e desliga `autoRenew`.
+- `reactivateSubscription()` religa `autoRenew`.
+- `tickSubscription()` simula o webhook do gateway: na hidratação do `useAccess` ele renova quem estiver `autoRenew=true` e vencido, e descarta quem está vencido sem renovação automática (estado `lapsed`).
+- UI estados expostos: `active`, `canceling`, `lapsed`, `none` (via `deriveSubscriptionUiState`).
+
+Checkout é simulado (`src/routes/memory-lane.index.tsx` para a compra, `src/routes/settings.tsx` para gerenciar). Use `/dev-unlock` durante o desenvolvimento para alternar estados de acesso, simular renovação/expiração/cancelamento. Pagamento real (Stripe / Mercado Pago) ainda não implementado.
 
 ### Global state
 

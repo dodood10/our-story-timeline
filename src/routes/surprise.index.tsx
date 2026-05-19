@@ -50,7 +50,7 @@ function SurpriseCheckout() {
   const { plan } = Route.useSearch();
   const productId: CheckoutProductId = plan ?? "premium";
   const product = getCheckoutProduct(productId);
-  const { surprise, setSurprise, hydrated } = useAccess();
+  const { surprise, hasSurprise, applyPurchase, hydrated } = useAccess();
   const navigate = useNavigate();
 
   const [bumps, setBumps] = useState(readCheckoutBumps);
@@ -80,7 +80,7 @@ function SurpriseCheckout() {
     );
   }
 
-  if (surprise === "basic" || surprise === "premium") {
+  if (hasSurprise) {
     return (
       <SurpriseShell footer={false} mainClassName="flex items-center justify-center px-4 py-16">
         <div className="max-w-md w-full text-center bg-card border border-border rounded-3xl p-8 shadow-card">
@@ -88,15 +88,15 @@ function SurpriseCheckout() {
           <h1 className="font-display text-3xl mt-4">Tudo pronto!</h1>
           <p className="text-muted-foreground mt-2">
             Você já tem acesso ao plano{" "}
-            <strong>{surprise === "premium" ? "Premium" : "Básico"}</strong>. Bora gerar a surpresa?
+            <strong>{surprise === "premium" ? "Premium" : "Básico"}</strong>.
           </p>
           <Button asChild size="lg" className="w-full mt-6">
-            <Link to="/surprise/quiz">
-              Começar o quiz <ArrowRight className="h-4 w-4 ml-1" />
+            <Link to="/app">
+              Ir para minha área <ArrowRight className="h-4 w-4 ml-1" />
             </Link>
           </Button>
-          <Button asChild variant="ghost" className="w-full mt-2">
-            <Link to="/">Voltar ao início</Link>
+          <Button asChild variant="outline" className="w-full mt-2">
+            <Link to="/surprise/quiz">Continuar surpresa (quiz)</Link>
           </Button>
         </div>
       </SurpriseShell>
@@ -113,16 +113,12 @@ function SurpriseCheckout() {
 
   function completeCheckout(lead: CheckoutLead) {
     setSubmitting(true);
-    try {
-      persistCheckoutDraft(lead, bumps, productId);
-      submitCheckoutMock();
-      setSurprise(product.tier);
-      toast.success("Pagamento confirmado! Seu acesso foi liberado.");
-      navigate({ to: "/surprise/upsell" });
-    } finally {
-      setSubmitting(false);
-      setPixOpen(false);
-    }
+    persistCheckoutDraft(lead, bumps, productId);
+    submitCheckoutMock();
+    applyPurchase({ surpriseTier: product.tier });
+    toast.success("Pagamento confirmado! Seu acesso foi liberado.");
+    setPixOpen(false);
+    navigate({ to: "/surprise/quiz", replace: true });
   }
 
   return (

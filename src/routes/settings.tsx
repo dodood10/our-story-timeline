@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useApp } from "@/hooks/useApp";
+import { useAccess } from "@/hooks/useAccess";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,10 @@ import {
   RefreshCw,
   Copy,
   Loader2,
+  CreditCard,
+  XCircle,
+  CheckCircle2,
+  Heart,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCouplePhoto } from "@/hooks/useCouplePhoto";
@@ -36,6 +41,8 @@ import { generateSyncCode, pushSync, pullSync, isSupabaseConfigured } from "@/li
 import { Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useRef } from "react";
+import { daysUntil, formatNextChargeDate } from "@/lib/memory-lane-subscription";
+import { formatBRL, getMemoryLaneProduct } from "@/lib/checkout-products";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -206,6 +213,8 @@ function SettingsForm({ couple }: { couple: Couple }) {
   return (
     <div className="px-4 sm:px-8 py-8 max-w-2xl mx-auto space-y-8">
       <PageHeader icon={SettingsIcon} title="Configurações" />
+
+      <SubscriptionSection />
 
       <section className="space-y-4 rounded-2xl bg-card border border-border p-6 shadow-card">
         <h2 className="font-display text-xl">Perfil do casal</h2>
@@ -430,5 +439,133 @@ function SettingsForm({ couple }: { couple: Couple }) {
         onConfirm={doPull}
       />
     </div>
+  );
+}
+
+function SubscriptionSection() {
+  const {
+    subscription,
+    subscriptionState,
+    cancelMemoryLane,
+    reactivateMemoryLane,
+    renewMemoryLaneNow,
+  } = useAccess();
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const product = getMemoryLaneProduct();
+
+  const monthly = `${formatBRL(product.priceCents)}${product.priceSuffix}`;
+
+  let badge: { label: string; tone: "active" | "warn" | "muted" } = {
+    label: "Ativa",
+    tone: "active",
+  };
+  let title = "Assinatura Memory Lane";
+  let description = "";
+  let primaryAction: React.ReactNode = null;
+  let secondaryAction: React.ReactNode = null;
+
+  if (subscriptionState === "active" && subscription) {
+    badge = { label: "Ativa", tone: "active" };
+    description = `Próxima cobrança em ${formatNextChargeDate(subscription)} · ${monthly} · ${subscription.renewals} ${subscription.renewals === 1 ? "mês pago" : "meses pagos"}.`;
+    primaryAction = (
+      <Button variant="outline" onClick={() => setConfirmCancel(true)}>
+        <XCircle className="h-4 w-4 mr-1.5" /> Cancelar assinatura
+      </Button>
+    );
+  } else if (subscriptionState === "canceling" && subscription) {
+    const remaining = daysUntil(subscription.currentPeriodEnd);
+    badge = { label: "Cancelada", tone: "warn" };
+    description = `Acesso liberado por mais ${remaining} ${remaining === 1 ? "dia" : "dias"} (até ${formatNextChargeDate(subscription)}). Depois disso o app é bloqueado.`;
+    primaryAction = (
+      <Button onClick={reactivateMemoryLane}>
+        <RefreshCw className="h-4 w-4 mr-1.5" /> Reativar renovação automática
+      </Button>
+    );
+  } else if (subscriptionState === "lapsed") {
+    badge = { label: "Vencida", tone: "warn" };
+    description = `Sua assinatura expirou. Suas memórias seguem salvas — reative por ${monthly} para voltar a abrir o app.`;
+    primaryAction = (
+      <Button asChild>
+        <Link to="/memory-lane">
+          <CreditCard className="h-4 w-4 mr-1.5" /> Reativar agora
+        </Link>
+      </Button>
+    );
+    secondaryAction = (
+      <Button variant="outline" onClick={renewMemoryLaneNow}>
+        <RefreshCw className="h-4 w-4 mr-1.5" /> Simular renovação (mock)
+      </Button>
+    );
+  } else {
+    badge = { label: "Inativa", tone: "muted" };
+    title = "Memory Lane";
+    description = `Você ainda não tem assinatura ativa. ${monthly}, cancele quando quiser.`;
+    primaryAction = (
+      <Button asChild>
+        <Link to="/memory-lane">
+          <Heart className="h-4 w-4 mr-1.5" /> Assinar Memory Lane
+        </Link>
+      </Button>
+    );
+  }
+
+  const badgeClass =
+    badge.tone === "active"
+      ? "bg-primary/10 text-primary"
+      : badge.tone === "warn"
+        ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+        : "bg-muted text-muted-foreground";
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-4">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <CreditCard className="h-5 w-5 text-primary" />
+          <h2 className="font-display text-xl">{title}</h2>
+        </div>
+        <span
+          className={`text-[11px] uppercase tracking-wider px-2 py-0.5 rounded-full font-medium ${badgeClass}`}
+        >
+          {badge.label}
+        </span>
+      </div>
+      <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+
+      {subscription && subscriptionState === "active" && (
+        <ul className="text-xs text-muted-foreground space-y-1.5">
+          <li className="flex items-center gap-2">
+            <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+            Renovação automática a cada {product.periodDays} dias.
+          </li>
+          <li className="flex items-center gap-2">
+            <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+            Cancele quando quiser, sem multa. O acesso fica liberado até o fim do período pago.
+          </li>
+        </ul>
+      )}
+
+      <div className="flex flex-wrap gap-2 pt-1">
+        {primaryAction}
+        {secondaryAction}
+      </div>
+
+      <ConfirmDialog
+        open={confirmCancel}
+        onOpenChange={setConfirmCancel}
+        title="Cancelar assinatura?"
+        description={
+          subscription
+            ? `Você manterá acesso ao Memory Lane até ${formatNextChargeDate(subscription)}. Depois disso o app será bloqueado, mas suas memórias ficam salvas e podem ser recuperadas reativando.`
+            : "Cancelar assinatura?"
+        }
+        confirmLabel="Cancelar assinatura"
+        destructive
+        onConfirm={() => {
+          cancelMemoryLane();
+          setConfirmCancel(false);
+          toast.success("Assinatura cancelada. Acesso liberado até o fim do período.");
+        }}
+      />
+    </section>
   );
 }

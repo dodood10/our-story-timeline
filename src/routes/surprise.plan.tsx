@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useAccess } from "@/hooks/useAccess";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Copy, Download, Heart, Lock, RotateCcw } from "lucide-react";
+import { ArrowLeft, Copy, Download, Heart, Lock, MessageCircle, RotateCcw } from "lucide-react";
 import { generateSurprisePlan } from "@/lib/surprise.functions";
 import {
   SurpriseAnswersSchema,
@@ -15,10 +15,16 @@ import {
 } from "@/lib/surprise-types";
 import { ANSWERS_KEY, readCachedPlan, writeCachedPlan, clearPlanCache } from "@/lib/surprise-cache";
 import { trackEvent } from "@/lib/meta-pixel";
-import { AccessGateDenied, AccessGateLoading } from "@/components/surprise/AccessGate";
+import {
+  AccessGateDenied,
+  AccessGateLoading,
+  AccessGateSurpriseBlocked,
+} from "@/components/surprise/AccessGate";
 import { SurpriseShell } from "@/components/surprise/SurpriseShell";
 import { BRAND_NAME } from "@/lib/brand";
 import { PlanResultView } from "@/components/surprise/plan/PlanResultView";
+import { PlanSectionNav } from "@/components/surprise/plan/PlanSectionNav";
+import { PlanFeedback } from "@/components/surprise/plan/PlanFeedback";
 import { planToText } from "@/components/surprise/plan/planToText";
 import { PLAN_COPY } from "@/components/surprise/plan/plan-copy";
 
@@ -36,7 +42,7 @@ const LOADING_MESSAGES = [
 ];
 
 function PlanPage() {
-  const { hasSurprise, isPremium, hydrated } = useAccess();
+  const { isPremium, hydrated, canUseSurprise, productMode } = useAccess();
   const navigate = useNavigate();
   const generate = useServerFn(generateSurprisePlan);
   const tier = isPremium ? "premium" : "basic";
@@ -46,12 +52,24 @@ function PlanPage() {
   const [error, setError] = useState<string | null>(null);
   const [showReveal, setShowReveal] = useState(false);
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
+  const [loadProgress, setLoadProgress] = useState(0);
   const printRef = useRef<HTMLDivElement>(null);
   const loadKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!loading) return;
     const t = setInterval(() => setLoadingMsgIndex((i) => (i + 1) % LOADING_MESSAGES.length), 2000);
+    return () => clearInterval(t);
+  }, [loading]);
+
+  useEffect(() => {
+    if (!loading) return;
+    setLoadProgress(0);
+    const start = Date.now();
+    const t = setInterval(() => {
+      const elapsed = Date.now() - start;
+      setLoadProgress(92 * (1 - Math.exp(-elapsed / 7000)));
+    }, 150);
     return () => clearInterval(t);
   }, [loading]);
 
@@ -74,8 +92,8 @@ function PlanPage() {
 
   useEffect(() => {
     if (!hydrated) return;
-    if (!hasSurprise) {
-      navigate({ to: "/surprise" });
+    if (!canUseSurprise) {
+      navigate({ to: productMode === "memory_lane_only" ? "/app" : "/surprise" });
       return;
     }
     if (loadKeyRef.current === tier) return;
@@ -98,7 +116,7 @@ function PlanPage() {
       return;
     }
     void doGenerate();
-  }, [hydrated, hasSurprise, tier, navigate]);
+  }, [hydrated, canUseSurprise, productMode, tier, navigate]);
 
   async function doGenerate() {
     setError(null);
@@ -134,7 +152,8 @@ function PlanPage() {
   }
 
   if (!hydrated) return <AccessGateLoading />;
-  if (!hasSurprise) return <AccessGateDenied />;
+  if (productMode === "memory_lane_only") return <AccessGateSurpriseBlocked />;
+  if (!canUseSurprise) return <AccessGateDenied />;
 
   async function copyAll() {
     if (!plan) return;
@@ -146,6 +165,12 @@ function PlanPage() {
     }
   }
 
+  function shareWhatsApp() {
+    const phrase = plan?.phrasesByMoment?.whatsapp?.trim();
+    const text = phrase || "Preparei uma surpresa especial para você. Vem logo!";
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+  }
+
   async function downloadPdf() {
     if (!plan || !printRef.current) return;
     const [{ default: jsPDF }, html2canvas] = await Promise.all([
@@ -155,11 +180,11 @@ function PlanPage() {
     toast.loading("Gerando PDF...", { id: "pdf" });
     try {
       const canvas = await html2canvas(printRef.current, {
-        scale: 2,
+        scale: 2.5,
         backgroundColor: "#ffffff",
         useCORS: true,
       });
-      const img = canvas.toDataURL("image/jpeg", 0.9);
+      const img = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
@@ -167,12 +192,12 @@ function PlanPage() {
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       let heightLeft = imgHeight;
       let position = 0;
-      pdf.addImage(img, "JPEG", 0, position, imgWidth, imgHeight);
+      pdf.addImage(img, "PNG", 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(img, "JPEG", 0, position, imgWidth, imgHeight);
+        pdf.addImage(img, "PNG", 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
       pdf.save("surpresa-romantica.pdf");
@@ -201,17 +226,18 @@ function PlanPage() {
               <p className="font-display text-2xl">{msg.text}</p>
             </motion.div>
           </AnimatePresence>
-          <div className="flex gap-2 justify-center mt-2">
-            {LOADING_MESSAGES.map((_, i) => (
+          <div className="mt-8 w-full">
+            <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
               <motion.div
-                key={i}
-                className="w-2 h-2 rounded-full bg-primary"
-                animate={{ opacity: i <= loadingMsgIndex ? 1 : 0.25 }}
-                transition={{ duration: 0.3 }}
+                className="h-full bg-primary rounded-full"
+                animate={{ width: `${loadProgress}%` }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
               />
-            ))}
+            </div>
+            <p className="text-muted-foreground text-xs text-center mt-3">
+              Isso leva uns 15–20 segundos.
+            </p>
           </div>
-          <p className="text-muted-foreground text-sm mt-6">Isso leva uns 15–20 segundos. ✨</p>
         </div>
       </SurpriseShell>
     );
@@ -292,27 +318,45 @@ function PlanPage() {
 
   return (
     <SurpriseShell footer={false} mainClassName="max-w-3xl mx-auto px-4 py-6 sm:py-10 pb-24">
-      <div className="flex items-center justify-between gap-2 mb-6">
+      <div className="flex items-center justify-between gap-2 mb-4">
         <Button asChild variant="ghost" size="sm">
           <Link to="/surprise/quiz">
             <ArrowLeft className="h-4 w-4 mr-1" /> Refazer quiz
           </Link>
         </Button>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
+          <Button variant="ghost" size="sm" onClick={regenerate} title="Gerar novo plano">
+            <RotateCcw className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1.5">Regenerar</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={shareWhatsApp}
+            title="Compartilhar no WhatsApp"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1.5">WhatsApp</span>
+          </Button>
           <Button variant="outline" size="sm" onClick={copyAll}>
-            <Copy className="h-4 w-4 mr-1.5" /> Copiar
+            <Copy className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1.5">Copiar</span>
           </Button>
           {isPremium ? (
             <Button size="sm" onClick={downloadPdf}>
-              <Download className="h-4 w-4 mr-1.5" /> PDF
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline ml-1.5">PDF</span>
             </Button>
           ) : (
             <Button size="sm" variant="secondary" disabled>
-              <Lock className="h-4 w-4 mr-1.5" /> PDF
+              <Lock className="h-4 w-4" />
+              <span className="hidden sm:inline ml-1.5">PDF</span>
             </Button>
           )}
         </div>
       </div>
+
+      <PlanSectionNav />
 
       <div
         ref={printRef}
@@ -320,6 +364,8 @@ function PlanPage() {
       >
         <PlanResultView plan={plan} answers={answers} isPremium={isPremium} />
       </div>
+
+      <PlanFeedback />
 
       {!isPremium && (
         <div className="mt-6 rounded-2xl border-2 border-primary/30 bg-primary/5 p-5 text-center">
@@ -334,11 +380,11 @@ function PlanPage() {
       )}
 
       <div className="fixed bottom-0 left-0 right-0 z-40 sm:hidden border-t border-border bg-background/95 backdrop-blur px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex gap-2">
+        <Button variant="outline" className="flex-1" size="sm" onClick={shareWhatsApp}>
+          <MessageCircle className="h-4 w-4 mr-1" /> WhatsApp
+        </Button>
         <Button variant="outline" className="flex-1" size="sm" onClick={copyAll}>
           <Copy className="h-4 w-4 mr-1" /> Copiar
-        </Button>
-        <Button className="flex-1" size="sm" onClick={regenerate} variant="secondary">
-          <RotateCcw className="h-4 w-4 mr-1" /> Regenerar
         </Button>
       </div>
     </SurpriseShell>

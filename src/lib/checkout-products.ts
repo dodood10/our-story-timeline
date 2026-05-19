@@ -1,6 +1,8 @@
-import type { SurpriseTier } from "@/hooks/useAccess";
+import type { SurpriseTier } from "@/lib/access-purchase";
+import { SUBSCRIPTION_PERIOD_DAYS, SUBSCRIPTION_PRICE_CENTS } from "@/lib/memory-lane-subscription";
 
 export type CheckoutProductId = "premium" | "basic";
+export type MemoryLaneProductId = "memory_lane";
 export type OrderBumpId = "cards" | "phrases";
 export type PaymentMethod = "pix" | "card";
 
@@ -12,7 +14,7 @@ export interface CheckoutProduct {
   compareAtCents: number;
   features: string[];
   tagline: string;
-  tier: SurpriseTier;
+  tier: Exclude<SurpriseTier, "none">;
 }
 
 export interface OrderBump {
@@ -22,6 +24,8 @@ export interface OrderBump {
   ctaLabel: string;
   priceCents: number;
   compareAtCents: number;
+  /** Destaque visual no checkout (ex.: add-on Memory Lane) */
+  highlighted?: boolean;
 }
 
 export const ORDER_BUMPS: OrderBump[] = [
@@ -44,6 +48,47 @@ export const ORDER_BUMPS: OrderBump[] = [
     compareAtCents: 990,
   },
 ];
+
+export interface MemoryLaneProduct {
+  id: MemoryLaneProductId;
+  title: string;
+  subtitle: string;
+  /** Valor da mensalidade em centavos. */
+  priceCents: number;
+  /** Valor "cheio" para ancoragem (riscado). */
+  compareAtCents: number;
+  /** Duração do período em dias (informativo). */
+  periodDays: number;
+  features: string[];
+  /** Texto curto exibido junto do preço (ex.: "/mês"). */
+  priceSuffix: string;
+  /** Texto explicativo abaixo do preço (renovação automática etc.). */
+  billingNote: string;
+}
+
+export const MEMORY_LANE_PRODUCT: MemoryLaneProduct = {
+  id: "memory_lane",
+  title: "Memory Lane — assinatura mensal",
+  subtitle:
+    "O diário digital do casal. Linha do tempo, fotos, cartas, mapa e mais — por uma mensalidade simples.",
+  priceCents: SUBSCRIPTION_PRICE_CENTS,
+  compareAtCents: 3990,
+  periodDays: SUBSCRIPTION_PERIOD_DAYS,
+  priceSuffix: "/mês",
+  billingNote: "Renovação automática a cada 30 dias. Cancele quando quiser, sem multa.",
+  features: [
+    "Linha do tempo de memórias",
+    "Galeria e fotos no dispositivo",
+    "Cartas e marcos do relacionamento",
+    "Mapa dos lugares especiais",
+    "Sincronização entre dispositivos (opcional)",
+    "Cancele direto nas configurações",
+  ],
+};
+
+export function getMemoryLaneProduct(): MemoryLaneProduct {
+  return MEMORY_LANE_PRODUCT;
+}
 
 export const UPSELL_KIT = {
   title: "Kit Surpresa Premium",
