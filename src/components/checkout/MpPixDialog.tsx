@@ -77,17 +77,21 @@ export function MpPixDialog({
       return;
     }
 
+    const ref =
+      regenToken === 0 ? externalReference : `${externalReference}-r${regenToken}`;
     createFn({
       data: {
         productKey,
         bumps,
-        externalReference: regenToken === 0 ? externalReference : `${externalReference}-r${regenToken}`,
+        externalReference: ref,
         payer: { name: lead.fullName, email: lead.email, document: doc },
       },
     })
       .then((res) => {
         setCharge(res);
         setStage("awaiting");
+        // Persiste para reconciliação caso o usuário feche a aba.
+        writePendingMpPayment({ externalReference: ref, productKey });
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : "Falha ao gerar o Pix.");
