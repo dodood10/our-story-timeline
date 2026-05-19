@@ -5,33 +5,27 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { OrderBumpCard } from "@/components/checkout/OrderBumpCard";
 import { PaymentMethodTabs } from "@/components/checkout/PaymentMethodTabs";
+import { PixPaymentDialog } from "@/components/checkout/PixPaymentDialog";
 import { ORDER_BUMPS, type PaymentMethod } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
 import { writeCheckoutLead } from "@/lib/checkout-storage";
 
-function checkoutSchema(paymentMethod: PaymentMethod) {
+function checkoutSchema() {
   return z.object({
     fullName: z.string().min(3, "Informe seu nome completo"),
     email: z.string().email("Informe um e-mail válido"),
     whatsapp: z.string().min(10, "Informe um WhatsApp válido"),
-    cpf:
-      paymentMethod === "card"
-        ? z.string().min(11, "CPF obrigatório para pagamento no cartão")
-        : z.string().optional(),
+    cpf: z
+      .string()
+      .min(11, "CPF obrigatório para emitir o Pix")
+      .refine((v) => v.replace(/\D/g, "").length === 11, "CPF inválido"),
   });
 }
 
 type FormValues = z.infer<ReturnType<typeof checkoutSchema>>;
+
 
 export function CheckoutFormColumn({
   bumps,
