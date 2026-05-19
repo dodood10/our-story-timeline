@@ -5,33 +5,27 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { OrderBumpCard } from "@/components/checkout/OrderBumpCard";
 import { PaymentMethodTabs } from "@/components/checkout/PaymentMethodTabs";
+import { PixPaymentDialog } from "@/components/checkout/PixPaymentDialog";
 import { ORDER_BUMPS, type PaymentMethod } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
 import { writeCheckoutLead } from "@/lib/checkout-storage";
 
-function checkoutSchema(paymentMethod: PaymentMethod) {
+function checkoutSchema() {
   return z.object({
     fullName: z.string().min(3, "Informe seu nome completo"),
     email: z.string().email("Informe um e-mail válido"),
     whatsapp: z.string().min(10, "Informe um WhatsApp válido"),
-    cpf:
-      paymentMethod === "card"
-        ? z.string().min(11, "CPF obrigatório para pagamento no cartão")
-        : z.string().optional(),
+    cpf: z
+      .string()
+      .min(11, "CPF obrigatório para emitir o Pix")
+      .refine((v) => v.replace(/\D/g, "").length === 11, "CPF inválido"),
   });
 }
 
 type FormValues = z.infer<ReturnType<typeof checkoutSchema>>;
+
 
 export function CheckoutFormColumn({
   bumps,
@@ -45,6 +39,9 @@ export function CheckoutFormColumn({
   submitting,
   hideBumps,
   submitLabel,
+  amountCents,
+  productLabel,
+  externalReference,
 }: {
   bumps: CheckoutBumps;
   onBumpChange: (id: keyof CheckoutBumps, value: boolean) => void;
@@ -53,13 +50,17 @@ export function CheckoutFormColumn({
   defaultLead: CheckoutLead | null;
   pixDialogOpen: boolean;
   onPixDialogOpenChange: (open: boolean) => void;
+  /** Chamado quando o SyncPay confirma o pagamento. */
   onSubmit: (lead: CheckoutLead) => void;
   submitting: boolean;
   hideBumps?: boolean;
   submitLabel?: string;
+  amountCents: number;
+  productLabel: string;
+  externalReference: string;
 }) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(checkoutSchema(paymentMethod)),
+    resolver: zodResolver(checkoutSchema()),
     defaultValues: {
       fullName: defaultLead?.fullName ?? "",
       email: defaultLead?.email ?? "",
@@ -67,11 +68,6 @@ export function CheckoutFormColumn({
       cpf: defaultLead?.cpf ?? "",
     },
   });
-
-  useEffect(() => {
-    form.clearErrors("cpf");
-    void form.trigger();
-  }, [paymentMethod, form]);
 
   const values = form.watch();
   useEffect(() => {
@@ -90,32 +86,21 @@ export function CheckoutFormColumn({
       fullName: data.fullName,
       email: data.email,
       whatsapp: data.whatsapp,
-      cpf: data.cpf || undefined,
+      cpf: data.cpf,
     };
-    if (paymentMethod === "pix") {
-      onPixDialogOpenChange(true);
-      writeCheckoutLead(lead);
-      return;
-    }
-    onSubmit(lead);
+    writeCheckoutLead(lead);
+    onPixDialogOpenChange(true);
   }
 
-  function confirmPix() {
-    const data = form.getValues();
-    onPixDialogOpenChange(false);
-    onSubmit({
-      fullName: data.fullName,
-      email: data.email,
-      whatsapp: data.whatsapp,
-      cpf: data.cpf || undefined,
-    });
-  }
+  const currentLead: CheckoutLead = {
+    fullName: values.fullName ?? "",
+    email: values.email ?? "",
+    whatsapp: values.whatsapp ?? "",
+    cpf: values.cpf,
+  };
 
-  const ctaLabel =
-    submitLabel ??
-    (paymentMethod === "pix"
-      ? "Gerar Pix e criar minha surpresa"
-      : "Finalizar compra e acessar agora");
+  const ctaLabel = submitLabel ?? "Gerar Pix e liberar meu acesso";
+
 
   return (
     <div className="space-y-6">
@@ -180,26 +165,24 @@ export function CheckoutFormColumn({
         )}
 
         <div className="space-y-3">
-          <h3 className="font-medium text-sm">Pagamento</h3>
+          <div className="space-y-2">
+            <Label htmlFor="cpf">CPF</Label>
+            <Input
+              id="cpf"
+              inputMode="numeric"
+              placeholder="000.000.000-00"
+              aria-describedby="cpf-hint"
+              {...form.register("cpf")}
+            />
+            <p id="cpf-hint" className="text-xs text-muted-foreground">
+              Obrigatório para emitir a cobrança Pix no seu nome.
+            </p>
+            {form.formState.errors.cpf && (
+              <p className="text-xs text-destructive">{form.formState.errors.cpf.message}</p>
+            )}
+          </div>
+          <h3 className="font-medium text-sm pt-2">Pagamento</h3>
           <PaymentMethodTabs value={paymentMethod} onChange={onPaymentMethodChange} />
-          {paymentMethod === "card" && (
-            <div className="space-y-2">
-              <Label htmlFor="cpf">CPF do titular</Label>
-              <Input
-                id="cpf"
-                inputMode="numeric"
-                placeholder="000.000.000-00"
-                aria-describedby="cpf-hint"
-                {...form.register("cpf")}
-              />
-              <p id="cpf-hint" className="text-xs text-muted-foreground">
-                Obrigatório para pagamento com cartão de crédito.
-              </p>
-              {form.formState.errors.cpf && (
-                <p className="text-xs text-destructive">{form.formState.errors.cpf.message}</p>
-              )}
-            </div>
-          )}
         </div>
 
         <div className="space-y-3 pt-2">
@@ -221,25 +204,18 @@ export function CheckoutFormColumn({
         </div>
       </form>
 
-      <Dialog open={pixDialogOpen} onOpenChange={onPixDialogOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Pagamento de teste (Pix)</DialogTitle>
-            <DialogDescription>
-              Em produção, aqui aparecerá o QR Code do Mercado Pago. Por agora, confirme para
-              simular o pagamento e liberar seu acesso.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" onClick={() => onPixDialogOpenChange(false)}>
-              Voltar
-            </Button>
-            <Button type="button" onClick={confirmPix} disabled={submitting}>
-              Confirmar pagamento
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PixPaymentDialog
+        open={pixDialogOpen}
+        onOpenChange={onPixDialogOpenChange}
+        amountCents={amountCents}
+        productLabel={productLabel}
+        lead={currentLead}
+        externalReference={externalReference}
+        onPaid={() => {
+          onPixDialogOpenChange(false);
+          onSubmit(currentLead);
+        }}
+      />
     </div>
   );
 }

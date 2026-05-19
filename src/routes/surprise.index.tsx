@@ -144,6 +144,9 @@ function SurpriseCheckout() {
             className="hidden lg:block"
           />
           <CheckoutFormColumn
+            amountCents={totalCents}
+            productLabel={product.title}
+            externalReference={`surprise-${product.id}-${Date.now()}`}
             bumps={bumps}
             onBumpChange={handleBumpChange}
             paymentMethod={paymentMethod}

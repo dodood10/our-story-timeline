@@ -29,6 +29,7 @@ import { Route as MemoryLaneIndexRouteImport } from './routes/memory-lane.index'
 import { Route as SurpriseUpsellRouteImport } from './routes/surprise.upsell'
 import { Route as SurpriseQuizRouteImport } from './routes/surprise.quiz'
 import { Route as SurprisePlanRouteImport } from './routes/surprise.plan'
+import { Route as ApiPublicSyncpayWebhookRouteImport } from './routes/api/public/syncpay-webhook'
 
 const TimelineRoute = TimelineRouteImport.update({
   id: '/timeline',
@@ -130,6 +131,11 @@ const SurprisePlanRoute = SurprisePlanRouteImport.update({
   path: '/plan',
   getParentRoute: () => SurpriseRoute,
 } as any)
+const ApiPublicSyncpayWebhookRoute = ApiPublicSyncpayWebhookRouteImport.update({
+  id: '/api/public/syncpay-webhook',
+  path: '/api/public/syncpay-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/surprise/upsell': typeof SurpriseUpsellRoute
   '/memory-lane/': typeof MemoryLaneIndexRoute
   '/surprise/': typeof SurpriseIndexRoute
+  '/api/public/syncpay-webhook': typeof ApiPublicSyncpayWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/surprise/upsell': typeof SurpriseUpsellRoute
   '/memory-lane': typeof MemoryLaneIndexRoute
   '/surprise': typeof SurpriseIndexRoute
+  '/api/public/syncpay-webhook': typeof ApiPublicSyncpayWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/surprise/upsell': typeof SurpriseUpsellRoute
   '/memory-lane/': typeof MemoryLaneIndexRoute
   '/surprise/': typeof SurpriseIndexRoute
+  '/api/public/syncpay-webhook': typeof ApiPublicSyncpayWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
     | '/surprise/upsell'
     | '/memory-lane/'
     | '/surprise/'
+    | '/api/public/syncpay-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/surprise/upsell'
     | '/memory-lane'
     | '/surprise'
+    | '/api/public/syncpay-webhook'
   id:
     | '__root__'
     | '/'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/surprise/upsell'
     | '/memory-lane/'
     | '/surprise/'
+    | '/api/public/syncpay-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -282,6 +294,7 @@ export interface RootRouteChildren {
   TermosRoute: typeof TermosRoute
   TimelineRoute: typeof TimelineRoute
   MemoryLaneIndexRoute: typeof MemoryLaneIndexRoute
+  ApiPublicSyncpayWebhookRoute: typeof ApiPublicSyncpayWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -426,6 +439,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SurprisePlanRouteImport
       parentRoute: typeof SurpriseRoute
     }
+    '/api/public/syncpay-webhook': {
+      id: '/api/public/syncpay-webhook'
+      path: '/api/public/syncpay-webhook'
+      fullPath: '/api/public/syncpay-webhook'
+      preLoaderRoute: typeof ApiPublicSyncpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -464,6 +484,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   TimelineRoute: TimelineRoute,
   MemoryLaneIndexRoute: MemoryLaneIndexRoute,
+  ApiPublicSyncpayWebhookRoute: ApiPublicSyncpayWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
