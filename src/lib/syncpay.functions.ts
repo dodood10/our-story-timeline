@@ -5,7 +5,7 @@ import {
   getSyncPayStatus,
   isFailedStatus,
   isPaidStatus,
-} from "@/integrations/syncpay/syncpay.server";
+} from "@/lib/syncpay.server";
 
 const CreatePixInput = z.object({
   amountCents: z.number().int().min(100).max(10_000_00),
