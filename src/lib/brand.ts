@@ -1,6 +1,6 @@
-export const BRAND_NAME = "Método Surpresa Perfeita™";
-export const BRAND_SHORT = "Surpresa";
-export const BRAND_TAGLINE = "Dia dos Namorados 2026";
+export const BRAND_NAME = "Plano Perfeito para o Dia dos Namorados";
+export const BRAND_SHORT = "Plano Perfeito";
+export const BRAND_TAGLINE = "Quiz + plano personalizado";
 
 /** @deprecated Use BRAND_NAME */
 export const LANDING_BRAND = BRAND_NAME;

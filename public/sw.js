@@ -15,11 +15,11 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((k) => k !== STATIC_CACHE).map((k) => caches.delete(k)),
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== STATIC_CACHE).map((k) => caches.delete(k))),
       ),
-    ),
   );
   self.clients.claim();
 });
@@ -29,10 +29,7 @@ self.addEventListener("message", (event) => {
 });
 
 function isDocumentRequest(request) {
-  return (
-    request.mode === "navigate" ||
-    request.headers.get("accept")?.includes("text/html")
-  );
+  return request.mode === "navigate" || request.headers.get("accept")?.includes("text/html");
 }
 
 function isHashedAsset(pathname) {
@@ -48,9 +45,7 @@ self.addEventListener("fetch", (event) => {
 
   // Always hit the network for HTML — avoids showing an outdated landing after deploy.
   if (isDocumentRequest(req)) {
-    event.respondWith(
-      fetch(req).catch(() => caches.match("/manifest.webmanifest")),
-    );
+    event.respondWith(fetch(req).catch(() => caches.match("/manifest.webmanifest")));
     return;
   }
 
@@ -72,7 +67,5 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Everything else: network-first, no HTML shell fallback.
-  event.respondWith(
-    fetch(req).catch(() => caches.match(req)),
-  );
+  event.respondWith(fetch(req).catch(() => caches.match(req)));
 });

@@ -1,6 +1,7 @@
 ## Objetivo
 
 Adicionar **Mercado Pago checkout transparente** (Pix + Cartão) substituindo a SyncPay como gateway principal. O cliente paga sem sair do site, com:
+
 - **Pix**: QR code + copia-e-cola gerados via API do MP, com polling de status.
 - **Cartão**: formulário direto na página, tokenização via MP.js no cliente, cobrança server-side com o token.
 
@@ -8,9 +9,9 @@ Adicionar **Mercado Pago checkout transparente** (Pix + Cartão) substituindo a 
 
 Duas credenciais do painel Mercado Pago → Suas integrações → Credenciais:
 
-| Secret | Onde colar | Uso |
-|---|---|---|
-| `MP_ACCESS_TOKEN` | secret do Lovable | Server: criar pagamentos |
+| Secret               | Onde colar        | Uso                       |
+| -------------------- | ----------------- | ------------------------- |
+| `MP_ACCESS_TOKEN`    | secret do Lovable | Server: criar pagamentos  |
 | `VITE_MP_PUBLIC_KEY` | secret do Lovable | Cliente: tokenizar cartão |
 
 Vamos pedir via `add_secret` no início da implementação.
@@ -18,6 +19,7 @@ Vamos pedir via `add_secret` no início da implementação.
 ## Arquivos novos
 
 ### Server
+
 - **`src/lib/mercadopago.server.ts`** — fetch helpers para `/v1/payments` (POST Pix, POST cartão, GET status). Lê `MP_ACCESS_TOKEN` dentro do handler. Gera `X-Idempotency-Key` por charge.
 - **`src/lib/mercadopago.functions.ts`** — 3 server functions:
   - `createMpPixCharge` — payload `{ payment_method_id: "pix", transaction_amount, payer }` → retorna `{ id, qrCode, qrCodeBase64, ticketUrl, status }`.
@@ -26,10 +28,12 @@ Vamos pedir via `add_secret` no início da implementação.
 - **`src/routes/api/public/mercadopago-webhook.ts`** — recebe notificações IPN/Webhook do MP (`type=payment`), busca o pagamento na API e loga. Sem dependência crítica (frontend libera via polling).
 
 ### Cliente
+
 - **`src/components/checkout/MpCardForm.tsx`** — formulário cartão (número, titular, validade, CVV, parcelas, doc). Carrega o MP.js dinamicamente (`https://sdk.mercadopago.com/js/v2`), cria `cardToken` via `mp.createCardToken(...)`, chama `createMpCardCharge`, mostra estados (aprovado / pendente / recusado com `status_detail` traduzido).
 - **`src/components/checkout/MpPixDialog.tsx`** — análogo ao `PixPaymentDialog` atual, mas chamando `createMpPixCharge` + `getMpPaymentStatus`. Usa `qrCodeBase64` direto do MP (não precisa gerar QR no cliente).
 
 ### Substituições / edições
+
 - **`src/components/checkout/PaymentMethodTabs.tsx`** — reativar opção Cartão. Duas tabs: Pix (instantâneo, 5% desc opcional) / Cartão (até 12x).
 - **`src/components/checkout/CheckoutFormColumn.tsx`**:
   - CPF continua obrigatório (MP exige para Pix; recomendado para cartão).
@@ -38,6 +42,7 @@ Vamos pedir via `add_secret` no início da implementação.
 - **`src/routes/surprise.index.tsx`** e **`src/routes/memory-lane.index.tsx`** — sem mudança de assinatura; só a UI interna troca.
 
 ### Limpeza
+
 - Manter `syncpay.*` no projeto por enquanto, mas **desconectado**. Deletar imports apenas; arquivos ficam órfãos para rollback rápido. (Posso remover de vez se preferir.)
 
 ## Detalhes técnicos importantes

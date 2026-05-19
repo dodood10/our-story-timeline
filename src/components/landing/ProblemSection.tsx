@@ -12,7 +12,9 @@ export function ProblemSection() {
           ))}
         </ul>
         <p className="text-center mt-6 text-muted-foreground">{problem.intro}</p>
-        <p className="mt-8 text-sm text-muted-foreground">Então a maioria dos homens acaba fazendo:</p>
+        <p className="mt-8 text-sm text-muted-foreground">
+          Então a maioria dos homens acaba fazendo:
+        </p>
         <ul className="mt-4 space-y-3">
           {problem.bullets.map((p, i) => (
             <motion.li

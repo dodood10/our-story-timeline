@@ -29,6 +29,11 @@ import { Route as MemoryLaneIndexRouteImport } from './routes/memory-lane.index'
 import { Route as SurpriseUpsellRouteImport } from './routes/surprise.upsell'
 import { Route as SurpriseQuizRouteImport } from './routes/surprise.quiz'
 import { Route as SurprisePlanRouteImport } from './routes/surprise.plan'
+import { Route as AuthSignupRouteImport } from './routes/auth.signup'
+import { Route as AuthRecoverAccessRouteImport } from './routes/auth.recover-access'
+import { Route as AuthLoginRouteImport } from './routes/auth.login'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ApiPublicSyncpayWebhookRouteImport } from './routes/api/public/syncpay-webhook'
 import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/public/mercadopago-webhook'
 
@@ -132,6 +137,31 @@ const SurprisePlanRoute = SurprisePlanRouteImport.update({
   path: '/plan',
   getParentRoute: () => SurpriseRoute,
 } as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/auth/signup',
+  path: '/auth/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRecoverAccessRoute = AuthRecoverAccessRouteImport.update({
+  id: '/auth/recover-access',
+  path: '/auth/recover-access',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/auth/forgot-password',
+  path: '/auth/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncpayWebhookRoute = ApiPublicSyncpayWebhookRouteImport.update({
   id: '/api/public/syncpay-webhook',
   path: '/api/public/syncpay-webhook',
@@ -160,6 +190,11 @@ export interface FileRoutesByFullPath {
   '/surprise': typeof SurpriseRouteWithChildren
   '/termos': typeof TermosRoute
   '/timeline': typeof TimelineRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/recover-access': typeof AuthRecoverAccessRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
   '/surprise/upsell': typeof SurpriseUpsellRoute
@@ -183,6 +218,11 @@ export interface FileRoutesByTo {
   '/stats': typeof StatsRoute
   '/termos': typeof TermosRoute
   '/timeline': typeof TimelineRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/recover-access': typeof AuthRecoverAccessRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
   '/surprise/upsell': typeof SurpriseUpsellRoute
@@ -208,6 +248,11 @@ export interface FileRoutesById {
   '/surprise': typeof SurpriseRouteWithChildren
   '/termos': typeof TermosRoute
   '/timeline': typeof TimelineRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/recover-access': typeof AuthRecoverAccessRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
   '/surprise/upsell': typeof SurpriseUpsellRoute
@@ -234,6 +279,11 @@ export interface FileRouteTypes {
     | '/surprise'
     | '/termos'
     | '/timeline'
+    | '/auth/callback'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/recover-access'
+    | '/auth/signup'
     | '/surprise/plan'
     | '/surprise/quiz'
     | '/surprise/upsell'
@@ -257,6 +307,11 @@ export interface FileRouteTypes {
     | '/stats'
     | '/termos'
     | '/timeline'
+    | '/auth/callback'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/recover-access'
+    | '/auth/signup'
     | '/surprise/plan'
     | '/surprise/quiz'
     | '/surprise/upsell'
@@ -281,6 +336,11 @@ export interface FileRouteTypes {
     | '/surprise'
     | '/termos'
     | '/timeline'
+    | '/auth/callback'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/recover-access'
+    | '/auth/signup'
     | '/surprise/plan'
     | '/surprise/quiz'
     | '/surprise/upsell'
@@ -306,6 +366,11 @@ export interface RootRouteChildren {
   SurpriseRoute: typeof SurpriseRouteWithChildren
   TermosRoute: typeof TermosRoute
   TimelineRoute: typeof TimelineRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRecoverAccessRoute: typeof AuthRecoverAccessRoute
+  AuthSignupRoute: typeof AuthSignupRoute
   MemoryLaneIndexRoute: typeof MemoryLaneIndexRoute
   ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
   ApiPublicSyncpayWebhookRoute: typeof ApiPublicSyncpayWebhookRoute
@@ -453,6 +518,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SurprisePlanRouteImport
       parentRoute: typeof SurpriseRoute
     }
+    '/auth/signup': {
+      id: '/auth/signup'
+      path: '/auth/signup'
+      fullPath: '/auth/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/recover-access': {
+      id: '/auth/recover-access'
+      path: '/auth/recover-access'
+      fullPath: '/auth/recover-access'
+      preLoaderRoute: typeof AuthRecoverAccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/auth/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/syncpay-webhook': {
       id: '/api/public/syncpay-webhook'
       path: '/api/public/syncpay-webhook'
@@ -504,6 +604,11 @@ const rootRouteChildren: RootRouteChildren = {
   SurpriseRoute: SurpriseRouteWithChildren,
   TermosRoute: TermosRoute,
   TimelineRoute: TimelineRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthRecoverAccessRoute: AuthRecoverAccessRoute,
+  AuthSignupRoute: AuthSignupRoute,
   MemoryLaneIndexRoute: MemoryLaneIndexRoute,
   ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
   ApiPublicSyncpayWebhookRoute: ApiPublicSyncpayWebhookRoute,
@@ -511,3 +616,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "@/hooks/useApp";
 import { useAccess } from "@/hooks/useAccess";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,15 @@ import { formatDatePT, daysTogether } from "@/lib/dates";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { QuotaMeter } from "@/components/common/QuotaMeter";
 import { downloadBackup, importBackup, type BackupBundle } from "@/lib/backup";
-import { generateSyncCode, pushSync, pullSync, isSupabaseConfigured } from "@/lib/sync";
+import { isSupabaseConfigured } from "@/lib/sync";
+import {
+  getInviteCode,
+  getWorkspaceMemberCount,
+  joinPartner,
+  pullWorkspaceSnapshot,
+  pushWorkspaceSnapshot,
+} from "@/lib/workspace-sync";
+import { useAuth } from "@/hooks/useAuth";
 import { Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useRef } from "react";
@@ -75,17 +83,11 @@ function SettingsPage() {
 }
 
 function SettingsForm({ couple }: { couple: Couple }) {
-  const {
-    setCouple,
-    settings,
-    setTheme,
-    setNotifications,
-    setSyncCode: persistSyncCode,
-    memories,
-    resetSeed,
-  } = useApp();
+  const { setCouple, settings, setTheme, setNotifications, memories, resetSeed } = useApp();
   const supabaseReady = isSupabaseConfigured();
-  const syncCode = settings.syncCode ?? "";
+  const { user, signOut, isAuthenticated } = useAuth();
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [memberCount, setMemberCount] = useState(1);
   const [name1, setName1] = useState(couple.name1);
   const [name2, setName2] = useState(couple.name2);
   const { photo, setPhoto, onPhotoChange } = useCouplePhoto(couple.photo);
@@ -96,8 +98,14 @@ function SettingsForm({ couple }: { couple: Couple }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [syncBusy, setSyncBusy] = useState(false);
   const [confirmPush, setConfirmPush] = useState(false);
-  const [pullCode, setPullCode] = useState("");
+  const [joinCode, setJoinCode] = useState("");
   const [confirmPull, setConfirmPull] = useState(false);
+
+  useEffect(() => {
+    if (!supabaseReady || !isAuthenticated) return;
+    void getInviteCode().then(setInviteCode);
+    void getWorkspaceMemberCount().then(setMemberCount);
+  }, [supabaseReady, isAuthenticated]);
 
   function save() {
     if (!name1.trim() || !name2.trim()) return toast.error("Preencha os nomes");
@@ -182,13 +190,12 @@ function SettingsForm({ couple }: { couple: Couple }) {
 
   async function doPush() {
     setConfirmPush(false);
-    const code = syncCode.trim() || generateSyncCode();
-    if (!syncCode.trim()) persistSyncCode(code);
     try {
       setSyncBusy(true);
-      await pushSync(code);
-      persistSyncCode(code.trim().toUpperCase());
-      toast.success("Sincronizado! Guarde seu código.");
+      await pushWorkspaceSnapshot();
+      const code = await getInviteCode();
+      setInviteCode(code);
+      toast.success("Backup enviado para a nuvem.");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -200,9 +207,24 @@ function SettingsForm({ couple }: { couple: Couple }) {
     setConfirmPull(false);
     try {
       setSyncBusy(true);
-      await pullSync(pullCode.trim().toUpperCase());
+      await pullWorkspaceSnapshot();
       toast.success("Dados restaurados. Recarregando...");
       setTimeout(() => location.reload(), 800);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSyncBusy(false);
+    }
+  }
+
+  async function doJoin() {
+    if (!joinCode.trim()) return;
+    try {
+      setSyncBusy(true);
+      await joinPartner(joinCode);
+      setMemberCount(await getWorkspaceMemberCount());
+      toast.success("Você entrou no workspace do casal!");
+      setJoinCode("");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -335,6 +357,30 @@ function SettingsForm({ couple }: { couple: Couple }) {
       </section>
 
       <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-4">
+        <h2 className="font-display text-xl">Conta</h2>
+        {isAuthenticated ? (
+          <>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                void signOut();
+                toast.success("Você saiu da conta.");
+              }}
+            >
+              Sair da conta
+            </Button>
+          </>
+        ) : (
+          <Button asChild variant="outline">
+            <Link to="/auth/login" search={{ redirect: "/settings" }}>
+              Entrar na conta
+            </Link>
+          </Button>
+        )}
+      </section>
+
+      <section className="rounded-2xl bg-card border border-border p-6 shadow-card space-y-4">
         <h2 className="font-display text-xl flex items-center gap-2">
           <Cloud className="h-5 w-5 text-primary" /> Sincronizar entre dispositivos
         </h2>
@@ -342,54 +388,56 @@ function SettingsForm({ couple }: { couple: Couple }) {
           <p className="text-sm text-muted-foreground">
             Sync indisponível: configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY.
           </p>
+        ) : !isAuthenticated ? (
+          <p className="text-sm text-muted-foreground">
+            Faça login para sincronizar seu diário na nuvem e convidar o(a) parceiro(a).
+          </p>
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
-              Opcional. Gere um código secreto e use-o no celular do(a) parceiro(a). Quem tem o
-              código tem acesso. O último envio substitui o backup na nuvem.
+              Backup vinculado à sua conta. Membros no workspace: <strong>{memberCount}</strong>. O
+              último envio substitui o backup na nuvem.
             </p>
-            <div className="flex flex-wrap gap-2">
-              <Input
-                value={syncCode}
-                onChange={(e) => persistSyncCode(e.target.value.toUpperCase())}
-                placeholder="Seu código (gerado automaticamente)"
-                className="font-mono max-w-xs"
-              />
-              {syncCode && (
+            {inviteCode && (
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-xs text-muted-foreground">Código de convite:</span>
+                <code className="font-mono text-sm bg-muted px-2 py-1 rounded">{inviteCode}</code>
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => {
-                    navigator.clipboard.writeText(syncCode);
+                    navigator.clipboard.writeText(inviteCode);
                     toast.success("Código copiado");
                   }}
                 >
-                  <Copy className="h-4 w-4 mr-1.5" /> Copiar
+                  <Copy className="h-4 w-4 mr-1" />
                 </Button>
-              )}
-              <Button onClick={() => setConfirmPush(true)} disabled={syncBusy || !supabaseReady}>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => setConfirmPush(true)} disabled={syncBusy}>
                 {syncBusy ? (
                   <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
                 ) : (
                   <Cloud className="h-4 w-4 mr-1.5" />
                 )}
-                {syncCode ? "Enviar para nuvem" : "Gerar código e enviar"}
+                Enviar para nuvem
+              </Button>
+              <Button variant="outline" onClick={() => setConfirmPull(true)} disabled={syncBusy}>
+                <RefreshCw className="h-4 w-4 mr-1.5" /> Baixar da nuvem
               </Button>
             </div>
             <div className="border-t border-border pt-4 space-y-2">
-              <p className="text-sm font-medium">Receber dados de outro dispositivo</p>
+              <p className="text-sm font-medium">Entrar no workspace do(a) parceiro(a)</p>
               <div className="flex flex-wrap gap-2">
                 <Input
-                  value={pullCode}
-                  onChange={(e) => setPullCode(e.target.value.toUpperCase())}
-                  placeholder="Cole o código aqui"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  placeholder="Cole o código de convite"
                   className="font-mono max-w-xs"
                 />
-                <Button
-                  variant="outline"
-                  onClick={() => setConfirmPull(true)}
-                  disabled={!pullCode.trim() || syncBusy}
-                >
-                  <RefreshCw className="h-4 w-4 mr-1.5" /> Baixar dados
+                <Button variant="outline" onClick={doJoin} disabled={!joinCode.trim() || syncBusy}>
+                  Entrar
                 </Button>
               </div>
             </div>
@@ -425,7 +473,7 @@ function SettingsForm({ couple }: { couple: Couple }) {
         open={confirmPush}
         onOpenChange={setConfirmPush}
         title="Enviar para a nuvem?"
-        description="O backup anterior neste código será substituído pelos dados deste dispositivo."
+        description="O backup na nuvem será substituído pelos dados deste dispositivo."
         confirmLabel="Enviar"
         onConfirm={doPush}
       />
@@ -466,40 +514,42 @@ function SubscriptionSection() {
 
   if (subscriptionState === "active" && subscription) {
     badge = { label: "Ativa", tone: "active" };
-    description = `Próxima cobrança em ${formatNextChargeDate(subscription)} · ${monthly} · ${subscription.renewals} ${subscription.renewals === 1 ? "mês pago" : "meses pagos"}.`;
+    description = `Acesso válido até ${formatNextChargeDate(subscription)} · ${subscription.renewals} ${subscription.renewals === 1 ? "período pago" : "períodos pagos"}.`;
     primaryAction = (
       <Button variant="outline" onClick={() => setConfirmCancel(true)}>
-        <XCircle className="h-4 w-4 mr-1.5" /> Cancelar assinatura
+        <XCircle className="h-4 w-4 mr-1.5" /> Encerrar ao fim do período
       </Button>
     );
   } else if (subscriptionState === "canceling" && subscription) {
     const remaining = daysUntil(subscription.currentPeriodEnd);
-    badge = { label: "Cancelada", tone: "warn" };
-    description = `Acesso liberado por mais ${remaining} ${remaining === 1 ? "dia" : "dias"} (até ${formatNextChargeDate(subscription)}). Depois disso o app é bloqueado.`;
+    badge = { label: "Encerrando", tone: "warn" };
+    description = `Acesso por mais ${remaining} ${remaining === 1 ? "dia" : "dias"} (até ${formatNextChargeDate(subscription)}). Depois disso é preciso um novo pagamento.`;
     primaryAction = (
-      <Button onClick={reactivateMemoryLane}>
-        <RefreshCw className="h-4 w-4 mr-1.5" /> Reativar renovação automática
+      <Button asChild>
+        <Link to="/memory-lane">
+          <RefreshCw className="h-4 w-4 mr-1.5" /> Renovar acesso
+        </Link>
       </Button>
     );
   } else if (subscriptionState === "lapsed") {
     badge = { label: "Vencida", tone: "warn" };
-    description = `Sua assinatura expirou. Suas memórias seguem salvas — reative por ${monthly} para voltar a abrir o app.`;
+    description = `Seu período de acesso expirou. Suas memórias seguem salvas — renove por ${monthly} para voltar a abrir o app.`;
     primaryAction = (
       <Button asChild>
         <Link to="/memory-lane">
-          <CreditCard className="h-4 w-4 mr-1.5" /> Reativar agora
+          <CreditCard className="h-4 w-4 mr-1.5" /> Renovar agora
         </Link>
       </Button>
     );
-    secondaryAction = (
+    secondaryAction = import.meta.env.DEV ? (
       <Button variant="outline" onClick={renewMemoryLaneNow}>
-        <RefreshCw className="h-4 w-4 mr-1.5" /> Simular renovação (mock)
+        <RefreshCw className="h-4 w-4 mr-1.5" /> Simular renovação (dev)
       </Button>
-    );
+    ) : null;
   } else {
     badge = { label: "Inativa", tone: "muted" };
     title = "Memory Lane";
-    description = `Você ainda não tem assinatura ativa. ${monthly}, cancele quando quiser.`;
+    description = `Você ainda não tem acesso ativo. ${monthly} por 30 dias de uso.`;
     primaryAction = (
       <Button asChild>
         <Link to="/memory-lane">

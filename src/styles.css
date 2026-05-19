@@ -234,7 +234,7 @@
 }
 
 .plan-theme-sensual {
-  --primary: oklch(0.50 0.18 340);
+  --primary: oklch(0.5 0.18 340);
   --primary-foreground: oklch(0.99 0.005 340);
   --ring: oklch(0.55 0.15 340);
   --secondary: oklch(0.96 0.04 340);

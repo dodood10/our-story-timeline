@@ -23,3 +23,15 @@ export function applyEnvToProcess(env) {
     if (v && !process.env[k]) process.env[k] = v;
   }
 }
+
+/** Avisa se secrets de servidor estiverem com prefixo VITE_ (vazam no build). */
+export function warnIfViteLeaks(env = {}) {
+  for (const [k, v] of Object.entries(env)) {
+    if (!k.startsWith("VITE_") || !v) continue;
+    if (v.startsWith("sbp_") || (v.startsWith("eyJ") && v.includes("service_role"))) {
+      console.warn(
+        `[env] ${k} parece um secret de servidor. Remova o prefixo VITE_ e use SUPABASE_ACCESS_TOKEN ou SUPABASE_SERVICE_ROLE_KEY.`,
+      );
+    }
+  }
+}

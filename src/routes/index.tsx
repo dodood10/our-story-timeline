@@ -16,19 +16,20 @@ import { PricingSection } from "@/components/landing/PricingSection";
 import { FaqSection } from "@/components/landing/FaqSection";
 import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
+import { BRAND_NAME } from "@/lib/brand";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       {
-        title: "Método Surpresa Perfeita™ — Dia dos Namorados 2026",
+        title: BRAND_NAME,
       },
       {
         name: "description",
         content:
-          "Método para homens criarem uma surpresa emocionante no Dia dos Namorados. Quiz + plano personalizado por IA: roteiro, decoração, lista de compras e frases prontas.",
+          "Plano para homens criarem uma surpresa emocionante no Dia dos Namorados. Quiz + plano personalizado: roteiro, decoração, lista de compras e frases prontas.",
       },
-      { property: "og:title", content: "Método Surpresa Perfeita™ — Dia dos Namorados 2026" },
+      { property: "og:title", content: BRAND_NAME },
       {
         property: "og:description",
         content:

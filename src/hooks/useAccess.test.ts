@@ -57,10 +57,10 @@ describe("applyPurchase rules", () => {
 });
 
 describe("subscription lifecycle", () => {
-  it("starts as active with 30-day period and renewals=1", () => {
+  it("starts as active with 30-day period and renewals=1 (sem auto-renovação)", () => {
     const sub = startSubscription();
     expect(sub.status).toBe("active");
-    expect(sub.autoRenew).toBe(true);
+    expect(sub.autoRenew).toBe(false);
     expect(sub.renewals).toBe(1);
     expect(isSubscriptionActive(sub)).toBe(true);
   });
@@ -90,14 +90,12 @@ describe("subscription lifecycle", () => {
     );
   });
 
-  it("tick auto-renews expired subscriptions with autoRenew on", () => {
+  it("tick expira assinatura ao fim do período (sem cobrança automática)", () => {
     const sub = startSubscription();
     const expired = { ...sub, currentPeriodEnd: new Date(Date.now() - 1000).toISOString() };
     const [next, changed] = tickSubscription(expired);
     expect(changed).toBe(true);
-    expect(next).not.toBeNull();
-    expect(next?.renewals).toBe(2);
-    expect(isSubscriptionActive(next)).toBe(true);
+    expect(next).toBeNull();
   });
 
   it("tick discards expired subscriptions when autoRenew is off", () => {

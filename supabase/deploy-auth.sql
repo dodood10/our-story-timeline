@@ -1,0 +1,4 @@
+-- Auth + entitlements + workspaces
+-- Cole o conteúdo de: supabase/migrations/20260520120000_auth_entitlements_workspaces.sql
+-- Ou execute: npm run supabase:apply
+-- Dashboard: https://supabase.com/dashboard/project/hscoblnnvlynrlyhhocm/sql/new

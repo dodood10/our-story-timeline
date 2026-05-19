@@ -15,10 +15,7 @@ import {
   getMpPaymentStatus,
   type MpPixResponse,
 } from "@/lib/mercadopago.functions";
-import {
-  formatBRL,
-  type CheckoutProductKey,
-} from "@/lib/checkout-products";
+import { formatBRL, type CheckoutProductKey } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
 import { clearPendingMpPayment, writePendingMpPayment } from "@/lib/checkout-storage";
 
@@ -33,6 +30,7 @@ export function MpPixDialog({
   bumps,
   lead,
   externalReference,
+  userId,
   onPaid,
 }: {
   open: boolean;
@@ -43,6 +41,7 @@ export function MpPixDialog({
   bumps: CheckoutBumps;
   lead: CheckoutLead | null;
   externalReference: string;
+  userId?: string | null;
   onPaid: () => void;
 }) {
   const createFn = useServerFn(createMpPixCharge);
@@ -77,14 +76,14 @@ export function MpPixDialog({
       return;
     }
 
-    const ref =
-      regenToken === 0 ? externalReference : `${externalReference}-r${regenToken}`;
+    const ref = regenToken === 0 ? externalReference : `${externalReference}-r${regenToken}`;
     createFn({
       data: {
         productKey,
         bumps,
         externalReference: ref,
         payer: { name: lead.fullName, email: lead.email, document: doc },
+        userId: userId ?? undefined,
       },
     })
       .then((res) => {
@@ -97,7 +96,7 @@ export function MpPixDialog({
         setError(err instanceof Error ? err.message : "Falha ao gerar o Pix.");
         setStage("error");
       });
-  }, [open, productKey, bumps, externalReference, lead, createFn, regenToken]);
+  }, [open, productKey, bumps, externalReference, lead, createFn, regenToken, userId]);
 
   useEffect(() => {
     if (stage !== "awaiting" || !charge?.id) return;

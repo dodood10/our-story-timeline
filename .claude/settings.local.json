@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git rm *)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "mcp__plugin_supabase_supabase__list_tables",
+      "Bash(node -e ' *)",
+      "Bash(node scripts/prepare-cf-deploy.mjs)",
+      "Bash(wrangler deploy *)",
+      "Bash(npx wrangler *)"
+    ]
+  }
+}

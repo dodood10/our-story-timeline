@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useAccess } from "@/hooks/useAccess";
+import { useAuth } from "@/hooks/useAuth";
+import { CheckoutAuthGate } from "@/components/auth/CheckoutAuthGate";
+import { buildCheckoutExternalReference } from "@/lib/checkout-auth";
 import { Button } from "@/components/ui/button";
 import { ProductSummaryColumn } from "@/components/checkout/ProductSummaryColumn";
 import { CheckoutFormColumn } from "@/components/checkout/CheckoutFormColumn";
@@ -20,7 +23,6 @@ import {
   readCheckoutBumps,
   readCheckoutLead,
   setBump,
-  submitCheckoutMock,
   type CheckoutLead,
 } from "@/lib/checkout-storage";
 import { trackEvent } from "@/lib/meta-pixel";
@@ -50,7 +52,15 @@ function SurpriseCheckout() {
   const { plan } = Route.useSearch();
   const productId: CheckoutProductId = plan ?? "premium";
   const product = getCheckoutProduct(productId);
-  const { surprise, hasSurprise, applyPurchase, hydrated } = useAccess();
+  const {
+    surprise,
+    hasSurprise,
+    applyPurchase,
+    hydrated,
+    refreshFromServer,
+    useServerEntitlements,
+  } = useAccess();
+  const { user, configured } = useAuth();
   const navigate = useNavigate();
 
   const [bumps, setBumps] = useState(readCheckoutBumps);
@@ -61,10 +71,15 @@ function SurpriseCheckout() {
   const totalCents = calcTotalCents(product, bumps);
   const defaultLead = readCheckoutLead();
   const externalReference = useMemo(
-    () => `surprise-${productId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-    [productId],
+    () =>
+      buildCheckoutExternalReference(
+        user?.id,
+        `surprise-${productId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+      ),
+    [productId, user?.id],
   );
-  const productKey = productId === "premium" ? ("surprise:premium" as const) : ("surprise:basic" as const);
+  const productKey =
+    productId === "premium" ? ("surprise:premium" as const) : ("surprise:basic" as const);
 
   useEffect(() => {
     if (hydrated && surprise !== "basic" && surprise !== "premium") {
@@ -96,12 +111,12 @@ function SurpriseCheckout() {
             <strong>{surprise === "premium" ? "Premium" : "Básico"}</strong>.
           </p>
           <Button asChild size="lg" className="w-full mt-6">
-            <Link to="/app">
-              Ir para minha área <ArrowRight className="h-4 w-4 ml-1" />
+            <Link to="/surprise/quiz">
+              Começar o quiz <ArrowRight className="h-4 w-4 ml-1" />
             </Link>
           </Button>
           <Button asChild variant="outline" className="w-full mt-2">
-            <Link to="/surprise/quiz">Continuar surpresa (quiz)</Link>
+            <Link to="/app">Ir para minha área</Link>
           </Button>
         </div>
       </SurpriseShell>
@@ -116,11 +131,14 @@ function SurpriseCheckout() {
     });
   }
 
-  function completeCheckout(lead: CheckoutLead) {
+  async function completeCheckout(lead: CheckoutLead) {
     setSubmitting(true);
     persistCheckoutDraft(lead, bumps, productId);
-    submitCheckoutMock();
-    applyPurchase({ surpriseTier: product.tier });
+    if (configured && useServerEntitlements) {
+      await refreshFromServer();
+    } else {
+      await applyPurchase({ surpriseTier: product.tier });
+    }
     toast.success("Pagamento confirmado! Seu acesso foi liberado.");
     setPixOpen(false);
     navigate({ to: "/surprise/quiz", replace: true });
@@ -148,21 +166,24 @@ function SurpriseCheckout() {
             totalCents={totalCents}
             className="hidden lg:block"
           />
-          <CheckoutFormColumn
-            amountCents={totalCents}
-            productLabel={product.title}
-            productKey={productKey}
-            externalReference={externalReference}
-            bumps={bumps}
-            onBumpChange={handleBumpChange}
-            paymentMethod={paymentMethod}
-            onPaymentMethodChange={setPaymentMethod}
-            defaultLead={defaultLead}
-            pixDialogOpen={pixOpen}
-            onPixDialogOpenChange={setPixOpen}
-            onSubmit={completeCheckout}
-            submitting={submitting}
-          />
+          <CheckoutAuthGate>
+            <CheckoutFormColumn
+              amountCents={totalCents}
+              productLabel={product.title}
+              productKey={productKey}
+              externalReference={externalReference}
+              userId={user?.id}
+              bumps={bumps}
+              onBumpChange={handleBumpChange}
+              paymentMethod={paymentMethod}
+              onPaymentMethodChange={setPaymentMethod}
+              defaultLead={defaultLead}
+              pixDialogOpen={pixOpen}
+              onPixDialogOpenChange={setPixOpen}
+              onSubmit={completeCheckout}
+              submitting={submitting}
+            />
+          </CheckoutAuthGate>
         </div>
       </div>
     </SurpriseShell>

@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useAccess } from "@/hooks/useAccess";
+import { useAuth } from "@/hooks/useAuth";
+import { CheckoutAuthGate } from "@/components/auth/CheckoutAuthGate";
+import { buildCheckoutExternalReference } from "@/lib/checkout-auth";
 import { Button } from "@/components/ui/button";
 import { CheckoutFormColumn } from "@/components/checkout/CheckoutFormColumn";
 import { SurpriseShell } from "@/components/surprise/SurpriseShell";
@@ -11,7 +14,6 @@ import {
   persistCheckoutDraft,
   readCheckoutBumps,
   readCheckoutLead,
-  submitCheckoutMock,
   type CheckoutBumps,
   type CheckoutLead,
 } from "@/lib/checkout-storage";
@@ -37,7 +39,16 @@ export const Route = createFileRoute("/memory-lane/")({
 function MemoryLaneCheckout() {
   const { upgrade } = Route.useSearch();
   const product = getMemoryLaneProduct();
-  const { canUseMemoryLane, productMode, applyPurchase, hydrated, subscription } = useAccess();
+  const {
+    canUseMemoryLane,
+    productMode,
+    applyPurchase,
+    hydrated,
+    subscription,
+    refreshFromServer,
+    useServerEntitlements,
+  } = useAccess();
+  const { user, configured } = useAuth();
   const navigate = useNavigate();
 
   const emptyBumps: CheckoutBumps = { cards: false, phrases: false };
@@ -46,8 +57,12 @@ function MemoryLaneCheckout() {
   const [submitting, setSubmitting] = useState(false);
   const defaultLead = readCheckoutLead();
   const memoryLaneExternalRef = useMemo(
-    () => `memory-lane-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-    [],
+    () =>
+      buildCheckoutExternalReference(
+        user?.id,
+        `memory-lane-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+      ),
+    [user?.id],
   );
 
   const isUpgrade = upgrade === true && productMode === "surprise_only";
@@ -102,11 +117,14 @@ function MemoryLaneCheckout() {
     );
   }
 
-  function completeCheckout(lead: CheckoutLead) {
+  async function completeCheckout(lead: CheckoutLead) {
     setSubmitting(true);
     persistCheckoutDraft(lead, emptyBumps, "premium");
-    applyPurchase({ memoryLaneOnly: true });
-    submitCheckoutMock();
+    if (configured && useServerEntitlements) {
+      await refreshFromServer();
+    } else {
+      await applyPurchase({ memoryLaneOnly: true });
+    }
     const message = isReactivation
       ? "Assinatura reativada! Memory Lane liberado."
       : "Pagamento confirmado! Memory Lane liberado.";
@@ -178,23 +196,26 @@ function MemoryLaneCheckout() {
       </div>
 
       <div className="mt-8">
-        <CheckoutFormColumn
-          amountCents={product.priceCents}
-          productLabel={product.title}
-          productKey="memory_lane"
-          externalReference={memoryLaneExternalRef}
-          bumps={emptyBumps}
-          onBumpChange={() => {}}
-          paymentMethod={paymentMethod}
-          onPaymentMethodChange={setPaymentMethod}
-          defaultLead={defaultLead}
-          pixDialogOpen={pixOpen}
-          onPixDialogOpenChange={setPixOpen}
-          onSubmit={completeCheckout}
-          submitting={submitting}
-          hideBumps
-          submitLabel={ctaPix}
-        />
+        <CheckoutAuthGate>
+          <CheckoutFormColumn
+            amountCents={product.priceCents}
+            productLabel={product.title}
+            productKey="memory_lane"
+            externalReference={memoryLaneExternalRef}
+            userId={user?.id}
+            bumps={emptyBumps}
+            onBumpChange={() => {}}
+            paymentMethod={paymentMethod}
+            onPaymentMethodChange={setPaymentMethod}
+            defaultLead={defaultLead}
+            pixDialogOpen={pixOpen}
+            onPixDialogOpenChange={setPixOpen}
+            onSubmit={completeCheckout}
+            submitting={submitting}
+            hideBumps
+            submitLabel={ctaPix}
+          />
+        </CheckoutAuthGate>
       </div>
     </SurpriseShell>
   );

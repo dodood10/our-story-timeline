@@ -107,9 +107,5 @@ export function shouldShowLandingPromoTimer(pathname: string): boolean {
 
 /** Promo bar in checkout funnel: `/surprise` → upsell (not quiz/plan). */
 export function shouldShowFunnelPromoTimer(pathname: string): boolean {
-  return (
-    pathname === "/surprise" ||
-    pathname === "/surprise/" ||
-    pathname === "/surprise/upsell"
-  );
+  return pathname === "/surprise" || pathname === "/surprise/" || pathname === "/surprise/upsell";
 }

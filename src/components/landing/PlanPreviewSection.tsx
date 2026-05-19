@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Clock, Gauge, Heart, Home, Moon, Palette, Sparkles, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BRAND_NAME } from "@/lib/brand";
 
 const CHIPS = [
   { icon: Heart, label: "Homenageada(o)", value: "Bianca" },
@@ -46,7 +47,7 @@ export function PlanPreviewSection() {
               <Heart className="h-6 w-6 text-primary fill-primary mx-auto" />
               <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
                 <Sparkles className="h-3 w-3" />
-                Método Surpresa Perfeita™ · Plano Premium
+                {BRAND_NAME} · Plano Premium
               </div>
               <p className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground">
                 Sua surpresa romântica está pronta
@@ -59,8 +60,8 @@ export function PlanPreviewSection() {
               </h3>
               <p className="mt-3 text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
                 Transforme os ambientes da casa em capítulos de uma história de afeto: uma jornada
-                que começa na porta e termina em um ritual de massagem, com foco em detalhes
-                manuais e curadoria musical para um clima Pinterest sem estourar o orçamento.
+                que começa na porta e termina em um ritual de massagem, com foco em detalhes manuais
+                e curadoria musical para um clima Pinterest sem estourar o orçamento.
               </p>
             </div>
 

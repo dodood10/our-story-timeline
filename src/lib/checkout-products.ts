@@ -75,7 +75,8 @@ export const MEMORY_LANE_PRODUCT: MemoryLaneProduct = {
   compareAtCents: 3990,
   periodDays: SUBSCRIPTION_PERIOD_DAYS,
   priceSuffix: "/mês",
-  billingNote: "Renovação automática a cada 30 dias. Cancele quando quiser, sem multa.",
+  billingNote:
+    "Acesso por 30 dias após o pagamento. Para continuar depois, reative com um novo pagamento.",
   features: [
     "Linha do tempo de memórias",
     "Galeria e fotos no dispositivo",
@@ -186,10 +187,7 @@ export interface CheckoutSubmitPayload {
  * Chave canônica para o servidor calcular o preço autoritativo.
  * NUNCA confie em valores enviados pelo cliente — passe somente esta chave + bumps.
  */
-export type CheckoutProductKey =
-  | "surprise:premium"
-  | "surprise:basic"
-  | "memory_lane";
+export type CheckoutProductKey = "surprise:premium" | "surprise:basic" | "memory_lane";
 
 export interface CheckoutBumpsInput {
   cards?: boolean;

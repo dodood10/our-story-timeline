@@ -44,11 +44,14 @@ async function fetchAuthToken(): Promise<string> {
     expires_at: string;
   };
 
-  return data.access_token && (tokenCache = {
-    token: data.access_token,
-    // renova 1min antes para evitar expirar no meio de uma request.
-    expiresAt: Date.now() + (data.expires_in - 60) * 1000,
-  }).token;
+  return (
+    data.access_token &&
+    (tokenCache = {
+      token: data.access_token,
+      // renova 1min antes para evitar expirar no meio de uma request.
+      expiresAt: Date.now() + (data.expires_in - 60) * 1000,
+    }).token
+  );
 }
 
 export async function getSyncPayToken(): Promise<string> {
@@ -181,7 +184,8 @@ export async function createSyncPayPix(input: SyncPayPixInput): Promise<SyncPayP
     ),
     paymentCode,
     paymentCodeBase64,
-    externalReference: pick("externalreference", "external_reference", "externalReference") ||
+    externalReference:
+      pick("externalreference", "external_reference", "externalReference") ||
       input.externalReference,
   };
 }
@@ -220,12 +224,9 @@ export async function getSyncPayStatus(id: string): Promise<SyncPayStatus> {
   return {
     id: pick("identifier", "id", "transactionId") || id,
     status: pick("status", "transactionStatus") || "pending",
-    amount: Number(
-      (candidates.find((c) => c.amount != null)?.amount as number | undefined) ?? 0,
-    ),
+    amount: Number((candidates.find((c) => c.amount != null)?.amount as number | undefined) ?? 0),
   };
 }
-
 
 /** Normaliza diferentes nomes retornados pelo SyncPay para "paid" / "pending" / "failed". */
 export function isPaidStatus(status: string): boolean {
@@ -235,5 +236,7 @@ export function isPaidStatus(status: string): boolean {
 
 export function isFailedStatus(status: string): boolean {
   const s = status.toLowerCase();
-  return s === "failed" || s === "canceled" || s === "cancelled" || s === "expired" || s === "refused";
+  return (
+    s === "failed" || s === "canceled" || s === "cancelled" || s === "expired" || s === "refused"
+  );
 }

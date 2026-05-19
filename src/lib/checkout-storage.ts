@@ -120,7 +120,10 @@ export function persistCheckoutDraft(
   writeLastProductId(productId);
 }
 
-/** Simulated checkout — replace with gateway webhook later. */
+/**
+ * Legado — pagamentos reais liberam via webhook/reconcile + refreshFromServer.
+ * Mantido vazio para não quebrar imports antigos.
+ */
 export function submitCheckoutMock(): void {
-  // TODO: POST /api/checkout → Mercado Pago Pix/Card → webhook libera tier
+  /* no-op */
 }

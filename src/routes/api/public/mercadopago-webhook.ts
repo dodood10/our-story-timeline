@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { getMpPayment } from "@/lib/mercadopago.server";
-import { updatePaymentStatus } from "@/lib/payments.server";
+import { grantEntitlementsFromPayment } from "@/lib/entitlements.server";
+import { getMpPayment, isPaidStatus } from "@/lib/mercadopago.server";
+import { findPaymentById, updatePaymentStatus } from "@/lib/payments.server";
 
 /**
  * Webhook do Mercado Pago — eventos "payment".
@@ -58,7 +59,14 @@ export const Route = createFileRoute("/api/public/mercadopago-webhook")({
 
         // Verificação de assinatura (obrigatória se o secret estiver configurado).
         const secret = process.env.MP_WEBHOOK_SECRET;
-        if (secret) {
+        const isProd = process.env.NODE_ENV === "production";
+        if (!secret) {
+          if (isProd) {
+            console.error("[mp-webhook] MP_WEBHOOK_SECRET obrigatório em produção");
+            return new Response("webhook not configured", { status: 503 });
+          }
+          console.warn("[mp-webhook] MP_WEBHOOK_SECRET ausente — pulando verificação (dev)");
+        } else {
           const ok = verifyMpSignature(
             secret,
             request.headers.get("x-signature"),
@@ -69,14 +77,23 @@ export const Route = createFileRoute("/api/public/mercadopago-webhook")({
             console.warn("[mp-webhook] assinatura inválida", { id });
             return new Response("invalid signature", { status: 401 });
           }
-        } else {
-          console.warn("[mp-webhook] MP_WEBHOOK_SECRET ausente — pulando verificação");
         }
 
         try {
           const p = await getMpPayment(id);
           console.log("[mp-webhook]", { id: p.id, status: p.status, statusDetail: p.statusDetail });
           await updatePaymentStatus({ id: p.id, status: p.status, raw: p });
+          if (isPaidStatus(p.status)) {
+            const row = await findPaymentById(p.id);
+            if (row) {
+              await grantEntitlementsFromPayment({
+                userId: row.user_id,
+                payerEmail: row.payer_email,
+                productKey: row.product_key,
+                externalReference: row.external_reference,
+              });
+            }
+          }
         } catch (e) {
           console.error("[mp-webhook] lookup falhou", e);
         }

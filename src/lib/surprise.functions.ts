@@ -10,6 +10,10 @@ import {
   type SurprisePlan,
 } from "./surprise-types";
 import { checkSurpriseRateLimit, clientKeyFromRequest } from "./surprise-rate-limit";
+import {
+  assertRequestedSurpriseTier,
+  resolveSurprisePlanAccess,
+} from "@/integrations/supabase/surprise-plan-middleware";
 
 const PLAN_SCHEMA_DESCRIPTION =
   "Plano de surpresa romântica em português brasileiro (schema v2). Retorne JSON válido conforme tier.";
@@ -106,9 +110,10 @@ function mapAiError(err: unknown): Error {
   });
   const status = e?.statusCode ?? e?.status;
   if (status === 429) return new Error("Muitas requisições. Tente novamente em alguns segundos.");
-  if (status === 402) return new Error("Créditos de IA esgotados. Adicione créditos no workspace.");
+  if (status === 402)
+    return new Error("Limite de geração atingido. Adicione créditos no workspace.");
   if (status === 401 || status === 403)
-    return new Error("Serviço de IA indisponível. Tente mais tarde.");
+    return new Error("Gerador temporariamente indisponível. Tente mais tarde.");
   const msg = e?.message
     ? `Falha ao gerar o plano: ${e.message}`
     : "Falha ao gerar o plano. Tente novamente.";
@@ -120,6 +125,11 @@ export const generateSurprisePlan = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY não configurado");
+
+    const surpriseTier = await resolveSurprisePlanAccess();
+    if (surpriseTier) {
+      assertRequestedSurpriseTier(surpriseTier, data.tier);
+    }
 
     const request = getRequest();
     checkSurpriseRateLimit(clientKeyFromRequest(request));

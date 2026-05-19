@@ -44,7 +44,10 @@ export function getPublicKey(): string {
   return k;
 }
 
-async function mpFetch<T>(path: string, init: RequestInit & { idempotencyKey?: string } = {}): Promise<T> {
+async function mpFetch<T>(
+  path: string,
+  init: RequestInit & { idempotencyKey?: string } = {},
+): Promise<T> {
   const { idempotencyKey, headers, ...rest } = init;
   const res = await fetch(`${MP_BASE}${path}`, {
     ...rest,
@@ -64,7 +67,10 @@ async function mpFetch<T>(path: string, init: RequestInit & { idempotencyKey?: s
   }
   if (!res.ok) {
     const msg =
-      (body && typeof body === "object" && "message" in body && (body as { message?: string }).message) ||
+      (body &&
+        typeof body === "object" &&
+        "message" in body &&
+        (body as { message?: string }).message) ||
       `HTTP ${res.status}`;
     throw new Error(`Mercado Pago ${path} falhou: ${msg}`);
   }
@@ -164,8 +170,9 @@ export async function createMpCard(input: {
   };
 }
 
-
-export async function getMpPayment(id: string): Promise<{ id: string; status: string; statusDetail: string }> {
+export async function getMpPayment(
+  id: string,
+): Promise<{ id: string; status: string; statusDetail: string }> {
   const data = await mpFetch<{ id: number | string; status: string; status_detail: string }>(
     `/v1/payments/${encodeURIComponent(id)}`,
     { method: "GET" },

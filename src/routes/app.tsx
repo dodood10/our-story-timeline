@@ -246,7 +246,7 @@ function DashboardHome() {
               ) : (
                 <>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Responda o quiz e a IA gera um plano com decoração, compras, cronograma e
+                    Responda o quiz e você recebe um plano com decoração, compras, cronograma e
                     frases.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">

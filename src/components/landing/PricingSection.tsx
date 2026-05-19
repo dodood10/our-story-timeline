@@ -56,7 +56,9 @@ export function PricingSection() {
 
         <div className="mt-10 max-w-xl mx-auto text-center rounded-2xl border border-border bg-card p-6">
           <h3 className="font-display text-xl">{pricing.guarantee.title}</h3>
-          <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{pricing.guarantee.body}</p>
+          <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
+            {pricing.guarantee.body}
+          </p>
         </div>
 
         <p className="text-center mt-8 text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">

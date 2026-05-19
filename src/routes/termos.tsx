@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart } from "lucide-react";
+import { BRAND_NAME } from "@/lib/brand";
 
 export const Route = createFileRoute("/termos")({
   head: () => ({
-    meta: [{ title: "Termos de Uso — Método Surpresa Perfeita™" }],
+    meta: [{ title: `Termos de Uso — ${BRAND_NAME}` }],
   }),
   component: TermosPage,
 });
@@ -27,61 +28,63 @@ function TermosPage() {
 
         <Section title="1. Objeto">
           <p>
-            Estes Termos regulam o acesso e o uso do <strong>Método Surpresa Perfeita™</strong>, produto
-            digital que oferece um gerador de plano de surpresa romântica personalizado por inteligência
-            artificial, incluindo conteúdo estático de apoio (decoração, playlists, frases, lista de
+            Estes Termos regulam o acesso e o uso do <strong>{BRAND_NAME}</strong>, produto digital
+            que oferece um gerador de plano de surpresa romântica personalizado com base no seu
+            quiz, incluindo conteúdo estático de apoio (decoração, playlists, frases, lista de
             compras).
           </p>
         </Section>
 
         <Section title="2. Acesso ao produto">
           <p>
-            O acesso é concedido individualmente ao comprador após confirmação do pagamento. O acesso é
-            pessoal, intransferível e não pode ser compartilhado, revendido ou cedido a terceiros.
+            O acesso é concedido individualmente ao comprador após confirmação do pagamento. O
+            acesso é pessoal, intransferível e não pode ser compartilhado, revendido ou cedido a
+            terceiros.
           </p>
           <p className="mt-3">
-            O plano Básico dá acesso ao gerador com as seções essenciais. O plano Premium desbloqueia
-            seções adicionais (frases românticas, ideias de jantar, plano de emergência, checklist e
-            download em PDF). O Kit Surpresa Premium adiciona conteúdo estático de bônus.
+            O plano Básico dá acesso ao gerador com as seções essenciais. O plano Premium
+            desbloqueia seções adicionais (frases românticas, ideias de jantar, plano de emergência,
+            checklist e download em PDF). O Kit Surpresa Premium adiciona conteúdo estático de
+            bônus.
           </p>
         </Section>
 
-        <Section title="3. Conteúdo gerado por IA">
+        <Section title="3. Conteúdo gerado automaticamente">
           <p>
-            Os planos são criados por modelo de linguagem (IA) com base nas respostas fornecidas no quiz.
-            Os resultados são personalizados porém automáticos — o produto não garante resultado
-            emocional específico. A qualidade da execução pelo usuário influencia diretamente a
-            experiência final.
+            Os planos são criados pelo gerador automatizado do produto com base nas respostas
+            fornecidas no quiz. Os resultados são personalizados porém automáticos — o produto não
+            garante resultado emocional específico. A qualidade da execução pelo usuário influencia
+            diretamente a experiência final.
           </p>
           <p className="mt-3">
-            O usuário pode refazer o quiz quantas vezes desejar; cada conjunto de respostas diferente
-            gera um plano novo.
+            O usuário pode refazer o quiz quantas vezes desejar; cada conjunto de respostas
+            diferente gera um plano novo.
           </p>
         </Section>
 
         <Section title="4. Garantia e reembolso">
           <p>
-            Oferecemos garantia de <strong>7 dias corridos</strong> a partir da data da compra. Nesse
-            período, o usuário pode solicitar o reembolso integral sem necessidade de justificativa,
-            entrando em contato pelo e-mail de suporte. Após esse prazo, não serão aceitas solicitações
-            de devolução.
+            Oferecemos garantia de <strong>7 dias corridos</strong> a partir da data da compra.
+            Nesse período, o usuário pode solicitar o reembolso integral sem necessidade de
+            justificativa, entrando em contato pelo e-mail de suporte. Após esse prazo, não serão
+            aceitas solicitações de devolução.
           </p>
         </Section>
 
         <Section title="5. Propriedade intelectual">
           <p>
             Todo o conteúdo estático do produto (textos, roteiros, temas de decoração, modelos de
-            bilhete) é de propriedade do criador. O plano gerado pela IA, com base nas respostas do
-            usuário, pode ser usado livremente para fins pessoais. É proibida a reprodução,
-            redistribuição ou revenda do conteúdo do produto.
+            bilhete) é de propriedade do criador. O plano gerado pelo gerador, com base nas
+            respostas do usuário, pode ser usado livremente para fins pessoais. É proibida a
+            reprodução, redistribuição ou revenda do conteúdo do produto.
           </p>
         </Section>
 
         <Section title="6. Limitação de responsabilidade">
           <p>
             O produto é fornecido "como está". Não nos responsabilizamos por falhas temporárias no
-            serviço de IA, por resultados que dependam da execução do usuário, ou por qualquer dano
-            indireto decorrente do uso do produto.
+            serviço de geração, por resultados que dependam da execução do usuário, ou por qualquer
+            dano indireto decorrente do uso do produto.
           </p>
         </Section>
 
@@ -95,8 +98,8 @@ function TermosPage() {
 
         <Section title="8. Contato">
           <p>
-            Dúvidas, solicitações de reembolso ou suporte: entre em contato pelo e-mail disponível na
-            página de vendas ou pelo WhatsApp informado no checkout.
+            Dúvidas, solicitações de reembolso ou suporte: entre em contato pelo e-mail disponível
+            na página de vendas ou pelo WhatsApp informado no checkout.
           </p>
         </Section>
       </main>

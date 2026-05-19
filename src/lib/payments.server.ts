@@ -17,6 +17,7 @@ export interface PaymentRow {
   product_key: string;
   payer_email: string | null;
   payment_method: string;
+  user_id: string | null;
   updated_at: string;
 }
 
@@ -28,21 +29,21 @@ export async function recordPaymentCreated(input: {
   productKey: CheckoutProductKey;
   payerEmail?: string | null;
   paymentMethod: PaymentMethod;
+  userId?: string | null;
 }): Promise<void> {
-  const { error } = await supabaseAdmin
-    .from("payments")
-    .upsert(
-      {
-        id: input.id,
-        external_reference: input.externalReference,
-        status: input.status,
-        amount_cents: input.amountCents,
-        product_key: input.productKey,
-        payer_email: input.payerEmail ?? null,
-        payment_method: input.paymentMethod,
-      },
-      { onConflict: "id" },
-    );
+  const { error } = await supabaseAdmin.from("payments").upsert(
+    {
+      id: input.id,
+      external_reference: input.externalReference,
+      status: input.status,
+      amount_cents: input.amountCents,
+      product_key: input.productKey,
+      payer_email: input.payerEmail ?? null,
+      payment_method: input.paymentMethod,
+      user_id: input.userId ?? null,
+    },
+    { onConflict: "id" },
+  );
   if (error) {
     console.error("[payments] recordPaymentCreated falhou", error);
   }
@@ -65,12 +66,29 @@ export async function updatePaymentStatus(input: {
   }
 }
 
+export async function findPaymentById(id: string): Promise<PaymentRow | null> {
+  const { data, error } = await supabaseAdmin
+    .from("payments")
+    .select(
+      "id, external_reference, status, amount_cents, product_key, payer_email, payment_method, user_id, updated_at",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) {
+    console.error("[payments] findPaymentById falhou", error);
+    return null;
+  }
+  return (data as PaymentRow | null) ?? null;
+}
+
 export async function findPaymentByExternalReference(
   externalReference: string,
 ): Promise<PaymentRow | null> {
   const { data, error } = await supabaseAdmin
     .from("payments")
-    .select("id, external_reference, status, amount_cents, product_key, payer_email, payment_method, updated_at")
+    .select(
+      "id, external_reference, status, amount_cents, product_key, payer_email, payment_method, user_id, updated_at",
+    )
     .eq("external_reference", externalReference)
     .order("updated_at", { ascending: false })
     .limit(1)

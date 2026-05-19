@@ -5,10 +5,7 @@ import { Loader2, CreditCard, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  createMpCardCharge,
-  getMpPublicKey,
-} from "@/lib/mercadopago.functions";
+import { createMpCardCharge, getMpPublicKey } from "@/lib/mercadopago.functions";
 import { formatBRL, type CheckoutProductKey } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
 
@@ -32,11 +29,7 @@ type MpInstance = {
   getPaymentMethods: (q: { bin: string }) => Promise<{
     results: Array<{ id: string; payment_type_id: string; issuer?: { id?: string | number } }>;
   }>;
-  getInstallments: (q: {
-    amount: string;
-    bin: string;
-    paymentTypeId?: string;
-  }) => Promise<
+  getInstallments: (q: { amount: string; bin: string; paymentTypeId?: string }) => Promise<
     Array<{
       payer_costs: InstallmentOption[];
     }>
@@ -69,7 +62,9 @@ function onlyDigits(v: string) {
   return v.replace(/\D/g, "");
 }
 function formatCardNumber(v: string) {
-  return onlyDigits(v).slice(0, 19).replace(/(\d{4})(?=\d)/g, "$1 ");
+  return onlyDigits(v)
+    .slice(0, 19)
+    .replace(/(\d{4})(?=\d)/g, "$1 ");
 }
 function formatExpiry(v: string) {
   const d = onlyDigits(v).slice(0, 4);
@@ -83,6 +78,7 @@ export function MpCardForm({
   productKey,
   bumps,
   externalReference,
+  userId,
   lead,
   onPaid,
 }: {
@@ -91,6 +87,7 @@ export function MpCardForm({
   productKey: CheckoutProductKey;
   bumps: CheckoutBumps;
   externalReference: string;
+  userId?: string | null;
   lead: CheckoutLead | null;
   onPaid: () => void;
 }) {
@@ -243,6 +240,7 @@ export function MpCardForm({
           installments,
           issuerId,
           payer: { name: lead.fullName, email: lead.email, document: doc },
+          userId: userId ?? undefined,
         },
       });
 
@@ -276,7 +274,10 @@ export function MpCardForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-border bg-muted/30 p-4">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 rounded-xl border border-border bg-muted/30 p-4"
+    >
       <div className="flex items-center gap-2 text-sm font-medium">
         <CreditCard className="h-4 w-4" />
         Pagamento com cartão de crédito
@@ -347,7 +348,11 @@ export function MpCardForm({
                     `${opt.installments}x de ${formatBRL(Math.round(opt.installment_amount * 100))}`}
                 </option>
               ))
-            : [<option key={1} value={1}>1x de {formatBRL(amountCents)}</option>]}
+            : [
+                <option key={1} value={1}>
+                  1x de {formatBRL(amountCents)}
+                </option>,
+              ]}
         </select>
         {!installmentOptions && cardNumber.length > 0 && (
           <p className="text-[11px] text-muted-foreground">
@@ -357,9 +362,7 @@ export function MpCardForm({
         )}
       </div>
 
-      {statusMsg && !done && (
-        <p className="text-xs text-destructive">{statusMsg}</p>
-      )}
+      {statusMsg && !done && <p className="text-xs text-destructive">{statusMsg}</p>}
 
       {done ? (
         <div className="flex items-center justify-center gap-2 text-sm text-primary">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -11,8 +11,15 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { BRAND_NAME } from "@/lib/brand";
 import { AppProvider, useApp } from "@/hooks/useApp";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { useAccess } from "@/hooks/useAccess";
+import { RequireAuth } from "@/components/auth/RequireAuth";
+import {
+  ImportLocalEntitlementsDialog,
+  readLocalImportDone,
+} from "@/components/auth/ImportLocalEntitlementsDialog";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BottomBar } from "@/components/layout/BottomBar";
 import { OnboardingDialog } from "@/components/layout/OnboardingDialog";
@@ -80,9 +87,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Guarde memórias, cartas e momentos especiais. Surpresa romântica com plano personalizado por IA.",
+          "Guarde memórias, cartas e momentos especiais. Surpresa romântica com plano personalizado.",
       },
-      { property: "og:title", content: "Método Surpresa Perfeita™ — Dia dos Namorados 2026" },
+      { property: "og:title", content: BRAND_NAME },
       {
         property: "og:description",
         content:
@@ -92,15 +99,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       {
         name: "twitter:title",
-        content: "Método Surpresa Perfeita™ — Dia dos Namorados 2026",
+        content: BRAND_NAME,
       },
       {
         name: "twitter:description",
         content:
           "Monte uma surpresa inesquecível em casa, mesmo sem criatividade e gastando pouco.",
       },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7794435d-7f69-4a31-a1cf-faa1159dc1c1/id-preview-54b887b2--0245b738-ed74-4eb8-a4d4-f0b4532ba2bf.lovable.app-1779072730436.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7794435d-7f69-4a31-a1cf-faa1159dc1c1/id-preview-54b887b2--0245b738-ed74-4eb8-a4d4-f0b4532ba2bf.lovable.app-1779072730436.png" },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7794435d-7f69-4a31-a1cf-faa1159dc1c1/id-preview-54b887b2--0245b738-ed74-4eb8-a4d4-f0b4532ba2bf.lovable.app-1779072730436.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7794435d-7f69-4a31-a1cf-faa1159dc1c1/id-preview-54b887b2--0245b738-ed74-4eb8-a4d4-f0b4532ba2bf.lovable.app-1779072730436.png",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -157,16 +172,26 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <AppProvider>
-        <LayoutSwitch />
-        <Toaster position="top-center" />
-      </AppProvider>
+      <AuthProvider>
+        <AppProvider>
+          <LayoutSwitch />
+          <Toaster position="top-center" />
+        </AppProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
 
 /** Routes that render a bare layout (no sidebar, no paywall). */
-const MARKETING_PREFIXES = ["/", "/surprise", "/dev-unlock", "/termos", "/privacidade"];
+const MARKETING_PREFIXES = [
+  "/",
+  "/surprise",
+  "/auth",
+  "/memory-lane",
+  "/dev-unlock",
+  "/termos",
+  "/privacidade",
+];
 
 function LayoutSwitch() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -186,39 +211,56 @@ function LayoutSwitch() {
 
 function AppShell() {
   const { hydrated, onboarded } = useApp();
-  const { canUseMemoryLane: full } = useAccess();
+  const { isAuthenticated, configured } = useAuth();
+  const { canUseMemoryLane: full, hasAnyProduct, invalidateEntitlements } = useAccess();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [newMemoryOpen, setNewMemoryOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   useCmdK(setPaletteOpen);
 
-  if (!hydrated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Heart className="h-10 w-10 text-primary animate-float-heart" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (isAuthenticated && configured && !readLocalImportDone()) {
+      setImportOpen(true);
+    }
+  }, [isAuthenticated, configured]);
 
-  if (!full) {
-    return <FullAppPaywall />;
-  }
-
-  return (
-    <div className="min-h-screen flex bg-background">
-      <AppSidebar />
-      <main className="flex-1 min-w-0 pb-20 lg:pb-0">
-        <Outlet />
-      </main>
-      <BottomBar />
-      {!onboarded && <OnboardingDialog open />}
-      <CommandPalette
-        open={paletteOpen}
-        onOpenChange={setPaletteOpen}
-        onNewMemory={() => setNewMemoryOpen(true)}
+  const inner = (
+    <>
+      {!hydrated ? (
+        <div className="min-h-screen flex items-center justify-center">
+          <Heart className="h-10 w-10 text-primary animate-float-heart" />
+        </div>
+      ) : !full && !hasAnyProduct ? (
+        <FullAppPaywall />
+      ) : (
+        <div className="min-h-screen flex bg-background">
+          <AppSidebar />
+          <main className="flex-1 min-w-0 pb-20 lg:pb-0">
+            <Outlet />
+          </main>
+          <BottomBar />
+          {!onboarded && <OnboardingDialog open />}
+          <CommandPalette
+            open={paletteOpen}
+            onOpenChange={setPaletteOpen}
+            onNewMemory={() => setNewMemoryOpen(true)}
+          />
+          <MemoryFormDialog open={newMemoryOpen} onOpenChange={setNewMemoryOpen} />
+        </div>
+      )}
+      <ImportLocalEntitlementsDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={invalidateEntitlements}
       />
-      <MemoryFormDialog open={newMemoryOpen} onOpenChange={setNewMemoryOpen} />
-    </div>
+    </>
   );
+
+  if (configured) {
+    return <RequireAuth>{inner}</RequireAuth>;
+  }
+
+  return inner;
 }
 
 function FullAppPaywall() {
@@ -230,15 +272,15 @@ function FullAppPaywall() {
         </div>
         <h1 className="font-display text-3xl">Memory Lane completo</h1>
         <p className="text-muted-foreground mt-2">
-          Linha do tempo, galeria, cartas seladas, mapa e muito mais — o app inteiro para guardar a
-          história de vocês.
-        </p>
-        <p className="text-sm text-muted-foreground mt-4">
-          Em breve disponível como plano. Por enquanto, comece pela surpresa do Dia dos Namorados.
+          Assine o Memory Lane para desbloquear linha do tempo, galeria, cartas e mapa — vinculado à
+          sua conta.
         </p>
         <div className="mt-6 flex flex-col gap-2">
           <Button asChild className="w-full">
-            <Link to="/surprise">Criar minha surpresa romântica</Link>
+            <Link to="/memory-lane">Assinar Memory Lane</Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full">
+            <Link to="/surprise">Ver surpresa romântica</Link>
           </Button>
           <Button asChild variant="ghost" className="w-full">
             <Link to="/">Voltar ao início</Link>

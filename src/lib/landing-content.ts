@@ -23,8 +23,7 @@ export const hero = {
   ],
   cta: "Quero Criar Uma Surpresa Inesquecível",
   microcopy: "Acesso imediato · Garantia de 7 dias",
-  urgencyWarning:
-    "A maioria dos homens deixa pra última hora… e acaba fazendo “mais do mesmo”.",
+  urgencyWarning: "A maioria dos homens deixa pra última hora… e acaba fazendo “mais do mesmo”.",
 } as const;
 
 export const curiosity = {
@@ -83,7 +82,7 @@ export const deliverablesSummary = {
   bullets: [
     "Ideias organizadas por tipo de surpresa",
     "Passo a passo simples de execução",
-    "Plano personalizado pelo seu quiz (gerador com IA)",
+    "Plano personalizado pelo seu quiz (gerador automático)",
     "Frases e mensagens emocionais prontas (Premium)",
     "Sequência ideal da surpresa — roteiro hora a hora",
     "Guia de decoração e clima em casa",
@@ -151,8 +150,7 @@ export const deliverables = {
       n: 7,
       emoji: "⚡",
       title: "Plano Emergência de 1 Hora",
-      description:
-        "Deixou pra última hora? Tem um plano que cabe em 60 minutos e ainda funciona.",
+      description: "Deixou pra última hora? Tem um plano que cabe em 60 minutos e ainda funciona.",
       tier: "premium" as const,
     },
     {
@@ -174,7 +172,7 @@ export const howItWorks = {
       n: "1",
       title: "Escolha o estilo da surpresa",
       description:
-        "Depois da compra, um quiz rápido pergunta sobre vocês, o lugar e o orçamento. A IA monta o plano que combina com vocês.",
+        "Depois da compra, um quiz rápido pergunta sobre vocês, o lugar e o orçamento. O gerador monta o plano que combina com vocês.",
     },
     {
       n: "2",
@@ -259,7 +257,7 @@ export const pricing = {
   ],
   premiumCta: "Quero Fazer Ela Nunca Esquecer Esse Dia",
   anchor:
-    "Um jantar fora custa fácil R$300 pra dois — e termina igual ao do ano passado. Aqui você monta uma noite que ela vai lembrar, com plano personalizado por IA.",
+    "Um jantar fora custa fácil R$300 pra dois — e termina igual ao do ano passado. Aqui você monta uma noite que ela vai lembrar, com plano personalizado.",
   trustLine: "Acesso imediato · Acesso vitalício (Premium) · Garantia de 7 dias",
   urgency: {
     title: "O Dia dos Namorados está chegando.",
@@ -281,7 +279,7 @@ export const faqItems = [
   },
   {
     q: "Esse plano é realmente personalizado ou é o mesmo pra todo mundo?",
-    a: "Cada combinação de respostas do quiz gera um plano diferente pela IA. Dois clientes com respostas diferentes recebem planos completamente diferentes.",
+    a: "Cada combinação de respostas do quiz gera um plano diferente pelo gerador. Dois clientes com respostas diferentes recebem planos completamente diferentes.",
   },
   {
     q: "Vai funcionar mesmo se eu deixei pra última hora?",

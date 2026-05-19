@@ -23,14 +23,19 @@ export function AccessGateDenied() {
         <Lock className="h-10 w-10 text-primary mx-auto" />
         <h1 className="font-display text-2xl mt-4">Acesso restrito</h1>
         <p className="text-muted-foreground mt-2">
-          Você precisa de um plano do <strong className="text-foreground">{BRAND_NAME}</strong> para
+          Você precisa de acesso ao <strong className="text-foreground">{BRAND_NAME}</strong> para
           usar o gerador.
         </p>
-        <Button asChild className="w-full mt-6">
-          <Link to="/surprise" search={{ plan: "premium" }}>
-            Ver planos
-          </Link>
-        </Button>
+        <div className="mt-6 flex flex-col gap-2">
+          <Button asChild className="w-full">
+            <Link to="/surprise" search={{ plan: "premium" }}>
+              Ver planos
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full">
+            <Link to="/auth/recover-access">Já comprei — recuperar acesso</Link>
+          </Button>
+        </div>
       </div>
     </SurpriseShell>
   );
@@ -47,8 +52,8 @@ export function AccessGateSurpriseBlocked() {
         <Lock className="h-10 w-10 text-primary mx-auto" />
         <h1 className="font-display text-2xl mt-4">Surpresa não incluída</h1>
         <p className="text-muted-foreground mt-2">
-          Seu plano do <strong className="text-foreground">{BRAND_NAME}</strong> não inclui o
-          gerador de surpresa.
+          O gerador do <strong className="text-foreground">{BRAND_NAME}</strong> não está incluído
+          no que você comprou.
         </p>
         <Button asChild className="w-full mt-6">
           <Link to="/surprise" search={{ plan: "premium" }}>

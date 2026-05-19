@@ -92,7 +92,7 @@ function SurpriseProductCard({
       <p className="text-sm text-muted-foreground mt-1 flex-1">
         {locked
           ? "O gerador de surpresa romântica é vendido separadamente do Memory Lane."
-          : "Plano personalizado por IA: decoração, compras, cronograma e frases para a noite."}
+          : "Plano personalizado: decoração, compras, cronograma e frases para a noite."}
       </p>
 
       {active && !locked && (

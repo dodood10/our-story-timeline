@@ -42,10 +42,7 @@ function checkoutSchema() {
       const digits = v.replace(/\D/g, "");
       return digits.length >= 10 && digits.length <= 11;
     }, "Informe um WhatsApp válido com DDD (ex: 11 99999-9999)"),
-    cpf: z
-      .string()
-      .min(11, "CPF obrigatório")
-      .refine(validateCpf, "CPF inválido"),
+    cpf: z.string().min(11, "CPF obrigatório").refine(validateCpf, "CPF inválido"),
   });
 }
 
