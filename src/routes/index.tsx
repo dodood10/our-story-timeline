@@ -49,8 +49,8 @@ function LandingPage() {
       <div style={{ paddingTop: barVisible ? PROMO_BAR_HEIGHT : "0" }}>
         <LandingHeader />
         <HeroSection />
-        <CuriositySection />
         <PlanPreviewSection />
+        <CuriositySection />
         <SceneSection />
         <ProblemSection />
         <DeliverablesSection />
