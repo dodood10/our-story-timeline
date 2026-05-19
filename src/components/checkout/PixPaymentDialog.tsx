@@ -184,15 +184,16 @@ export function PixPaymentDialog({
 
         {stage === "awaiting" && charge && (
           <div className="space-y-4">
-            {charge.paymentCodeBase64 && (
+            {qrDataUrl && (
               <div className="flex justify-center">
                 <img
-                  src={`data:image/png;base64,${charge.paymentCodeBase64}`}
+                  src={qrDataUrl}
                   alt="QR Code Pix"
                   className="h-56 w-56 rounded-lg border border-border bg-white p-2"
                 />
               </div>
             )}
+
 
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground">
