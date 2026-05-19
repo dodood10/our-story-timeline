@@ -165,26 +165,24 @@ export function CheckoutFormColumn({
         )}
 
         <div className="space-y-3">
-          <h3 className="font-medium text-sm">Pagamento</h3>
+          <div className="space-y-2">
+            <Label htmlFor="cpf">CPF</Label>
+            <Input
+              id="cpf"
+              inputMode="numeric"
+              placeholder="000.000.000-00"
+              aria-describedby="cpf-hint"
+              {...form.register("cpf")}
+            />
+            <p id="cpf-hint" className="text-xs text-muted-foreground">
+              Obrigatório para emitir a cobrança Pix no seu nome.
+            </p>
+            {form.formState.errors.cpf && (
+              <p className="text-xs text-destructive">{form.formState.errors.cpf.message}</p>
+            )}
+          </div>
+          <h3 className="font-medium text-sm pt-2">Pagamento</h3>
           <PaymentMethodTabs value={paymentMethod} onChange={onPaymentMethodChange} />
-          {paymentMethod === "card" && (
-            <div className="space-y-2">
-              <Label htmlFor="cpf">CPF do titular</Label>
-              <Input
-                id="cpf"
-                inputMode="numeric"
-                placeholder="000.000.000-00"
-                aria-describedby="cpf-hint"
-                {...form.register("cpf")}
-              />
-              <p id="cpf-hint" className="text-xs text-muted-foreground">
-                Obrigatório para pagamento com cartão de crédito.
-              </p>
-              {form.formState.errors.cpf && (
-                <p className="text-xs text-destructive">{form.formState.errors.cpf.message}</p>
-              )}
-            </div>
-          )}
         </div>
 
         <div className="space-y-3 pt-2">
