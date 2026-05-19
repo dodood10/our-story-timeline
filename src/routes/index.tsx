@@ -5,6 +5,7 @@ import { LandingHeader } from "@/components/landing/LandingHeader";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { CuriositySection } from "@/components/landing/CuriositySection";
 import { SceneSection } from "@/components/landing/SceneSection";
+import { PlanPreviewSection } from "@/components/landing/PlanPreviewSection";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { DeliverablesSection } from "@/components/landing/DeliverablesSection";
