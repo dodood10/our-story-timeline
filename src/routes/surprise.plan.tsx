@@ -173,12 +173,13 @@ function PlanPage() {
 
   async function downloadPdf() {
     if (!plan || !printRef.current) return;
-    const [{ default: jsPDF }, html2canvas] = await Promise.all([
-      import("jspdf"),
-      import("html2canvas").then((m) => m.default),
-    ]);
     toast.loading("Gerando PDF...", { id: "pdf" });
     try {
+      // html2canvas-pro: fork com suporte a oklch/lab/color-mix (Tailwind v4).
+      const [{ default: jsPDF }, html2canvas] = await Promise.all([
+        import("jspdf"),
+        import("html2canvas-pro").then((m) => m.default),
+      ]);
       const canvas = await html2canvas(printRef.current, {
         scale: 2.5,
         backgroundColor: "#ffffff",
