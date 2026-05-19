@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import QRCode from "qrcode";
 import { Copy, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import {
   Dialog,
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { createPixCharge, getPixStatus, type CreatePixResponse } from "@/lib/syncpay.functions";
 import { formatBRL } from "@/lib/checkout-products";
 import type { CheckoutLead } from "@/lib/checkout-storage";
+
 
 type Stage = "loading" | "awaiting" | "paid" | "error";
 
