@@ -177,7 +177,8 @@ function MemoryLaneCheckout() {
         <CheckoutFormColumn
           amountCents={product.priceCents}
           productLabel={product.title}
-          externalReference={`memory-lane-${Date.now()}`}
+          productKey="memory_lane"
+          externalReference={memoryLaneExternalRef}
           bumps={emptyBumps}
           onBumpChange={() => {}}
           paymentMethod={paymentMethod}
