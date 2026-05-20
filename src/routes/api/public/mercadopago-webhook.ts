@@ -3,7 +3,12 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { createConversionFromPayment } from "@/lib/affiliate.server";
 import { grantEntitlementsFromPayment } from "@/lib/entitlements.server";
 import { getMpPayment, isPaidStatus } from "@/lib/mercadopago.server";
-import { findPaymentById, updatePaymentStatus } from "@/lib/payments.server";
+import {
+  findPaymentById,
+  markCapiPurchaseSent,
+  updatePaymentStatus,
+} from "@/lib/payments.server";
+import { sendMetaPurchase } from "@/lib/meta-capi.server";
 
 /**
  * Webhook do Mercado Pago — eventos "payment".
@@ -94,6 +99,21 @@ export const Route = createFileRoute("/api/public/mercadopago-webhook")({
                 externalReference: row.external_reference,
               });
               await createConversionFromPayment(row);
+              // Meta CAPI — envio idempotente do Purchase (dedup pelo event_id).
+              if (await markCapiPurchaseSent(row.id)) {
+                await sendMetaPurchase({
+                  eventId: row.id,
+                  amountCents: row.amount_cents,
+                  contentId: row.product_key,
+                  user: {
+                    email: row.payer_email,
+                    fbp: row.fbp,
+                    fbc: row.fbc,
+                    clientIp: row.client_ip,
+                    userAgent: row.client_ua,
+                  },
+                });
+              }
             }
           }
         } catch (e) {
