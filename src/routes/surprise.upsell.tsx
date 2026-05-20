@@ -62,7 +62,7 @@ function UpsellPage() {
   const productId = readLastProductId();
   const product = getCheckoutProduct(productId);
   const bumps = readCheckoutBumps();
-  const baseTotal = calcTotalCents(product, bumps);
+  void calcTotalCents(product, bumps);
 
   function accept() {
     writeUpsellKit(true);
