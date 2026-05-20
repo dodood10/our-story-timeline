@@ -6,15 +6,25 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Database } from "@/integrations/supabase/types";
 import type { SurpriseTier } from "@/lib/access-purchase";
 import {
+  isSubscriptionActive,
   parseSubscription,
   renewSubscription,
   startSubscription,
+  SUBSCRIPTION_PERIOD_DAYS,
   tickSubscription,
   type MemoryLaneSubscription,
   type StoredSubscription,
 } from "@/lib/memory-lane-subscription";
 import type { CheckoutProductKey } from "@/lib/checkout-products";
+import {
+  buildExternalReferenceParts as buildExternalReference,
+  parseAffiliateCodeFromExternalReference,
+  parseUserIdFromReferenceParts as parseUserIdFromExternalReference,
+} from "@/lib/affiliate-reference";
+import { reverseConversionForPayment } from "@/lib/affiliate.server";
 import { isPaidStatus } from "@/lib/mercadopago.server";
+
+export { buildExternalReference, parseAffiliateCodeFromExternalReference, parseUserIdFromExternalReference };
 
 export type EntitlementsRow = {
   surpriseTier: SurpriseTier;
@@ -95,16 +105,6 @@ async function findUserIdByEmail(email: string): Promise<string | null> {
     .maybeSingle();
   if (error || !data) return null;
   return data.id;
-}
-
-export function parseUserIdFromExternalReference(ref: string): string | null {
-  const match = /^u:([0-9a-f-]{36})\|/i.exec(ref);
-  return match?.[1] ?? null;
-}
-
-export function buildExternalReference(userId: string | null, suffix: string): string {
-  if (userId) return `u:${userId}|${suffix}`;
-  return suffix;
 }
 
 export function mergeSurpriseTier(current: SurpriseTier, next: SurpriseTier): SurpriseTier {
@@ -224,4 +224,122 @@ export async function migrateLocalEntitlementsAdmin(
 export function tickEntitlementsRow(row: EntitlementsRow): EntitlementsRow {
   const [subscription] = tickSubscription(row.subscription);
   return { ...row, subscription };
+}
+
+/** Admin: define tier Surpresa (não concede via cliente público). */
+export async function setSurpriseTierAdmin(
+  userId: string,
+  tier: SurpriseTier,
+): Promise<EntitlementsRow> {
+  const current = await fetchEntitlementsForUser(supabaseAdmin, userId);
+  const row: EntitlementsRow = { ...current, surpriseTier: tier };
+  await upsertEntitlementsAdmin(userId, row);
+  return row;
+}
+
+/** Admin: define assinatura Memory Lane. */
+export async function setSubscriptionAdmin(
+  userId: string,
+  subscription: StoredSubscription,
+): Promise<EntitlementsRow> {
+  const current = await fetchEntitlementsForUser(supabaseAdmin, userId);
+  const row: EntitlementsRow = { ...current, subscription };
+  await upsertEntitlementsAdmin(userId, row);
+  return row;
+}
+
+/** Admin: estende Memory Lane em N dias (padrão 30). */
+export async function extendMemoryLaneAdmin(
+  userId: string,
+  days = SUBSCRIPTION_PERIOD_DAYS,
+): Promise<EntitlementsRow> {
+  const current = await fetchEntitlementsForUser(supabaseAdmin, userId);
+  let subscription = current.subscription;
+  if (subscription && isSubscriptionActive(subscription)) {
+    subscription = renewSubscription(subscription);
+    if (days !== SUBSCRIPTION_PERIOD_DAYS) {
+      const base = subscription.currentPeriodEnd;
+      const d = new Date(base);
+      d.setUTCDate(d.getUTCDate() + (days - SUBSCRIPTION_PERIOD_DAYS));
+      subscription = { ...subscription, currentPeriodEnd: d.toISOString() };
+    }
+  } else {
+    subscription = startSubscription();
+  }
+  const row: EntitlementsRow = { ...current, subscription };
+  await upsertEntitlementsAdmin(userId, row);
+  return row;
+}
+
+/** Admin: revoga Surpresa + Memory Lane. */
+export async function revokeAllAccessAdmin(userId: string): Promise<EntitlementsRow> {
+  const row: EntitlementsRow = { surpriseTier: "none", subscription: null };
+  await upsertEntitlementsAdmin(userId, row);
+  return row;
+}
+
+/** Pure: revoga acesso de um produto no row (para testes e admin). */
+export function applyRevokeForProductKey(
+  row: EntitlementsRow,
+  productKey: string,
+): EntitlementsRow {
+  if (productKey === "memory_lane") {
+    return { ...row, subscription: null };
+  }
+  if (productKey === "surprise:premium") {
+    return {
+      ...row,
+      surpriseTier: row.surpriseTier === "premium" ? "none" : row.surpriseTier,
+    };
+  }
+  if (productKey === "surprise:basic") {
+    return {
+      ...row,
+      surpriseTier: row.surpriseTier === "basic" ? "none" : row.surpriseTier,
+    };
+  }
+  return row;
+}
+
+/** Admin: revoga acesso concedido por um produto específico. */
+export async function revokeAccessForProductAdmin(
+  userId: string,
+  productKey: string,
+): Promise<EntitlementsRow> {
+  const current = await fetchEntitlementsForUser(supabaseAdmin, userId);
+  const row = applyRevokeForProductKey(current, productKey);
+  await upsertEntitlementsAdmin(userId, row);
+  return row;
+}
+
+/** Admin: revoga com base no pagamento (após reembolso MP). */
+export async function revokeAccessForPaymentAdmin(paymentId: string): Promise<{
+  userId: string | null;
+  productKey: string;
+  row: EntitlementsRow | null;
+}> {
+  const { data: payment, error } = await supabaseAdmin
+    .from("payments")
+    .select("id, user_id, payer_email, external_reference, product_key")
+    .eq("id", paymentId)
+    .maybeSingle();
+
+  if (error || !payment) {
+    throw new Error("Pagamento não encontrado");
+  }
+
+  let userId = payment.user_id;
+  if (!userId) {
+    userId = parseUserIdFromExternalReference(payment.external_reference);
+  }
+  if (!userId && payment.payer_email) {
+    userId = await findUserIdByEmail(payment.payer_email);
+  }
+  if (!userId) {
+    return { userId: null, productKey: payment.product_key, row: null };
+  }
+
+  const row = await revokeAccessForProductAdmin(userId, payment.product_key);
+  await reverseConversionForPayment(paymentId);
+  return { userId, productKey: payment.product_key, row };
 }

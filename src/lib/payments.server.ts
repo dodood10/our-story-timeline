@@ -5,6 +5,7 @@
  * RLS bloqueia anon/authenticated — escrevemos com service role.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { parseAffiliateCodeFromExternalReference } from "@/lib/affiliate-reference";
 import type { CheckoutProductKey } from "@/lib/checkout-products";
 
 type PaymentMethod = "pix" | "card";
@@ -18,6 +19,7 @@ export interface PaymentRow {
   payer_email: string | null;
   payment_method: string;
   user_id: string | null;
+  affiliate_code: string | null;
   updated_at: string;
 }
 
@@ -30,7 +32,10 @@ export async function recordPaymentCreated(input: {
   payerEmail?: string | null;
   paymentMethod: PaymentMethod;
   userId?: string | null;
+  affiliateCode?: string | null;
 }): Promise<void> {
+  const affiliate_code =
+    input.affiliateCode ?? parseAffiliateCodeFromExternalReference(input.externalReference);
   const { error } = await supabaseAdmin.from("payments").upsert(
     {
       id: input.id,
@@ -41,6 +46,7 @@ export async function recordPaymentCreated(input: {
       payer_email: input.payerEmail ?? null,
       payment_method: input.paymentMethod,
       user_id: input.userId ?? null,
+      affiliate_code,
     },
     { onConflict: "id" },
   );
@@ -70,7 +76,7 @@ export async function findPaymentById(id: string): Promise<PaymentRow | null> {
   const { data, error } = await supabaseAdmin
     .from("payments")
     .select(
-      "id, external_reference, status, amount_cents, product_key, payer_email, payment_method, user_id, updated_at",
+      "id, external_reference, status, amount_cents, product_key, payer_email, payment_method, user_id, affiliate_code, updated_at",
     )
     .eq("id", id)
     .maybeSingle();

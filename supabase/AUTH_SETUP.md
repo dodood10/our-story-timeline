@@ -30,8 +30,13 @@ Após pagamento, o cliente deve usar o **mesmo e-mail** da conta em `/auth/recov
 
 Ver [`.env.example`](../.env.example): `VITE_SUPABASE_*` no cliente; `SUPABASE_SERVICE_ROLE_KEY` no servidor (webhook + entitlements).
 
+## Admin
+
+Usuários com `app_metadata.role = "admin"` acessam `/admin`. Ver [docs/ADMIN.md](../docs/ADMIN.md).
+
 ## Migration
 
 ```bash
 npm run supabase:apply
+npm run supabase:apply-auth
 ```

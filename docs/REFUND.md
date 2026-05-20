@@ -12,7 +12,11 @@ Painel MP → Atividade → localizar pagamento → **Reembolsar total**.
 
 ## 3. Revogar acesso
 
-No SQL Editor (service role) ou script admin:
+**Painel:** `/admin` → Usuários (buscar e-mail) ou Pagamentos → **Revogar** (após estorno no MP).
+
+A revogação também marca a conversão de afiliado vinculada ao pagamento como `reversed` (se existir). Ver [AFFILIATES.md](./AFFILIATES.md).
+
+Alternativa SQL (service role):
 
 ```sql
 update public.user_entitlements
@@ -21,6 +25,8 @@ where user_id = '<uuid do usuário>';
 ```
 
 Para Surpresa apenas, zere `surprise_tier`. Para Memory Lane, zere `subscription`.
+
+Ver [ADMIN.md](./ADMIN.md) para conceder role `admin` no Supabase.
 
 ## 4. Responder ao cliente
 

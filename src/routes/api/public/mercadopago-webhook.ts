@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { createConversionFromPayment } from "@/lib/affiliate.server";
 import { grantEntitlementsFromPayment } from "@/lib/entitlements.server";
 import { getMpPayment, isPaidStatus } from "@/lib/mercadopago.server";
 import { findPaymentById, updatePaymentStatus } from "@/lib/payments.server";
@@ -92,6 +93,7 @@ export const Route = createFileRoute("/api/public/mercadopago-webhook")({
                 productKey: row.product_key,
                 externalReference: row.external_reference,
               });
+              await createConversionFromPayment(row);
             }
           }
         } catch (e) {

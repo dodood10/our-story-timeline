@@ -189,6 +189,9 @@ const MARKETING_PREFIXES = [
   "/auth",
   "/memory-lane",
   "/dev-unlock",
+  "/admin",
+  "/affiliate",
+  "/r",
   "/termos",
   "/privacidade",
 ];

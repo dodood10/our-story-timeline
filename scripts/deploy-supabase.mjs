@@ -61,6 +61,18 @@ const authSql = readFileSync(
 ).trim();
 await runSql(authSql, "auth_entitlements_workspaces");
 
+const adminSql = readFileSync(
+  "supabase/migrations/20260521120000_admin_audit_log.sql",
+  "utf8",
+).trim();
+await runSql(adminSql, "admin_audit_log");
+
+const affiliatesSql = readFileSync(
+  "supabase/migrations/20260522120000_affiliates.sql",
+  "utf8",
+).trim();
+await runSql(affiliatesSql, "affiliates");
+
 await fetch(`https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`, {
   method: "POST",
   headers: {

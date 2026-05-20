@@ -43,6 +43,14 @@ Memory Lane billing: **30-day prepaid access** (single MP payment), not auto-ren
 
 `__root.tsx` → marketing routes (bare) vs `AppShell` (sidebar + `RequireAuth` when Supabase configured). Paywall uses `canUseMemoryLane` / `hasAnyProduct`.
 
+### Admin
+
+`/admin` — backoffice (dashboard, usuários, pagamentos, afiliados). Requer Supabase Auth com `app_metadata.role = "admin"`. Server fns em `admin.functions.ts` + `requireAdmin` middleware. Ver [docs/ADMIN.md](docs/ADMIN.md).
+
+### Afiliados
+
+Programa last-touch (30 dias): `?ref=CODIGO` na landing → `localStorage` → `external_reference` MP (`a:CODE|u:uuid|suffix`). Conversão no webhook; estorno via revogação admin. Portal `/affiliate` (`requireAffiliate` — `affiliates.user_id` + `status=active`). Ver [docs/AFFILIATES.md](docs/AFFILIATES.md).
+
 ### AI
 
 `LOVABLE_API_KEY` on server. Model: `google/gemini-3-flash-preview`.

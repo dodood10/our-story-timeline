@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
+import { AffiliateCapture } from "@/components/affiliate/AffiliateCapture";
 import { PromoTimerBar, PROMO_BAR_HEIGHT } from "@/components/landing/PromoTimerBar";
 import { usePromoTimer } from "@/hooks/usePromoTimer";
 import { LandingHeader } from "@/components/landing/LandingHeader";
@@ -18,7 +20,12 @@ import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { BRAND_NAME } from "@/lib/brand";
 
+const searchSchema = z.object({
+  ref: z.string().max(20).optional(),
+});
+
 export const Route = createFileRoute("/")({
+  validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
     meta: [
       {
@@ -41,11 +48,13 @@ export const Route = createFileRoute("/")({
 });
 
 function LandingPage() {
+  const { ref } = Route.useSearch();
   const { phase } = usePromoTimer();
   const barVisible = phase !== "expired";
 
   return (
     <div className="bg-background text-foreground">
+      <AffiliateCapture refCode={ref} />
       {barVisible && <PromoTimerBar />}
       <div style={{ paddingTop: barVisible ? PROMO_BAR_HEIGHT : "0" }}>
         <LandingHeader />

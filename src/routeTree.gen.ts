@@ -23,19 +23,32 @@ import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as DevUnlockRouteImport } from './routes/dev-unlock'
 import { Route as BucketListRouteImport } from './routes/bucket-list'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as AffiliateRouteImport } from './routes/affiliate'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SurpriseIndexRouteImport } from './routes/surprise.index'
 import { Route as MemoryLaneIndexRouteImport } from './routes/memory-lane.index'
+import { Route as AffiliateIndexRouteImport } from './routes/affiliate.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SurpriseUpsellRouteImport } from './routes/surprise.upsell'
 import { Route as SurpriseQuizRouteImport } from './routes/surprise.quiz'
 import { Route as SurprisePlanRouteImport } from './routes/surprise.plan'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as AuthRecoverAccessRouteImport } from './routes/auth.recover-access'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AffiliateSalesRouteImport } from './routes/affiliate.sales'
+import { Route as AffiliateMaterialsRouteImport } from './routes/affiliate.materials'
+import { Route as AffiliateLinkRouteImport } from './routes/affiliate.link'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
+import { Route as AdminAffiliatesRouteImport } from './routes/admin.affiliates'
 import { Route as ApiPublicSyncpayWebhookRouteImport } from './routes/api/public/syncpay-webhook'
 import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/public/mercadopago-webhook'
+import { Route as AdminUsersUserIdRouteImport } from './routes/admin.users.$userId'
+import { Route as AdminAffiliatesIdRouteImport } from './routes/admin.affiliates.$id'
 
 const TimelineRoute = TimelineRouteImport.update({
   id: '/timeline',
@@ -107,6 +120,16 @@ const AppRoute = AppRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AffiliateRoute = AffiliateRouteImport.update({
+  id: '/affiliate',
+  path: '/affiliate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -122,6 +145,16 @@ const MemoryLaneIndexRoute = MemoryLaneIndexRouteImport.update({
   path: '/memory-lane/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AffiliateIndexRoute = AffiliateIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AffiliateRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const SurpriseUpsellRoute = SurpriseUpsellRouteImport.update({
   id: '/upsell',
   path: '/upsell',
@@ -136,6 +169,11 @@ const SurprisePlanRoute = SurprisePlanRouteImport.update({
   id: '/plan',
   path: '/plan',
   getParentRoute: () => SurpriseRoute,
+} as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/auth/signup',
@@ -162,6 +200,36 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AffiliateSalesRoute = AffiliateSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => AffiliateRoute,
+} as any)
+const AffiliateMaterialsRoute = AffiliateMaterialsRouteImport.update({
+  id: '/materials',
+  path: '/materials',
+  getParentRoute: () => AffiliateRoute,
+} as any)
+const AffiliateLinkRoute = AffiliateLinkRouteImport.update({
+  id: '/link',
+  path: '/link',
+  getParentRoute: () => AffiliateRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAffiliatesRoute = AdminAffiliatesRouteImport.update({
+  id: '/affiliates',
+  path: '/affiliates',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ApiPublicSyncpayWebhookRoute = ApiPublicSyncpayWebhookRouteImport.update({
   id: '/api/public/syncpay-webhook',
   path: '/api/public/syncpay-webhook',
@@ -173,9 +241,21 @@ const ApiPublicMercadopagoWebhookRoute =
     path: '/api/public/mercadopago-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminUsersUserIdRoute = AdminUsersUserIdRouteImport.update({
+  id: '/$userId',
+  path: '/$userId',
+  getParentRoute: () => AdminUsersRoute,
+} as any)
+const AdminAffiliatesIdRoute = AdminAffiliatesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminAffiliatesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/affiliate': typeof AffiliateRouteWithChildren
   '/app': typeof AppRoute
   '/bucket-list': typeof BucketListRoute
   '/dev-unlock': typeof DevUnlockRoute
@@ -190,16 +270,27 @@ export interface FileRoutesByFullPath {
   '/surprise': typeof SurpriseRouteWithChildren
   '/termos': typeof TermosRoute
   '/timeline': typeof TimelineRoute
+  '/admin/affiliates': typeof AdminAffiliatesRouteWithChildren
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/users': typeof AdminUsersRouteWithChildren
+  '/affiliate/link': typeof AffiliateLinkRoute
+  '/affiliate/materials': typeof AffiliateMaterialsRoute
+  '/affiliate/sales': typeof AffiliateSalesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/recover-access': typeof AuthRecoverAccessRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/r/$code': typeof RCodeRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
   '/surprise/upsell': typeof SurpriseUpsellRoute
+  '/admin/': typeof AdminIndexRoute
+  '/affiliate/': typeof AffiliateIndexRoute
   '/memory-lane/': typeof MemoryLaneIndexRoute
   '/surprise/': typeof SurpriseIndexRoute
+  '/admin/affiliates/$id': typeof AdminAffiliatesIdRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/api/public/mercadopago-webhook': typeof ApiPublicMercadopagoWebhookRoute
   '/api/public/syncpay-webhook': typeof ApiPublicSyncpayWebhookRoute
 }
@@ -218,22 +309,35 @@ export interface FileRoutesByTo {
   '/stats': typeof StatsRoute
   '/termos': typeof TermosRoute
   '/timeline': typeof TimelineRoute
+  '/admin/affiliates': typeof AdminAffiliatesRouteWithChildren
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/users': typeof AdminUsersRouteWithChildren
+  '/affiliate/link': typeof AffiliateLinkRoute
+  '/affiliate/materials': typeof AffiliateMaterialsRoute
+  '/affiliate/sales': typeof AffiliateSalesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/recover-access': typeof AuthRecoverAccessRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/r/$code': typeof RCodeRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
   '/surprise/upsell': typeof SurpriseUpsellRoute
+  '/admin': typeof AdminIndexRoute
+  '/affiliate': typeof AffiliateIndexRoute
   '/memory-lane': typeof MemoryLaneIndexRoute
   '/surprise': typeof SurpriseIndexRoute
+  '/admin/affiliates/$id': typeof AdminAffiliatesIdRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/api/public/mercadopago-webhook': typeof ApiPublicMercadopagoWebhookRoute
   '/api/public/syncpay-webhook': typeof ApiPublicSyncpayWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/affiliate': typeof AffiliateRouteWithChildren
   '/app': typeof AppRoute
   '/bucket-list': typeof BucketListRoute
   '/dev-unlock': typeof DevUnlockRoute
@@ -248,16 +352,27 @@ export interface FileRoutesById {
   '/surprise': typeof SurpriseRouteWithChildren
   '/termos': typeof TermosRoute
   '/timeline': typeof TimelineRoute
+  '/admin/affiliates': typeof AdminAffiliatesRouteWithChildren
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/users': typeof AdminUsersRouteWithChildren
+  '/affiliate/link': typeof AffiliateLinkRoute
+  '/affiliate/materials': typeof AffiliateMaterialsRoute
+  '/affiliate/sales': typeof AffiliateSalesRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/recover-access': typeof AuthRecoverAccessRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/r/$code': typeof RCodeRoute
   '/surprise/plan': typeof SurprisePlanRoute
   '/surprise/quiz': typeof SurpriseQuizRoute
   '/surprise/upsell': typeof SurpriseUpsellRoute
+  '/admin/': typeof AdminIndexRoute
+  '/affiliate/': typeof AffiliateIndexRoute
   '/memory-lane/': typeof MemoryLaneIndexRoute
   '/surprise/': typeof SurpriseIndexRoute
+  '/admin/affiliates/$id': typeof AdminAffiliatesIdRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/api/public/mercadopago-webhook': typeof ApiPublicMercadopagoWebhookRoute
   '/api/public/syncpay-webhook': typeof ApiPublicSyncpayWebhookRoute
 }
@@ -265,6 +380,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
+    | '/affiliate'
     | '/app'
     | '/bucket-list'
     | '/dev-unlock'
@@ -279,16 +396,27 @@ export interface FileRouteTypes {
     | '/surprise'
     | '/termos'
     | '/timeline'
+    | '/admin/affiliates'
+    | '/admin/payments'
+    | '/admin/users'
+    | '/affiliate/link'
+    | '/affiliate/materials'
+    | '/affiliate/sales'
     | '/auth/callback'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/recover-access'
     | '/auth/signup'
+    | '/r/$code'
     | '/surprise/plan'
     | '/surprise/quiz'
     | '/surprise/upsell'
+    | '/admin/'
+    | '/affiliate/'
     | '/memory-lane/'
     | '/surprise/'
+    | '/admin/affiliates/$id'
+    | '/admin/users/$userId'
     | '/api/public/mercadopago-webhook'
     | '/api/public/syncpay-webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -307,21 +435,34 @@ export interface FileRouteTypes {
     | '/stats'
     | '/termos'
     | '/timeline'
+    | '/admin/affiliates'
+    | '/admin/payments'
+    | '/admin/users'
+    | '/affiliate/link'
+    | '/affiliate/materials'
+    | '/affiliate/sales'
     | '/auth/callback'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/recover-access'
     | '/auth/signup'
+    | '/r/$code'
     | '/surprise/plan'
     | '/surprise/quiz'
     | '/surprise/upsell'
+    | '/admin'
+    | '/affiliate'
     | '/memory-lane'
     | '/surprise'
+    | '/admin/affiliates/$id'
+    | '/admin/users/$userId'
     | '/api/public/mercadopago-webhook'
     | '/api/public/syncpay-webhook'
   id:
     | '__root__'
     | '/'
+    | '/admin'
+    | '/affiliate'
     | '/app'
     | '/bucket-list'
     | '/dev-unlock'
@@ -336,22 +477,35 @@ export interface FileRouteTypes {
     | '/surprise'
     | '/termos'
     | '/timeline'
+    | '/admin/affiliates'
+    | '/admin/payments'
+    | '/admin/users'
+    | '/affiliate/link'
+    | '/affiliate/materials'
+    | '/affiliate/sales'
     | '/auth/callback'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/recover-access'
     | '/auth/signup'
+    | '/r/$code'
     | '/surprise/plan'
     | '/surprise/quiz'
     | '/surprise/upsell'
+    | '/admin/'
+    | '/affiliate/'
     | '/memory-lane/'
     | '/surprise/'
+    | '/admin/affiliates/$id'
+    | '/admin/users/$userId'
     | '/api/public/mercadopago-webhook'
     | '/api/public/syncpay-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  AffiliateRoute: typeof AffiliateRouteWithChildren
   AppRoute: typeof AppRoute
   BucketListRoute: typeof BucketListRoute
   DevUnlockRoute: typeof DevUnlockRoute
@@ -371,6 +525,7 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRecoverAccessRoute: typeof AuthRecoverAccessRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  RCodeRoute: typeof RCodeRoute
   MemoryLaneIndexRoute: typeof MemoryLaneIndexRoute
   ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
   ApiPublicSyncpayWebhookRoute: typeof ApiPublicSyncpayWebhookRoute
@@ -476,6 +631,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/affiliate': {
+      id: '/affiliate'
+      path: '/affiliate'
+      fullPath: '/affiliate'
+      preLoaderRoute: typeof AffiliateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -497,6 +666,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MemoryLaneIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/affiliate/': {
+      id: '/affiliate/'
+      path: '/'
+      fullPath: '/affiliate/'
+      preLoaderRoute: typeof AffiliateIndexRouteImport
+      parentRoute: typeof AffiliateRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/surprise/upsell': {
       id: '/surprise/upsell'
       path: '/upsell'
@@ -517,6 +700,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/surprise/plan'
       preLoaderRoute: typeof SurprisePlanRouteImport
       parentRoute: typeof SurpriseRoute
+    }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/signup': {
       id: '/auth/signup'
@@ -553,6 +743,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/affiliate/sales': {
+      id: '/affiliate/sales'
+      path: '/sales'
+      fullPath: '/affiliate/sales'
+      preLoaderRoute: typeof AffiliateSalesRouteImport
+      parentRoute: typeof AffiliateRoute
+    }
+    '/affiliate/materials': {
+      id: '/affiliate/materials'
+      path: '/materials'
+      fullPath: '/affiliate/materials'
+      preLoaderRoute: typeof AffiliateMaterialsRouteImport
+      parentRoute: typeof AffiliateRoute
+    }
+    '/affiliate/link': {
+      id: '/affiliate/link'
+      path: '/link'
+      fullPath: '/affiliate/link'
+      preLoaderRoute: typeof AffiliateLinkRouteImport
+      parentRoute: typeof AffiliateRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/payments': {
+      id: '/admin/payments'
+      path: '/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/affiliates': {
+      id: '/admin/affiliates'
+      path: '/affiliates'
+      fullPath: '/admin/affiliates'
+      preLoaderRoute: typeof AdminAffiliatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/api/public/syncpay-webhook': {
       id: '/api/public/syncpay-webhook'
       path: '/api/public/syncpay-webhook'
@@ -567,8 +799,80 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMercadopagoWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users/$userId': {
+      id: '/admin/users/$userId'
+      path: '/$userId'
+      fullPath: '/admin/users/$userId'
+      preLoaderRoute: typeof AdminUsersUserIdRouteImport
+      parentRoute: typeof AdminUsersRoute
+    }
+    '/admin/affiliates/$id': {
+      id: '/admin/affiliates/$id'
+      path: '/$id'
+      fullPath: '/admin/affiliates/$id'
+      preLoaderRoute: typeof AdminAffiliatesIdRouteImport
+      parentRoute: typeof AdminAffiliatesRoute
+    }
   }
 }
+
+interface AdminAffiliatesRouteChildren {
+  AdminAffiliatesIdRoute: typeof AdminAffiliatesIdRoute
+}
+
+const AdminAffiliatesRouteChildren: AdminAffiliatesRouteChildren = {
+  AdminAffiliatesIdRoute: AdminAffiliatesIdRoute,
+}
+
+const AdminAffiliatesRouteWithChildren = AdminAffiliatesRoute._addFileChildren(
+  AdminAffiliatesRouteChildren,
+)
+
+interface AdminUsersRouteChildren {
+  AdminUsersUserIdRoute: typeof AdminUsersUserIdRoute
+}
+
+const AdminUsersRouteChildren: AdminUsersRouteChildren = {
+  AdminUsersUserIdRoute: AdminUsersUserIdRoute,
+}
+
+const AdminUsersRouteWithChildren = AdminUsersRoute._addFileChildren(
+  AdminUsersRouteChildren,
+)
+
+interface AdminRouteChildren {
+  AdminAffiliatesRoute: typeof AdminAffiliatesRouteWithChildren
+  AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminUsersRoute: typeof AdminUsersRouteWithChildren
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAffiliatesRoute: AdminAffiliatesRouteWithChildren,
+  AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminUsersRoute: AdminUsersRouteWithChildren,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface AffiliateRouteChildren {
+  AffiliateLinkRoute: typeof AffiliateLinkRoute
+  AffiliateMaterialsRoute: typeof AffiliateMaterialsRoute
+  AffiliateSalesRoute: typeof AffiliateSalesRoute
+  AffiliateIndexRoute: typeof AffiliateIndexRoute
+}
+
+const AffiliateRouteChildren: AffiliateRouteChildren = {
+  AffiliateLinkRoute: AffiliateLinkRoute,
+  AffiliateMaterialsRoute: AffiliateMaterialsRoute,
+  AffiliateSalesRoute: AffiliateSalesRoute,
+  AffiliateIndexRoute: AffiliateIndexRoute,
+}
+
+const AffiliateRouteWithChildren = AffiliateRoute._addFileChildren(
+  AffiliateRouteChildren,
+)
 
 interface SurpriseRouteChildren {
   SurprisePlanRoute: typeof SurprisePlanRoute
@@ -590,6 +894,8 @@ const SurpriseRouteWithChildren = SurpriseRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  AffiliateRoute: AffiliateRouteWithChildren,
   AppRoute: AppRoute,
   BucketListRoute: BucketListRoute,
   DevUnlockRoute: DevUnlockRoute,
@@ -609,6 +915,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthRecoverAccessRoute: AuthRecoverAccessRoute,
   AuthSignupRoute: AuthSignupRoute,
+  RCodeRoute: RCodeRoute,
   MemoryLaneIndexRoute: MemoryLaneIndexRoute,
   ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
   ApiPublicSyncpayWebhookRoute: ApiPublicSyncpayWebhookRoute,
