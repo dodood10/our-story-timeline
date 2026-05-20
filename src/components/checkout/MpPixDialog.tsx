@@ -18,6 +18,7 @@ import {
 import { formatBRL, type CheckoutProductKey } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
 import { clearPendingMpPayment, writePendingMpPayment } from "@/lib/checkout-storage";
+import { readMetaTracking, trackEvent } from "@/lib/meta-pixel";
 
 type Stage = "loading" | "awaiting" | "paid" | "expired" | "error";
 
@@ -84,6 +85,7 @@ export function MpPixDialog({
         externalReference: ref,
         payer: { name: lead.fullName, email: lead.email, document: doc },
         userId: userId ?? undefined,
+        tracking: readMetaTracking(),
       },
     })
       .then((res) => {
@@ -113,6 +115,18 @@ export function MpPixDialog({
         if (res.paid) {
           setStage("paid");
           clearPendingMpPayment();
+          // Pixel Purchase (browser) — eventID = ID do pagamento p/ dedup com CAPI.
+          trackEvent(
+            "Purchase",
+            {
+              value: amountCents / 100,
+              currency: "BRL",
+              content_ids: [productKey],
+              content_type: "product",
+              order_id: charge!.id,
+            },
+            charge!.id,
+          );
           onPaid();
           return;
         }
