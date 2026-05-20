@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader, getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import {
   createMpCard,
@@ -14,15 +15,28 @@ import { grantEntitlementsFromPayment } from "@/lib/entitlements.server";
 import {
   findPaymentById,
   findPaymentByExternalReference,
+  markCapiPurchaseSent,
   recordPaymentCreated,
   updatePaymentStatus,
 } from "@/lib/payments.server";
+import { sendMetaPurchase } from "@/lib/meta-capi.server";
 
 function splitName(full: string): { firstName: string; lastName: string } {
   const parts = full.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return { firstName: "Cliente", lastName: "MP" };
   if (parts.length === 1) return { firstName: parts[0], lastName: parts[0] };
   return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+}
+
+/** Captura IP, user-agent do request atual (server fn). */
+function captureClientContext(): { clientIp: string | null; clientUa: string | null } {
+  try {
+    const ip = getRequestIP({ xForwardedFor: true }) ?? null;
+    const ua = getRequestHeader("user-agent") ?? null;
+    return { clientIp: ip, clientUa: ua };
+  } catch {
+    return { clientIp: null, clientUa: null };
+  }
 }
 
 const PayerInput = z.object({
@@ -36,12 +50,21 @@ const BumpsInput = z
   .object({ cards: z.boolean().optional(), phrases: z.boolean().optional() })
   .default({});
 
+const TrackingInput = z
+  .object({
+    fbp: z.string().max(200).optional(),
+    fbc: z.string().max(400).optional(),
+    eventSourceUrl: z.string().url().max(500).optional(),
+  })
+  .optional();
+
 const CreatePixInput = z.object({
   productKey: ProductKey,
   bumps: BumpsInput.optional(),
   externalReference: z.string().min(1).max(120),
   payer: PayerInput,
   userId: z.string().uuid().optional(),
+  tracking: TrackingInput,
 });
 
 export type MpPixResponse = {
@@ -59,6 +82,7 @@ export const createMpPixCharge = createServerFn({ method: "POST" })
     const { amountCents, label } = resolveCheckoutAmountCents(data.productKey, data.bumps ?? {});
     const amount = Number((amountCents / 100).toFixed(2));
     const { firstName, lastName } = splitName(data.payer.name);
+    const { clientIp, clientUa } = captureClientContext();
     const charge = await createMpPix({
       amount,
       description: label,
@@ -83,6 +107,10 @@ export const createMpPixCharge = createServerFn({ method: "POST" })
       payerEmail: data.payer.email,
       paymentMethod: "pix",
       userId: data.userId,
+      fbp: data.tracking?.fbp ?? null,
+      fbc: data.tracking?.fbc ?? null,
+      clientIp,
+      clientUa,
     });
     return {
       id: charge.id,
@@ -104,6 +132,7 @@ const CreateCardInput = z.object({
   installments: z.number().int().min(1).max(12),
   issuerId: z.string().min(1).max(40).optional(),
   payer: PayerInput,
+  tracking: TrackingInput,
 });
 
 export type MpCardResponse = {
@@ -122,6 +151,7 @@ export const createMpCardCharge = createServerFn({ method: "POST" })
     const { amountCents, label } = resolveCheckoutAmountCents(data.productKey, data.bumps ?? {});
     const amount = Number((amountCents / 100).toFixed(2));
     const { firstName, lastName } = splitName(data.payer.name);
+    const { clientIp, clientUa } = captureClientContext();
     const charge = await createMpCard({
       amount,
       description: label,
@@ -147,6 +177,10 @@ export const createMpCardCharge = createServerFn({ method: "POST" })
       payerEmail: data.payer.email,
       paymentMethod: "card",
       userId: data.userId,
+      fbp: data.tracking?.fbp ?? null,
+      fbc: data.tracking?.fbc ?? null,
+      clientIp,
+      clientUa,
     });
     if (isPaidStatus(charge.status)) {
       await grantEntitlementsFromPayment({
@@ -155,6 +189,25 @@ export const createMpCardCharge = createServerFn({ method: "POST" })
         productKey: data.productKey,
         externalReference: data.externalReference,
       });
+      // Envio idempotente do Purchase ao Meta CAPI (dedup pelo event_id).
+      if (await markCapiPurchaseSent(charge.id)) {
+        await sendMetaPurchase({
+          eventId: charge.id,
+          amountCents,
+          contentId: data.productKey,
+          eventSourceUrl: data.tracking?.eventSourceUrl,
+          user: {
+            email: data.payer.email,
+            firstName,
+            lastName,
+            cpf: data.payer.document,
+            fbp: data.tracking?.fbp ?? null,
+            fbc: data.tracking?.fbc ?? null,
+            clientIp,
+            userAgent: clientUa,
+          },
+        });
+      }
     }
     return {
       id: charge.id,
@@ -192,6 +245,20 @@ export const getMpPaymentStatus = createServerFn({ method: "POST" })
           productKey: row.product_key,
           externalReference: row.external_reference,
         });
+        if (await markCapiPurchaseSent(row.id)) {
+          await sendMetaPurchase({
+            eventId: row.id,
+            amountCents: row.amount_cents,
+            contentId: row.product_key,
+            user: {
+              email: row.payer_email,
+              fbp: row.fbp,
+              fbc: row.fbc,
+              clientIp: row.client_ip,
+              userAgent: row.client_ua,
+            },
+          });
+        }
       }
     }
     return {
@@ -239,6 +306,20 @@ export const reconcileMpPayment = createServerFn({ method: "POST" })
         productKey: row.product_key,
         externalReference: row.external_reference,
       });
+      if (await markCapiPurchaseSent(row.id)) {
+        await sendMetaPurchase({
+          eventId: row.id,
+          amountCents: row.amount_cents,
+          contentId: row.product_key,
+          user: {
+            email: row.payer_email,
+            fbp: row.fbp,
+            fbc: row.fbc,
+            clientIp: row.client_ip,
+            userAgent: row.client_ua,
+          },
+        });
+      }
     }
     return {
       found: true,
