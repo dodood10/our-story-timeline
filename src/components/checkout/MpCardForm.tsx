@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { createMpCardCharge, getMpPublicKey } from "@/lib/mercadopago.functions";
 import { formatBRL, type CheckoutProductKey } from "@/lib/checkout-products";
 import type { CheckoutBumps, CheckoutLead } from "@/lib/checkout-storage";
+import { readMetaTracking, trackEvent } from "@/lib/meta-pixel";
 
 type InstallmentOption = {
   installments: number;
@@ -241,6 +242,7 @@ export function MpCardForm({
           issuerId,
           payer: { name: lead.fullName, email: lead.email, document: doc },
           userId: userId ?? undefined,
+          tracking: readMetaTracking(),
         },
       });
 
@@ -248,6 +250,18 @@ export function MpCardForm({
         setDone(true);
         setStatusMsg(res.message);
         toast.success("Pagamento aprovado!");
+        // Pixel Purchase (browser) — eventID = ID do pagamento p/ dedup com CAPI.
+        trackEvent(
+          "Purchase",
+          {
+            value: res.amountCents / 100,
+            currency: "BRL",
+            content_ids: [productKey],
+            content_type: "product",
+            order_id: res.id,
+          },
+          res.id,
+        );
         onPaid();
       } else if (res.failed) {
         setStatusMsg(res.message);
