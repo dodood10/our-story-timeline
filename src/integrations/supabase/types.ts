@@ -209,8 +209,13 @@ export type Database = {
         Row: {
           affiliate_code: string | null
           amount_cents: number
+          capi_purchase_sent_at: string | null
+          client_ip: string | null
+          client_ua: string | null
           created_at: string
           external_reference: string
+          fbc: string | null
+          fbp: string | null
           id: string
           payer_email: string | null
           payment_method: string
@@ -223,8 +228,13 @@ export type Database = {
         Insert: {
           affiliate_code?: string | null
           amount_cents: number
+          capi_purchase_sent_at?: string | null
+          client_ip?: string | null
+          client_ua?: string | null
           created_at?: string
           external_reference: string
+          fbc?: string | null
+          fbp?: string | null
           id: string
           payer_email?: string | null
           payment_method: string
@@ -237,8 +247,13 @@ export type Database = {
         Update: {
           affiliate_code?: string | null
           amount_cents?: number
+          capi_purchase_sent_at?: string | null
+          client_ip?: string | null
+          client_ua?: string | null
           created_at?: string
           external_reference?: string
+          fbc?: string | null
+          fbp?: string | null
           id?: string
           payer_email?: string | null
           payment_method?: string

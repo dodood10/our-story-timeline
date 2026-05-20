@@ -20,8 +20,16 @@ export interface PaymentRow {
   payment_method: string;
   user_id: string | null;
   affiliate_code: string | null;
+  fbp: string | null;
+  fbc: string | null;
+  client_ip: string | null;
+  client_ua: string | null;
+  capi_purchase_sent_at: string | null;
   updated_at: string;
 }
+
+const SELECT_COLS =
+  "id, external_reference, status, amount_cents, product_key, payer_email, payment_method, user_id, affiliate_code, fbp, fbc, client_ip, client_ua, capi_purchase_sent_at, updated_at";
 
 export async function recordPaymentCreated(input: {
   id: string;
@@ -33,6 +41,10 @@ export async function recordPaymentCreated(input: {
   paymentMethod: PaymentMethod;
   userId?: string | null;
   affiliateCode?: string | null;
+  fbp?: string | null;
+  fbc?: string | null;
+  clientIp?: string | null;
+  clientUa?: string | null;
 }): Promise<void> {
   const affiliate_code =
     input.affiliateCode ?? parseAffiliateCodeFromExternalReference(input.externalReference);
@@ -47,6 +59,10 @@ export async function recordPaymentCreated(input: {
       payment_method: input.paymentMethod,
       user_id: input.userId ?? null,
       affiliate_code,
+      fbp: input.fbp ?? null,
+      fbc: input.fbc ?? null,
+      client_ip: input.clientIp ?? null,
+      client_ua: input.clientUa ?? null,
     },
     { onConflict: "id" },
   );
@@ -72,12 +88,30 @@ export async function updatePaymentStatus(input: {
   }
 }
 
+/**
+ * Marca o pagamento como tendo enviado o Purchase ao Meta CAPI.
+ * Retorna `true` se conseguiu marcar agora (deduplicação atômica),
+ * `false` se já estava marcado — útil para evitar envio duplicado.
+ */
+export async function markCapiPurchaseSent(id: string): Promise<boolean> {
+  const { data, error } = await supabaseAdmin
+    .from("payments")
+    .update({ capi_purchase_sent_at: new Date().toISOString() })
+    .eq("id", id)
+    .is("capi_purchase_sent_at", null)
+    .select("id")
+    .maybeSingle();
+  if (error) {
+    console.error("[payments] markCapiPurchaseSent falhou", error);
+    return false;
+  }
+  return Boolean(data);
+}
+
 export async function findPaymentById(id: string): Promise<PaymentRow | null> {
   const { data, error } = await supabaseAdmin
     .from("payments")
-    .select(
-      "id, external_reference, status, amount_cents, product_key, payer_email, payment_method, user_id, affiliate_code, updated_at",
-    )
+    .select(SELECT_COLS)
     .eq("id", id)
     .maybeSingle();
   if (error) {
@@ -92,9 +126,7 @@ export async function findPaymentByExternalReference(
 ): Promise<PaymentRow | null> {
   const { data, error } = await supabaseAdmin
     .from("payments")
-    .select(
-      "id, external_reference, status, amount_cents, product_key, payer_email, payment_method, user_id, updated_at",
-    )
+    .select(SELECT_COLS)
     .eq("external_reference", externalReference)
     .order("updated_at", { ascending: false })
     .limit(1)
