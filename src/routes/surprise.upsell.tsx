@@ -5,7 +5,7 @@ import { useAccess } from "@/hooks/useAccess";
 import { Button } from "@/components/ui/button";
 import { UPSELL_KIT, formatBRL, calcTotalCents, getCheckoutProduct } from "@/lib/checkout-products";
 import { readCheckoutBumps, readLastProductId, writeUpsellKit } from "@/lib/checkout-storage";
-import { trackEvent } from "@/lib/meta-pixel";
+import { trackCustom } from "@/lib/meta-pixel";
 import {
   AccessGateDenied,
   AccessGateLoading,
@@ -66,22 +66,19 @@ function UpsellPage() {
 
   function accept() {
     writeUpsellKit(true);
-    trackEvent("Purchase", {
-      value: (baseTotal + UPSELL_KIT.priceCents) / 100,
+    // Evento customizado (não duplica Purchase — esse já foi disparado na confirmação do pagamento).
+    trackCustom("UpsellKitAccepted", {
+      value: UPSELL_KIT.priceCents / 100,
       currency: "BRL",
       content_ids: [product.id, "upsell-kit"],
-      content_type: "product",
     });
     toast.success("Kit Surpresa Premium adicionado ao seu acesso!");
     navigate({ to: "/surprise/quiz" });
   }
 
   function decline() {
-    trackEvent("Purchase", {
-      value: baseTotal / 100,
-      currency: "BRL",
+    trackCustom("UpsellKitDeclined", {
       content_ids: [product.id],
-      content_type: "product",
     });
     navigate({ to: "/surprise/quiz" });
   }
