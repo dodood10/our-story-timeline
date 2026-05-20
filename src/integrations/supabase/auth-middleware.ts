@@ -4,10 +4,15 @@ import { getRequest } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
+const FALLBACK_SUPABASE_URL = "https://hscoblnnvlynrlyhhocm.supabase.co";
+const FALLBACK_SUPABASE_PUBLISHABLE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzY29ibG5udmx5bnJseWhob2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NDY2NTksImV4cCI6MjA5NDEyMjY1OX0.Hplr7Yn37QHHoSuo02j5QeGLzMS6VrA9k4_N49hHGJc";
+
 export const requireSupabaseAuth = createMiddleware({ type: "function" }).server(
   async ({ next }) => {
-    const SUPABASE_URL = process.env.SUPABASE_URL;
-    const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
+    const SUPABASE_URL = process.env.SUPABASE_URL ?? FALLBACK_SUPABASE_URL;
+    const SUPABASE_PUBLISHABLE_KEY =
+      process.env.SUPABASE_PUBLISHABLE_KEY ?? FALLBACK_SUPABASE_PUBLISHABLE_KEY;
 
     if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
       const missing = [
